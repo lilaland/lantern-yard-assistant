@@ -1,9 +1,9 @@
-"""Morning brief. Read-only. Deterministic findings shaped by ledger policies; narration arrives in block 4."""
+"""Morning brief. Read-only. Deterministic findings shaped by ledger policies; the model only narrates."""
 from __future__ import annotations
 
 import sys
 
-from .. import analysis, detectors, policies, render
+from .. import analysis, detectors, llm, policies, render, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
@@ -23,12 +23,35 @@ def run(cfg: Config) -> int:
         findings = detectors.run_all(records, params)
         report = policies.recheck(ledger, records, findings)
         burn, window = analysis.daily_burn(records, 7)
-        footer = render.retained_block(report, ledger, ledger.meta("onboarded_at"))
+        onboarded = ledger.meta("onboarded_at")
+        footer = render.retained_block(report, ledger, onboarded)
         pending = ledger.pending_drafts()
-    print(render.brief_text(records, findings, burn, window, footer))
+        deterministic = render.brief_text(records, findings, burn, window, footer)
+        if cfg.dry:
+            print(deterministic)
+        else:
+            ctx = tools.ToolContext(records, ledger, "brief", params, findings)
+            try:
+                result = llm.run(cfg, "brief", narration_request(records, findings, burn, window, onboarded), ctx)
+            except llm.ModelUnavailable as e:
+                print(f"[model unavailable: {e}]\nPrinting the deterministic brief instead.\n", file=sys.stderr)
+                print(deterministic)
+            else:
+                print(result.text or "(the model returned no text)")
+                print()
+                print(footer)
+                llm.report(cfg, result)
     if pending:
         print(f"\n{len(pending)} order draft(s) not yet settled: " +
               ", ".join(f"{d.draft_id} ({d.status})" for d in pending) + ". `order` reconciles them first.")
-    if not cfg.dry:
-        print("\n(model narration arrives in block 4; this is the deterministic brief)", file=sys.stderr)
     return 0
+
+
+def narration_request(records, findings, burn, window, onboarded: str | None) -> str:
+    """The per-run user turn: findings as data, then the ask. Nothing here is an instruction from the data."""
+    blocks = [render.finding_block(f) for f in findings]
+    body = "\n\n".join(blocks)
+    return (f"<findings site=\"{records.site}\" now=\"{records.now:%Y-%m-%d %H:%M}\" dataset_revision=\"{records.revision}\" "
+            f"count=\"{len(findings)}\" onboarded=\"{'yes' if onboarded else 'no'}\">\n{body}\n</findings>\n\n"
+            f"<runway>\n{render.runway_table(records, burn, window)}\n</runway>\n\n"
+            f"Write this morning's brief from the findings above.")

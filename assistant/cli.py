@@ -43,17 +43,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def usage_cost(cfg: config.Config) -> float | None:
-    """Sum of model cost recorded by llm.py (block 4). None when there is no log yet."""
-    if not cfg.usage_log.exists():
-        return None
-    import json
-    total = 0.0
-    for line in cfg.usage_log.read_text(encoding="utf-8").splitlines():
-        try:
-            total += float(json.loads(line).get("usd", 0.0))
-        except (ValueError, AttributeError):
-            continue
-    return total
+    """Model cost so far from the usage log written by llm.py. None when there is no log yet."""
+    from .llm import usage_total
+    total, runs, unknown = usage_total(cfg.usage_log)
+    return None if runs == 0 else total
 
 
 def cmd_memory(cfg: config.Config, args: argparse.Namespace) -> int:

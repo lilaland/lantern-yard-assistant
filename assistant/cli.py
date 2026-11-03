@@ -18,7 +18,7 @@ COMMANDS = {
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
-PLANNED_IN_BLOCK = {"brief": 2, "memory": 3, "onboard": 3, "order": 5, "ask": 8, "why": 8}
+PLANNED_IN_BLOCK = {"memory": 3, "onboard": 3, "order": 5, "ask": 8, "why": 8}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -59,6 +59,9 @@ def main(argv: list[str] | None = None) -> int:
     cfg = config.load(dry=args.dry, state_dir=args.state_dir)
     if args.command == "reset":
         return cmd_reset(cfg, args)
+    if args.command == "brief":
+        from .modes import brief
+        return brief.run(cfg)
     block = PLANNED_IN_BLOCK[args.command]
     print(f"{args.command}: not implemented yet (BUILD_PLAN.md block {block})", file=sys.stderr)
     return 2

@@ -9,5 +9,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 0: git init, venv, package skeleton, config, CLI, logs | 00:10 | 00:25 | 0.25 | session 1 continued |
 | 2026-11-03 | Block 1: API client, typed records, simulator fixture, 21 tests | ~09:18 | 09:35 | ~0.3 | session 1 continued next morning |
 | 2026-11-03 | Block 2: analysis, detectors, renderer, dry brief, 21 tests | ~09:36 | 09:47 | ~0.2 | session 1 continued |
+| 2026-11-03 | Block 3: belief ledger, policies, onboard --defaults, memory/why, recheck footer, 16 tests | 16:15 | 16:28 | ~0.2 | session 1 continued, afternoon |
 
-Running total: ~0.75 h of build time plus session 1 design time (fill in).
+Running total: ~1.0 h of build time plus session 1 design time (fill in).

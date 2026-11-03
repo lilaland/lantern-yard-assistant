@@ -18,7 +18,7 @@ COMMANDS = {
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
-PLANNED_IN_BLOCK = {"memory": 3, "onboard": 3, "order": 5, "ask": 8, "why": 8}
+PLANNED_IN_BLOCK = {"order": 5, "ask": 8}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,7 +37,45 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("subject")
         if name == "reset":
             sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt.")
+        if name == "memory":
+            sp.add_argument("--all", action="store_true", help="Include superseded and conflicted beliefs.")
     return parser
+
+
+def usage_cost(cfg: config.Config) -> float | None:
+    """Sum of model cost recorded by llm.py (block 4). None when there is no log yet."""
+    if not cfg.usage_log.exists():
+        return None
+    import json
+    total = 0.0
+    for line in cfg.usage_log.read_text(encoding="utf-8").splitlines():
+        try:
+            total += float(json.loads(line).get("usd", 0.0))
+        except (ValueError, AttributeError):
+            continue
+    return total
+
+
+def cmd_memory(cfg: config.Config, args: argparse.Namespace) -> int:
+    from .ledger import Ledger
+    from .render import memory_text
+    if not cfg.db_path.exists():
+        print(f"No ledger yet at {cfg.db_path}. Run `onboard --defaults` or `brief` first.")
+        return 0
+    with Ledger(cfg.db_path) as ledger:
+        print(memory_text(ledger, ledger.meta("onboarded_at"), usage_cost(cfg), include_closed=args.all))
+    return 0
+
+
+def cmd_why(cfg: config.Config, args: argparse.Namespace) -> int:
+    from .ledger import Ledger
+    from .render import why_text
+    if not cfg.db_path.exists():
+        print(f"No ledger yet at {cfg.db_path}.")
+        return 0
+    with Ledger(cfg.db_path) as ledger:
+        print(why_text(args.subject, ledger.why(args.subject)))
+    return 0
 
 
 def cmd_reset(cfg: config.Config, args: argparse.Namespace) -> int:
@@ -62,6 +100,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "brief":
         from .modes import brief
         return brief.run(cfg)
+    if args.command == "onboard":
+        from .modes import onboard
+        return onboard.run_defaults(cfg) if args.defaults else onboard.run_interactive(cfg)
+    if args.command == "memory":
+        return cmd_memory(cfg, args)
+    if args.command == "why":
+        return cmd_why(cfg, args)
     block = PLANNED_IN_BLOCK[args.command]
     print(f"{args.command}: not implemented yet (BUILD_PLAN.md block {block})", file=sys.stderr)
     return 2

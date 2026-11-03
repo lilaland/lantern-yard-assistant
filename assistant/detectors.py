@@ -43,26 +43,66 @@ def rank_key(f: Finding) -> tuple:
     return (f.severity, f.urgency_days if f.urgency_days is not None else 999.0, -f.usd_at_stake, f.id)
 
 
+ON_HAND_RULES = ("physical_confirmation", "office_status")
+
+
+@dataclass(frozen=True)
+class Params:
+    """Knobs the ledger's policies and preferences set. Defaults are the detectors' own.
+
+    ``applied`` maps a knob to the belief that set it (e.g. ``"on_hand_rule": "inbound.on_hand_rule
+    (human:onboarding-defaults)"``) so a finding can name the policy that shaped it.
+    """
+    on_hand_rule: str = "physical_confirmation"
+    confirmed_received: frozenset = frozenset()      # invoice ids a human confirmed as physically received
+    confirmed_not_received: frozenset = frozenset()  # invoice ids a human confirmed as not received
+    price_outlier_ratio: float = 2.0
+    runway_threshold_days: float = 3.0
+    brunch_uplift: float = 0.0
+    delivery_days: dict = field(default_factory=dict)  # vendor_id -> tuple of weekday names
+    applied: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.on_hand_rule not in ON_HAND_RULES:
+            raise ValueError(f"on_hand_rule must be one of {ON_HAND_RULES}, got {self.on_hand_rule!r}")
+
+    def label(self, *keys: str) -> list[str]:
+        return [self.applied[k] for k in keys if k in self.applied]
+
+
 @dataclass
 class Ctx:
     records: Records
+    params: Params
     usage: an.Usage
     invoice_issues: list[an.InvoiceIssue]
     inbound_issues: list[an.InvoiceIssue]
     rec_trusting_status: dict[str, an.Reconciliation]  # office status taken at face value
-    rec_evidence: dict[str, an.Reconciliation]         # only goods that can be on hand today
+    rec_evidence: dict[str, an.Reconciliation]         # only goods the current rule counts as on hand
     burn: dict[str, float]
     burn_window: tuple[date, date]
     counts: dict[str, tuple]
 
 
-def build_ctx(records: Records) -> Ctx:
-    issues = an.invoice_checks(records)
+def on_hand_exclusions(records: Records, params: Params) -> tuple[str, ...]:
+    """Invoices whose goods do not count as on hand under the current rule and confirmations."""
+    if params.on_hand_rule == "office_status":
+        excluded = {h.invoice_id for h in an.unreceived_invoices(records)}
+    else:
+        excluded = {h.invoice_id for h in an.not_on_hand_invoices(records)}
+    excluded -= set(params.confirmed_received)
+    excluded |= set(params.confirmed_not_received)
+    return tuple(sorted(excluded))
+
+
+def build_ctx(records: Records, params: Params | None = None) -> Ctx:
+    params = params or Params()
+    issues = an.invoice_checks(records, outlier_ratio=params.price_outlier_ratio)
     inbound = [i for i in issues if i.kind == "status_inconsistent_with_date"]
     trusting = tuple(h.invoice_id for h in an.unreceived_invoices(records))
-    evidence = tuple(h.invoice_id for h in an.not_on_hand_invoices(records))
+    evidence = on_hand_exclusions(records, params)
     burn, window = an.daily_burn(records, 7)
-    return Ctx(records, an.theoretical_usage(records.sales, records.recipes), issues, inbound,
+    return Ctx(records, params, an.theoretical_usage(records.sales, records.recipes), issues, inbound,
                an.reconcile_all(records, trusting), an.reconcile_all(records, evidence), burn, window,
                an.opening_and_closing(records))
 
@@ -82,7 +122,11 @@ def _excerpt(text: str, n: int = 110, around: tuple[str, ...] = ()) -> str:
     if hit < 0:
         return text[: n - 1].rstrip() + "…"
     start = max(0, hit - n // 3)
+    if start:
+        start = text.rfind(" ", 0, start) + 1  # begin on a whole word
     end = min(len(text), start + n)
+    if end < len(text) and " " in text[hit:end]:
+        end = hit + text[hit:end].rindex(" ")  # end on a whole word
     return ("…" if start else "") + text[start:end].strip() + ("…" if end < len(text) else "")
 
 
@@ -106,13 +150,18 @@ def _vendor_for_ingredient(records: Records, ingredient: str):
     return None
 
 
-def _days_until_listed_delivery(vendor, today: date) -> int | None:
+def _delivery_days(ctx: Ctx, vendor) -> tuple[str, ...]:
     if vendor is None:
+        return ()
+    return tuple(ctx.params.delivery_days.get(vendor.vendor_id, vendor.delivery_days))
+
+
+def _days_until_listed_delivery(days: tuple[str, ...], today: date) -> int | None:
+    """Days from today until the next listed delivery weekday (0 = today). None if no days listed."""
+    idx = [an.WEEKDAYS.index(d) for d in days if d in an.WEEKDAYS]
+    if not idx:
         return None
-    for ahead in range(0, 8):
-        if an.weekday_name(today + timedelta(days=ahead)) in vendor.delivery_days:
-            return ahead
-    return None
+    return min((i - today.weekday()) % 7 for i in idx)
 
 
 def _usd(x: Decimal | float | None) -> float:
@@ -174,14 +223,30 @@ def detect_phantom_receipts(ctx: Ctx) -> list[Finding]:
             evidence += _note_cites(waste, around=("tossed", "waste", "threw"))
         vendor = r.vendor_by_account(h.vendor_account)
         vname = vendor.vendor_name if vendor else h.vendor_name
-        next_step = (f"Confirm with {vname} whether {h.invoice_id} has shipped before placing the next order. "
-                     f"Until confirmed, plan with {main} at {ctx.rec_evidence[main].counted:g} {unit} on hand"
-                     f"{f', about {urgency:.1f} days' if urgency else ''}." if main else
-                     f"Confirm with {vname} whether {h.invoice_id} has shipped.")
-        out.append(Finding(f"phantom_receipt:{h.invoice_id}", "status_inconsistent_with_evidence", 1,
+        p = ctx.params
+        confirmed = h.invoice_id in p.confirmed_received
+        denied = h.invoice_id in p.confirmed_not_received
+        applied = p.label("on_hand_rule", f"received:{h.invoice_id}")
+        if confirmed:
+            severity = 3
+            next_step = (f"The manager confirmed {h.invoice_id} was physically received, so its goods count as on "
+                         f"hand; ask the office to correct the delivery date.")
+        elif p.on_hand_rule == "office_status" and not denied:
+            severity = 3
+            next_step = (f"Policy trusts the office receipt status, so {h.invoice_id} counts as on hand. The delivery "
+                         f"date still disagrees; worth a call to {vname} before relying on it.")
+        else:
+            severity = 1
+            next_step = (f"Confirm with {vname} whether {h.invoice_id} has shipped before placing the next order. "
+                         f"Until confirmed, plan with {main} at {ctx.rec_evidence[main].counted:g} {unit} on hand"
+                         f"{f', about {urgency:.1f} days' if urgency else ''}." if main else
+                         f"Confirm with {vname} whether {h.invoice_id} has shipped.")
+            if denied:
+                next_step = f"The manager confirmed the cases are not here. {next_step}"
+        out.append(Finding(f"phantom_receipt:{h.invoice_id}", "status_inconsistent_with_evidence", severity,
                            f"{h.invoice_id} is marked received but its delivery date is in the future",
                            summary, evidence, uncertainty, next_step, numbers, r.revision, urgency,
-                           _usd(h.invoice_total)))
+                           _usd(h.invoice_total), applied))
     return out
 
 
@@ -196,7 +261,7 @@ def detect_count_variance(ctx: Ctx) -> list[Finding]:
         if pct < 0.02 and usd < 10:
             continue
         severity = 1 if usd >= 100 else 2 if usd >= 25 else 3
-        excl = f" (excluding not-yet-received {', '.join(rec.excluded_invoices)})" if rec.excluded_invoices else ""
+        excl = f" (excluding not-on-hand {', '.join(rec.excluded_invoices)})" if rec.excluded_invoices else ""
         summary = (f"{ing}: opening {rec.opening:g} + purchased {rec.purchased:g}{excl} - theoretical use "
                    f"{rec.theoretical:.1f} = {rec.expected_close:.1f} {rec.unit} expected; counted {rec.counted:g}, "
                    f"a gap of {rec.gap:+.1f} {rec.unit} ({pct:.0%}), roughly ${usd:.0f} at the latest unit cost.")
@@ -227,13 +292,14 @@ def detect_invoice_anomalies(ctx: Ctx) -> list[Finding]:
         vname = vendor.vendor_name if vendor else (h.vendor_name if h else "the vendor")
         if issue.kind == "unit_price_outlier":
             usd = _usd(issue.numbers["amount_vs_median"])
+            applied = ctx.params.label("price_outlier_ratio")
             out.append(Finding(f"unit_price_outlier:{issue.cites[0].ref}", issue.kind, 1,
                                f"{issue.invoice_id} bills a line at {issue.numbers['ratio']:.0f}x the usual unit cost",
                                issue.detail + f". Against the median this line is ${usd:,.2f} higher.",
                                issue.cites, ["The header total agrees with the line, so the error is on the invoice "
                                              "itself or in data entry; the paper invoice decides which."],
                                f"Ask {vname} for a corrected invoice or credit on {issue.invoice_id}. Do not adjust "
-                               f"the recorded amounts yourself.", dict(issue.numbers), r.revision, None, usd))
+                               f"the recorded amounts yourself.", dict(issue.numbers), r.revision, None, usd, applied))
         elif issue.kind == "header_total_mismatch":
             usd = abs(_usd(issue.numbers["difference"]))
             out.append(Finding(f"header_total_mismatch:{issue.invoice_id}", issue.kind, 2,
@@ -273,15 +339,23 @@ def detect_reference_table_stale(ctx: Ctx) -> list[Finding]:
             summary += f" Since then deliveries landed on other days: {'; '.join(parts)}."
         if notes:
             summary += f" Note{'s' if len(notes) > 1 else ''} {', '.join(n.ref for n in notes)} mention a route change."
+        override = ctx.params.delivery_days.get(v.vendor_id)
+        applied = ctx.params.label(f"delivery_days:{v.vendor_id}")
+        if override:
+            next_step = (f"Planning already uses {', '.join(override)} for {v.vendor_name}; update the vendor sheet "
+                         f"so the two agree.")
+        else:
+            next_step = (f"Confirm {v.vendor_name}'s current delivery days and order cutoff, then update the "
+                         f"vendor sheet.")
         out.append(Finding(f"reference_table_stale:{v.vendor_id}", "reference_table_stale", 2,
                            f"{v.vendor_name} delivery days on the vendor sheet look out of date",
                            summary, evidence,
                            ["The vendor sheet is the only place order cutoffs are implied; the notes are the "
                             "newer source but are informal."],
-                           f"Confirm {v.vendor_name}'s current delivery days and order cutoff, then update the "
-                           f"vendor sheet.", {"listed_days": list(v.delivery_days),
-                                              "observed_days_since_review": sorted(actual)},
-                           r.revision, None, 0.0))
+                           next_step, {"listed_days": list(v.delivery_days),
+                                       "planning_days": list(override or v.delivery_days),
+                                       "observed_days_since_review": sorted(actual)},
+                           r.revision, None, 0.0, applied))
     return out
 
 
@@ -371,17 +445,20 @@ def detect_runway(ctx: Ctx) -> list[Finding]:
             continue
         burn = ctx.burn.get(ing, 0.0)
         days = an.runway_days(closing.quantity, burn)
-        if days is None or days >= 3:
+        if days is None or days >= ctx.params.runway_threshold_days:
             continue
         vendor = _vendor_for_ingredient(r, ing)
-        until = _days_until_listed_delivery(vendor, today)
+        pdays = _delivery_days(ctx, vendor)
+        until = _days_until_listed_delivery(pdays, today)
         covered = until is not None and until <= days
         severity = 2 if covered or days >= 2 else 1
         vname = vendor.vendor_name if vendor else "the supplier"
-        vdays = ", ".join(vendor.delivery_days) if vendor else "unknown days"
+        vdays = ", ".join(pdays) if vendor else "unknown days"
+        basis = "per the vendor sheet" if not vendor or pdays == vendor.delivery_days else "per the recorded route change"
+        applied = ctx.params.label(f"delivery_days:{vendor.vendor_id}") if vendor else []
         summary = (f"{ing}: {closing.quantity:g} {closing.unit} on hand at the {closing.counted_at.date()} close against "
                    f"{burn:.1f} {closing.unit}/day theoretical use ({ctx.burn_window[0]}..{ctx.burn_window[1]}), "
-                   f"about {days:.1f} days. {vname} delivers {vdays} per the vendor sheet.")
+                   f"about {days:.1f} days. {vname} delivers {vdays} {basis}.")
         uncertainty = ["Use is theoretical from recipes and sales, not measured."]
         if until == 0:
             uncertainty.append(f"A {vname} delivery is listed for today, but the order sheet is not among the exported "
@@ -394,7 +471,7 @@ def detect_runway(ctx: Ctx) -> list[Finding]:
                            f"Confirm whether a {vname} delivery is arriving within {days:.0f} day(s); if not, order today.",
                            {"on_hand": closing.quantity, "unit": closing.unit, "burn_per_day": round(burn, 2),
                             "runway_days": round(days, 2), "vendor": vname, "vendor_days": vdays,
-                            "days_until_listed_delivery": until}, r.revision, days, 0.0))
+                            "days_until_listed_delivery": until}, r.revision, days, 0.0, applied))
     return out
 
 
@@ -405,9 +482,14 @@ def detect_weekend_readiness(ctx: Ctx) -> list[Finding]:
     for m in r.menu:
         if m.service != "weekends":
             continue
-        f = an.weekend_forecast(r, m.pos_item_id)
+        uplift = ctx.params.brunch_uplift
+        f = an.weekend_forecast(r, m.pos_item_id, uplift)
         if not f.prior_days or not f.needs:
             continue
+        applied = ctx.params.label("brunch_uplift") if uplift else []
+        uplift_note = (f"A {uplift:.0%} uplift is applied on the manager's preference; there are no booking numbers "
+                       f"to confirm it." if uplift else
+                       "No uplift is applied; the owner expects a busier brunch but there are no booking numbers.")
         shortages = {}
         for ing, need in f.needs.items():
             on_hand = ctx.counts[ing][1].quantity if ing in ctx.counts else 0.0
@@ -425,15 +507,16 @@ def detect_weekend_readiness(ctx: Ctx) -> list[Finding]:
         out.append(Finding(f"weekend_readiness:{m.pos_item_id}", "weekend_readiness", 2,
                            f"{m.name} next weekend will outrun what is on hand",
                            f"{m.name} ({m.pos_item_id}) averaged {f.portions_per_day:.0f} portions per weekend day over "
-                           f"{len(f.prior_days)} days. At that pace {f.days[0]}..{f.days[1]} needs: " + "; ".join(lines) + ".",
+                           f"{len(f.prior_days)} days. At that pace{f' plus {uplift:.0%}' if uplift else ''} "
+                           f"{f.days[0]}..{f.days[1]} needs: " + "; ".join(lines) + ".",
                            evidence + _note_cites(notes),
-                           ["No uplift is applied; the owner expects a busier brunch but there are no booking numbers."],
+                           [uplift_note],
                            f"Include {', '.join(_short(i) for i in hard)} in the next order from the vendor that supplies "
                            f"them, sized for at least last weekend's pace.",
                            {"portions_per_day": round(f.portions_per_day, 1), "days": [str(d) for d in f.days],
-                            "needs": {k: round(v, 1) for k, v in f.needs.items()},
+                            "needs": {k: round(v, 1) for k, v in f.needs.items()}, "uplift": uplift,
                             "short": {k: round(v[0] - v[1], 1) for k, v in hard.items()}},
-                           r.revision, float((f.days[0] - r.now.date()).days), usd))
+                           r.revision, float((f.days[0] - r.now.date()).days), usd, applied))
     return out
 
 
@@ -475,8 +558,8 @@ DETECTORS = (detect_source_conflicts, detect_phantom_receipts, detect_invoice_an
              detect_items_without_recipe, detect_count_variance, detect_untrusted_instructions)
 
 
-def run_all(records: Records) -> list[Finding]:
-    ctx = build_ctx(records)
+def run_all(records: Records, params: Params | None = None) -> list[Finding]:
+    ctx = build_ctx(records, params)
     findings: list[Finding] = []
     for det in DETECTORS:
         findings.extend(det(ctx))

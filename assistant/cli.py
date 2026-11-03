@@ -18,7 +18,7 @@ COMMANDS = {
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
-PLANNED_IN_BLOCK = {"order": 5, "ask": 8}
+PLANNED_IN_BLOCK = {"ask": 8}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,6 +39,13 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt.")
         if name == "memory":
             sp.add_argument("--all", action="store_true", help="Include superseded and conflicted beliefs.")
+        if name == "order":
+            sp.add_argument("--vendor", default="V1", help="Vendor id to order from (default V1, Alder Wholesale).")
+            sp.add_argument("--propose-only", action="store_true", help="Show the proposal and stop; no draft.")
+            sp.add_argument("--yes", action="store_true", help="Create the draft without the confirmation prompt.")
+            sp.add_argument("--resume", action="store_true", help="Settle earlier drafts (submit approved ones) and stop.")
+            sp.add_argument("--poll-seconds", type=float, default=2.0, help="How often to check for approval.")
+            sp.add_argument("--timeout", type=float, default=600.0, help="How long to wait for approval, seconds.")
     return parser
 
 
@@ -98,6 +105,9 @@ def main(argv: list[str] | None = None) -> int:
         return onboard.run_defaults(cfg) if args.defaults else onboard.run_interactive(cfg)
     if args.command == "memory":
         return cmd_memory(cfg, args)
+    if args.command == "order":
+        from .modes import order
+        return order.run(cfg, args.vendor, args.propose_only, args.yes, args.resume, args.poll_seconds, args.timeout)
     if args.command == "why":
         return cmd_why(cfg, args)
     block = PLANNED_IN_BLOCK[args.command]

@@ -68,7 +68,9 @@ MODE_SETS = {
     "brief": ("READ", "ANALYSIS"),
     "onboard": ("READ", "ANALYSIS", "MEMORY"),
     "ask": ("READ", "ANALYSIS", "MEMORY"),
-    "order": ("READ", "ANALYSIS", "MEMORY", "ORDER"),
+    # Order mode: the model explains a proposal; the state machine in orderflow.py is driven by the operator,
+    # so the model gets no order tools and no memory tool. The ORDER set stays empty on purpose.
+    "order": ("READ", "ANALYSIS"),
 }
 
 
@@ -412,4 +414,5 @@ def record_belief(ctx, kind, subject, statement, value_json):
     return out
 
 
-# ORDER tools arrive in block 5. The allowlist entry exists so the mode table is complete.
+# There are deliberately no ORDER tools: see MODE_SETS. Drafting, approval, submission and verification
+# happen in assistant/orderflow.py under the operator's keyboard, never under the model's.

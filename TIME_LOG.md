@@ -7,5 +7,6 @@ Adjust the estimates marked `~` to what actually happened.
 |---|---|---|---|---|---|
 | 2026-11-02 | Read packet, design discussion, write BUILD_PLAN.md | ~17:00 | ~22:00 | ~? | session 1; fill in real hours |
 | 2026-11-03 | Block 0: git init, venv, package skeleton, config, CLI, logs | 00:10 | 00:25 | 0.25 | session 1 continued |
+| 2026-11-03 | Block 1: API client, typed records, simulator fixture, 21 tests | ~09:18 | 09:35 | ~0.3 | session 1 continued next morning |
 
-Running total: fill in at each commit.
+Running total: ~0.55 h of build time plus session 1 design time (fill in).

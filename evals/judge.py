@@ -188,7 +188,8 @@ def fake_judge_call(kwargs: dict):
         cid, text = line[2:].split(":", 1)
         needles = [w.strip("()'\".,").lower() for w in text.split() if w.isupper() or w.startswith('"')]
         needles = [n.strip('"') for n in needles if len(n) > 2]
-        ok = all(n in transcript for n in needles) if needles else True
+        negative = any(k in text.lower() for k in (" not ", " no ", "never", "does not", "do not"))
+        ok = (not any(n in transcript for n in needles)) if negative else (all(n in transcript for n in needles) if needles else True)
         crit.append({"id": cid.strip(), "pass": ok, "evidence": "fake judge: keyword check", "note": f"needles={needles}"})
     body = json.dumps({"criteria": crit, "overall_note": "fake judge"})
     return NS(content=[NS(type="text", text=body)], stop_reason="end_turn",

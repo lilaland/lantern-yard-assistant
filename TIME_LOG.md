@@ -12,5 +12,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 3: belief ledger, policies, onboard --defaults, memory/why, recheck footer, 16 tests | 16:15 | 16:28 | ~0.2 | session 1 continued, afternoon |
 | 2026-11-03 | Block 4: tools + allowlists, model loop, brief prompt, narrated brief, 12 tests | 16:59 | 17:08 | ~0.15 | no API key present, so the live narrated brief is not yet exercised; fallback path verified |
 | 2026-11-03 | Block 5: order sizing + rationale, state machine, order CLI, 9 tests incl. lost response and restart | 17:35 | 17:42 | ~0.1 | end-to-end draft -> approve -> submit -> verify runs in the test suite against the real simulator |
+| 2026-11-03 | Block 6: demo/demo.sh smoke path, DEMO_SCRIPT.md, STATUS.md, transcript export + renderer, REJECTED.md | 20:35 | 20:42 | ~0.1 | demo.sh ran end to end (exit 0) with the lost-response path |
 
-Running total: ~1.25 h of build time plus session 1 design time (fill in).
+Running total: ~1.35 h of build time (blocks 0–6, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

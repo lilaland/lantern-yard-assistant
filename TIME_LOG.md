@@ -28,6 +28,6 @@ Adjust the estimates marked `~` to what actually happened.
 
 | 2026-11-03 | Client experience (additional): Marbly page with onboarding cards, recheck, alerts inbox, client memory, order wizard, settings; dev chat mode switch; alerts page relayout; 2 endpoint tests | 22:16 | 22:25 | ~0.15 | clicked through in dry mode; no live key run yet |
 
-| 2026-11-03 | Live client pass (additional): full Marbly flow in the browser with the model; two fixes (recheck kind, null bubble) | 22:27 | 22:34 | ~0.1 | $0.1720 model spend |
+| 2026-11-03 | Live client pass (additional): full Marbly flow in the browser with the model; two fixes (recheck kind, null bubble) | 22:27 | 22:32 | ~0.1 | $0.1720 model spend |
 
 Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.25 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

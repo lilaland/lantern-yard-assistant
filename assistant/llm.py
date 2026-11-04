@@ -73,6 +73,7 @@ class ToolCall:
     args: dict
     ok: bool
     summary: str
+    result: Any = None
 
 
 @dataclass
@@ -152,7 +153,7 @@ def run(cfg: Config, mode: str, user_content: str | list, ctx: tools.ToolContext
             "max_tokens": MAX_TOKENS,
             "system": system_blocks(mode),
             "tools": defs,
-            "messages": messages,
+            "messages": list(messages),  # a snapshot: the loop keeps appending to its own list
             "output_config": {"effort": effort or cfg.effort, **({"format": output_format} if output_format else {})},
         })
         usage.add(getattr(msg, "usage", None))
@@ -176,7 +177,7 @@ def run(cfg: Config, mode: str, user_content: str | list, ctx: tools.ToolContext
                     raise tools.ToolError(f"{name} is not available in {mode} mode")
                 out = tools.execute(ctx, name, args)
                 results.append({"type": "tool_result", "tool_use_id": u["id"], "content": json.dumps(out)})
-                calls.append(ToolCall(name, args, True, _summ(out)))
+                calls.append(ToolCall(name, args, True, _summ(out), out))
             except tools.ToolError as e:
                 results.append({"type": "tool_result", "tool_use_id": u["id"], "content": f"error: {e}", "is_error": True})
                 calls.append(ToolCall(name, args, False, str(e)))

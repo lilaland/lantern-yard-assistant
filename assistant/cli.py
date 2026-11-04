@@ -18,7 +18,7 @@ COMMANDS = {
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
-PLANNED_IN_BLOCK = {"ask": 8}
+PLANNED_IN_BLOCK: dict[str, int] = {}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +37,9 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--again", action="store_true", help="Ask every question again, not only new ones.")
         if name == "why":
             sp.add_argument("subject")
+        if name == "ask":
+            sp.add_argument("--once", help="Handle one line (a question or a command) and exit.")
+            sp.add_argument("--fresh", action="store_true", help="Do not load the earlier conversation.")
         if name == "reset":
             sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt.")
         if name == "memory":
@@ -107,11 +110,14 @@ def main(argv: list[str] | None = None) -> int:
         return onboard.run_defaults(cfg) if args.defaults else onboard.run_interactive(cfg, args.answers, args.again)
     if args.command == "memory":
         return cmd_memory(cfg, args)
+    if args.command == "ask":
+        from .modes import ask
+        return ask.run(cfg, once=args.once, resume=not args.fresh)
     if args.command == "order":
         from .modes import order
         return order.run(cfg, args.vendor, args.propose_only, args.yes, args.resume, args.poll_seconds, args.timeout)
     if args.command == "why":
         return cmd_why(cfg, args)
-    block = PLANNED_IN_BLOCK[args.command]
-    print(f"{args.command}: not implemented yet (BUILD_PLAN.md block {block})", file=sys.stderr)
+    block = PLANNED_IN_BLOCK.get(args.command)
+    print(f"{args.command}: not implemented" + (f" yet (BUILD_PLAN.md block {block})" if block else ""), file=sys.stderr)
     return 2

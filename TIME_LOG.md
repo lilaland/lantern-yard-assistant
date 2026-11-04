@@ -14,5 +14,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 5: order sizing + rationale, state machine, order CLI, 9 tests incl. lost response and restart | 17:35 | 17:42 | ~0.1 | end-to-end draft -> approve -> submit -> verify runs in the test suite against the real simulator |
 | 2026-11-03 | Block 6: demo/demo.sh smoke path, DEMO_SCRIPT.md, STATUS.md, transcript export + renderer, REJECTED.md | 20:35 | 20:42 | ~0.1 | demo.sh ran end to end (exit 0) with the lost-response path |
 | 2026-11-03 | Block 7: interactive onboarding (six questions, unknown answers, idempotent re-run, --answers), 9 tests | 20:43 | 20:48 | ~0.1 | model wording of questions not exercised live (no key) |
+| 2026-11-03 | Block 8: ask REPL (deterministic commands + model path, persisted exchanges), 6 tests | 20:49 | 20:54 | ~0.1 | live model conversation not exercised (no key) |
 
-Running total: ~1.45 h of build time (blocks 0–7, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.55 h of build time (blocks 0–8, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

@@ -1,4 +1,5 @@
 """The tool loop, driven by a fake API: result handling, allowlists, limits, logging, cost."""
+import copy
 import json
 from types import SimpleNamespace as NS
 
@@ -48,7 +49,7 @@ class Script:
         self.responses, self.requests = list(responses), []
 
     def __call__(self, kwargs):
-        self.requests.append(kwargs)
+        self.requests.append(copy.deepcopy(kwargs))
         return self.responses.pop(0) if len(self.responses) > 1 else self.responses[0]
 
 

@@ -137,7 +137,27 @@ CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS exchanges (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    messages_json TEXT NOT NULL,
+    revision INTEGER
+);
 """
+
+
+@dataclass(frozen=True)
+class Exchange:
+    seq: int
+    created_at: str
+    mode: str
+    question: str
+    answer: str
+    messages: list
+    revision: int | None
 
 
 class Ledger:
@@ -334,3 +354,24 @@ class Ledger:
 
     def pending_drafts(self) -> list[Draft]:
         return self.drafts(PENDING_DRAFT_STATUSES)
+
+    # ----- conversation ----------------------------------------------------------
+
+    def save_exchange(self, mode: str, question: str, answer: str, messages: list, revision: int | None) -> Exchange:
+        """One question and everything up to its final answer, kept whole so history never splits a tool turn."""
+        self.db.execute("INSERT INTO exchanges (created_at, mode, question, answer, messages_json, revision) "
+                        "VALUES (?,?,?,?,?,?)", (_now(), mode, question, answer, dumps(messages), revision))
+        self.db.commit()
+        seq = self.db.execute("SELECT MAX(seq) FROM exchanges").fetchone()[0]
+        return self.exchanges(mode, last=1)[-1] if seq else None
+
+    def exchanges(self, mode: str, last: int | None = None) -> list[Exchange]:
+        rows = self.db.execute("SELECT * FROM exchanges WHERE mode=? ORDER BY seq", (mode,)).fetchall()
+        out = [Exchange(r["seq"], r["created_at"], r["mode"], r["question"], r["answer"], json.loads(r["messages_json"]),
+                        r["revision"]) for r in rows]
+        return out[-last:] if last else out
+
+    def clear_exchanges(self, mode: str) -> int:
+        n = self.db.execute("DELETE FROM exchanges WHERE mode=?", (mode,)).rowcount
+        self.db.commit()
+        return n

@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 10 (2026-11-03 evening). This is the honest state of the submission; the
+Updated after block 11 (2026-11-03 evening). This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -28,11 +28,14 @@ README's "unfinished work" section is written from it.
   brief, order explanation or model-worded onboarding question has been produced yet. Measured
   cost is therefore zero so far.
 
+Submission documents: `ARCHITECTURE.md` (one Mermaid diagram, decisions, the retained-versus-rechecked
+table, limits; about two pages), the README's "Submission" section (setup, demo commands, credentials,
+model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `transcripts/`.
+
 ## Unfinished (planned for the second session)
 
 | Block | Item | Why it matters |
 |---|---|---|
-| 11 | `ARCHITECTURE.md` (≤ 2 pages, diagram), README submission section, transcripts export and index, cost total | Required deliverables |
 | 12 | Two dress rehearsals of `demo/DEMO_SCRIPT.md` | |
 
 ## Known limitations in what exists

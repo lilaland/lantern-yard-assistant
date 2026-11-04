@@ -17,5 +17,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 8: ask REPL (deterministic commands + model path, persisted exchanges), 6 tests | 20:49 | 20:54 | ~0.1 | live model conversation not exercised (no key) |
 | 2026-11-03 | Block 9: "what changed" block (headline, cleared, new notes, corrected records, conflicts), order warning for inbound inside the window, 4 tests | 20:55 | 20:57 | ~0.05 | |
 | 2026-11-03 | Block 10: test_injection.py (7), test_scope.py (7), VERIFICATION.md | 20:59 | 21:03 | ~0.07 | 116 tests |
+| 2026-11-03 | Block 11: ARCHITECTURE.md (diagram, decisions, retained vs rechecked, limits), README submission section | 21:02 | 21:05 | ~0.05 | |
 
-Running total: ~1.7 h of build time (blocks 0–10, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.75 h of build time (blocks 0–11, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

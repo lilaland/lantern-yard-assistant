@@ -1,11 +1,12 @@
 # Time log
 
 The brief asks for actual time spent. This is the honest record, including AI-assisted work.
-Adjust the estimates marked `~` to what actually happened.
+Rows marked `~` were logged from the clock at the start and end of each block; the transcript-derived
+table at the bottom is the cross-check (message timestamps, gaps over 20 minutes excluded).
 
 | Date | Activity | Start | End | Hours | Notes |
 |---|---|---|---|---|---|
-| 2026-11-02 | Read packet, design discussion, write BUILD_PLAN.md | ~17:00 | ~22:00 | ~? | session 1; fill in real hours |
+| 2026-11-02 | Read packet, design discussion, write BUILD_PLAN.md | 17:03 | 21:53 | 0.6 + reading | transcript-active time 0.62 h (17:03–17:12 and 21:25–21:53); the candidate's reading and thinking between prompts is not in the transcript and is theirs to add |
 | 2026-11-03 | Block 0: git init, venv, package skeleton, config, CLI, logs | 00:10 | 00:25 | 0.25 | session 1 continued |
 | 2026-11-03 | Block 1: API client, typed records, simulator fixture, 21 tests | ~09:18 | 09:35 | ~0.3 | session 1 continued next morning |
 | 2026-11-03 | Block 2: analysis, detectors, renderer, dry brief, 21 tests | ~09:36 | 09:47 | ~0.2 | session 1 continued |
@@ -35,3 +36,19 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Live tuning of the client sample flows (additional): two live scenario runs, grader history fix, word budgets, model label | 22:56 | 23:03 | ~0.1 | $0.58 model spend |
 
 Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.65 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+
+## Transcript-derived active time (cross-check)
+
+From the Claude Code export's message timestamps, local time, gaps longer than 20 minutes excluded:
+
+| Day | Active spans | Hours |
+|---|---|---|
+| 2026-11-02 | 17:03–17:12, 21:25–21:53 | 0.62 |
+| 2026-11-03 | 00:13–00:16, 09:29–09:47, 16:15–16:28, 16:58–17:07, 17:33–17:42, 20:35–23:03 | 3.33 |
+| 2026-11-04 | 08:42– (this overview and the push) | logged below |
+| Total | | 3.95 + Nov 4 |
+
+The per-block rows above sum to about 1.85 h for blocks 0–12 plus 1.65 h for the frontend, evaluators,
+live tuning and client experience, which agrees with the Nov 3 transcript figure. What the transcript
+cannot see: the candidate reading the packet and the plan, rehearsing, and the live testing done by hand
+in the UI. Those hours are the candidate's to add before submission.

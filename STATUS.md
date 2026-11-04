@@ -19,7 +19,7 @@ README's "unfinished work" section is written from it.
 | Interactive onboarding: six questions from findings, options/defaults/ledger effects fixed in code, "unknown" keeps facts at evidence level, idempotent re-run, `--answers` for scripts | `assistant/onboarding.py`, `modes/onboard.py` | `tests/test_onboarding.py` incl. a CLI run followed by a brief |
 | `ask` REPL: deterministic commands (`why`, `memory`, `findings`, `set`) without a model; model answers with READ/ANALYSIS/MEMORY tools; conversation persisted per exchange and resumed across restarts | `assistant/modes/ask.py`, `prompts/ask.md` | `tests/test_ask.py` (fake model; CLI run changes the next order proposal) |
 | CLI: `onboard [--defaults|--answers|--again]`, `brief`, `ask [--once|--fresh]`, `order`, `why`, `memory`, `reset` | `assistant/cli.py` | subprocess tests above; `demo/demo.sh` |
-| Named safety tests: injection (SUP-V1-01 flagged, evidence-only text, no tool can submit, a disobedient model changes nothing, documents cannot write policies, server-enforced approval, no invented reference) and scope (client and fixture refuse SITE-02, no tool takes a site, no CSV or fixture-state access, agent token only) | `tests/test_injection.py`, `tests/test_scope.py` | `VERIFICATION.md` is the written record (117 tests) |
+| Named safety tests: injection (SUP-V1-01 flagged, evidence-only text, no tool can submit, a disobedient model changes nothing, documents cannot write policies, server-enforced approval, no invented reference) and scope (client and fixture refuse SITE-02, no tool takes a site, no CSV or fixture-state access, agent token only) | `tests/test_injection.py`, `tests/test_scope.py` | `VERIFICATION.md` is the written record (159 tests) |
 
 ## Not yet verified
 

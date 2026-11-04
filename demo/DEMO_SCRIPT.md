@@ -36,7 +36,7 @@ interviewer sees who types what.
 
 ```bash
 source .venv/bin/activate              # `python -m assistant` below means this interpreter
-python -m pytest -q                    # 117 tests against a throwaway simulator
+python -m pytest -q                    # 159 tests against a throwaway simulator
 cp .env.example .env                   # add ANTHROPIC_API_KEY; without it, every command still works with --dry
 rm -rf .marble/live .state/live.sqlite # fresh state for this run
 ```

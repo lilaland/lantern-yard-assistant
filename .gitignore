@@ -6,3 +6,9 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 .claude/settings.local.json
+# live eval runs: keep the reports and turn records, not the per-scenario ledgers, usage logs and probes
+evals/live/*/*/state/
+evals/live/*/_probe/
+evals/live/*-fake/
+# private notes that are not part of the submission
+PRIVATE_REVIEW.md

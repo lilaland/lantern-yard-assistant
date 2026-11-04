@@ -9,8 +9,10 @@ request. Sessions that could not be exported are listed here as missing rather t
 
 | # | Date | Tool | Purpose | File | Status |
 |---|---|---|---|---|---|
-| 1 | 2026-11-02 → 2026-11-03 | Claude Code (desktop), model Fable 5.1 | Read the packet, map the planted data story, design discussion, BUILD_PLAN.md, blocks 0–6 (client, detectors, ledger, tools and model loop, order flow, demo) | `session-01-design-and-build.md` | exported 2026-11-03 20:39; 11 user turns, 39 assistant turns, 154 tool calls, one automatic context summary |
-| 2 | 2026-11-04 (planned) | Claude Code (desktop) | Blocks 7–12: interactive onboarding, ask REPL, correction narration, named injection/scope tests, ARCHITECTURE.md, README, rehearsals | `session-02-iterate.md` | not started |
+| 1 | 2026-11-02 → 2026-11-04 | Claude Code (desktop), model Fable 5.1 | Everything: packet read, design discussion, BUILD_PLAN.md, blocks 0–12, frontend and evaluators, agentic judge suite, three live tuning iterations, the Marbly client experience and its live pass, this overview | `session-01-design-and-build.md` | re-exported 2026-11-04 08:43; 32 user turns, 87 assistant turns, 412 tool calls, one automatic context summary |
+
+`SESSION_OVERVIEW.md` is the short version: timeline, the nine decisions and why, and every defect the
+AI introduced with how it was caught.
 
 Reading tips: search for `### [` to step through turns; `- **tool**` lines are the assistant's tool
 calls with the result on the next line; "context summary (automatic, after compaction)" marks where

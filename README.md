@@ -35,7 +35,7 @@ state and unfinished work: [`STATUS.md`](STATUS.md). AI transcripts: [`transcrip
 ```bash
 python3 -m venv .venv && .venv/bin/pip install anthropic pytest
 cp .env.example .env            # add ANTHROPIC_API_KEY for model narration; everything runs without it with --dry
-.venv/bin/python -m pytest -q   # 117 tests against a throwaway simulator
+.venv/bin/python -m pytest -q   # 159 tests against a throwaway simulator
 ```
 
 Python 3.10+ (built on 3.10.16, macOS). Dependencies: `anthropic` (model) and `pytest` (tests);

@@ -252,3 +252,17 @@ def test_planner_orders_vendors_by_cutoff_and_sees_drafts(records, ledger, flow,
     half = {k: v // 2 for k, v in covered.items()}  # part of it ordered: the rest is still proposed, with what was ordered on the line
     net = ordering.net_lines(ordering.plan_order(records, ledger, "V1"), half)
     assert net and all(n["cases"] == n["proposed"] - n["already_ordered"] and n["quantity"] == n["cases"] for n in net)
+    # the brief's "Orders to cover": by vendor, with days left and one suggested draft per vendor; after the accepted order Alder drops out
+    o = ordering.orders_block(records, ledger)
+    assert "V1" not in {v["vendor_id"] for v in o["vendors"]} and o["covered"][0]["vendor_name"] == "Alder Wholesale"
+    assert "already ordered from Alder Wholesale" in ordering.orders_text(o) and o["covered"][0]["accepted"][0]["order_id"].startswith("O-")
+    ledger.db.execute("DELETE FROM drafts"); ledger.db.commit()
+    o = ordering.orders_block(records, ledger)
+    ids = [v["vendor_id"] for v in o["vendors"]]
+    assert "V1" in ids and len(o["suggested"]) == len(ids) >= 2 and "one per vendor" in o["note"]
+    v1 = next(v for v in o["vendors"] if v["vendor_id"] == "V1")
+    chicken = next(l for l in v1["lines"] if l["sku"] == "AW-CHK20")
+    assert chicken["on_hand"] == 47.9 and chicken["count_unit"] == "lb" and chicken["days_left"] == 2.0 and chicken["runs_out"]
+    text = ordering.orders_text(o)
+    assert text.startswith("Orders to cover:") and "× AW-CHK20" in text and "runs out before delivery" in text
+    assert "Alder Wholesale:" in ordering.orders_summary(o) and "drafts suggested" in ordering.orders_summary(o)

@@ -272,7 +272,7 @@ def test_suggestions_follow_the_findings(site):
     s = get(base, "/api/suggestions?context=brief")[1]["suggestions"]
     assert s[0] == {"text": "Why aren't you counting INV-099 as on hand?", "kind": "ask", "vendor": None, "finding": "phantom_receipt:INV-099"}
     o = [x for x in s if x["kind"] in ("order", "planner")]
-    assert len(o) == 1 and o[0]["kind"] == "order" and o[0]["vendor"] in ("V1", "V2", "V3") and o[0]["text"].startswith("Plan the next ")
+    assert 1 <= len(o) <= 2 and all(x["kind"] == "order" and x["text"].startswith("Plan the next ") for x in o) and len({x["vendor"] for x in o}) == len(o)
     assert 3 <= len(s) <= 5 and any("Juniper" in x["text"] and "INV-010" in x["text"] for x in s)
     h = get(base, "/api/suggestions?context=home")[1]["suggestions"]
     assert h[0]["kind"] == "brief" and h[0]["text"] == "Give me this morning's brief" and len(h) <= 5
@@ -341,6 +341,10 @@ def test_client_wizard_and_sample_prompt_flows_in_api_order(sim, tmp_path):
         # chip: "Give me this morning's brief" -> /api/brief (SSE); dry mode returns the deterministic text and no "no changes" line
         ev = sse(base, "/api/brief", {})
         assert ev[0]["type"] == "start" and "What changed" not in ev[0]["deterministic"] and "No changes since" not in ev[0]["deterministic"]
+        # the orders to cover ride on their own field (the page draws a card), one suggested draft per vendor
+        done = next(e for e in ev if e["type"] == "done")
+        assert ev[0]["orders"]["vendors"] and done["orders"]["suggested"] and "Orders to cover" not in ev[0]["deterministic"]
+        assert all(l["days_left"] is not None and "on_hand" in l for v in ev[0]["orders"]["vendors"] for l in v["lines"])
         # chips that go to /api/chat (ask mode): without a model the page shows the explanation, nothing else happens
         for text in ("How many days of chicken do we have?", "Why do you think Alder delivers on Wednesday?", "use two days of buffer from now on"):
             ev = sse(base, "/api/chat", {"text": text, "mode": "ask"})

@@ -528,13 +528,27 @@
     refreshChips('ask', `${text} ${answer}`, text);  // what to ask next, from what this answer touched
   }
   const gateIntro = (out) => { if (!out.dataset.gi) { out.dataset.gi = '1'; out.append(el('p', { class: 'small muted' }, 'I would like to remember this. Approve, change the value, or reject:')); } };
+  // "Orders to cover" under the brief: every item still to order by vendor, days left, suggested cases, a draft button per vendor
+  function ordersCard(o) {
+    if (!o) return null;
+    const cls = (u) => u === 'overdue' || u === 'today' ? 'HIGH' : 'MED';
+    return el('div', { class: 'orders' }, el('h4', {}, `Orders to cover · ${o.note}`),
+      ...o.vendors.map(v => el('div', { class: `alertcard ${cls(v.urgency)}` },
+        el('div', { class: 'row' }, el('span', { class: `badge ${cls(v.urgency)}` }, urgencyLabel[v.urgency] || v.urgency), el('strong', {}, v.vendor_name),
+          el('span', { class: 'small muted' }, v.delivery_date ? `deliver ${v.delivery_date}, order by ${when(v.order_by)}${v.hours_to_cutoff !== null ? ' (' + (v.hours_to_cutoff < 0 ? 'cutoff passed' : Math.round(v.hours_to_cutoff) + ' h left') + ')' : ''}` : 'no delivery day known'),
+          el('span', { class: 'spacer' }), el('button', { onclick: () => openWizard(v.vendor_id) }, `Draft the ${v.short} order`)),
+        el('table', {}, el('thead', {}, el('tr', {}, ...['item', 'on hand', 'days left', 'order'].map(h => el('th', {}, h)))),
+          el('tbody', {}, ...v.lines.map(l => el('tr', {}, el('td', {}, l.ingredient), el('td', {}, `${l.on_hand} ${l.count_unit}`), el('td', { class: l.runs_out ? 'bad' : '' }, (l.days_left === null ? '—' : String(l.days_left)) + (l.runs_out ? ' · runs out before delivery' : '')), el('td', {}, el('strong', {}, `${l.quantity} × ${l.sku}`)))))),
+        el('p', { class: 'small muted' }, `${v.est_total_usd ? 'est. $' + Number(v.est_total_usd).toFixed(2) + (v.over_max ? ' (above your unflagged limit)' : '') : ''}${v.open_draft ? ' · open draft ' + v.open_draft.draft_id + ' is ' + v.open_draft.status.replace('_', ' ') : ''}`))),
+      ...o.covered.flatMap(c => c.accepted.map(a => el('p', { class: 'small muted' }, `Already ordered from ${c.vendor_name}: ${a.draft_id} → ${a.order_id} (${a.lines.map(l => l.quantity + ' × ' + l.sku).join(', ')}).`))));
+  }
   async function runBrief() {
     think(true);
     const out = say('…');
     let det = '';  // dry mode: the deterministic brief arrives on the start event, the done event has no text
     await stream('/api/brief', {}, (ev) => {
       if (ev.type === 'start') det = ev.deterministic || '';
-      if (ev.type === 'done') out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly · morning brief'), el('div', {}, linkify(ev.text || det || '', ev.citations || [])), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : '')));
+      if (ev.type === 'done') out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly · morning brief'), el('div', {}, linkify(ev.text || det || '', ev.citations || [])), ordersCard(ev.orders), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : '')));
       else if (ev.type === 'error') out.append(el('p', { class: 'small' }, ev.message));
       feed.scrollTop = feed.scrollHeight;
     });

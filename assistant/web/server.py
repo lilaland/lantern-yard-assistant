@@ -549,10 +549,10 @@ class App:
             t = self._follow_up(f, records)
             if all(s["text"] != t for s in out):
                 out.append({"text": t, "kind": "ask", "vendor": None, "finding": f.id})
-        nxt = next((v for v in plan if v["lines"] and v["urgency"] not in ("ordered", "nothing needed")), None)
-        if nxt:
-            out.append({"text": f"Plan the next {nxt['vendor_name'].split(',')[0].split()[0]} order", "kind": "order", "vendor": nxt["vendor_id"], "finding": None})
-        else:
+        needing = [v for v in plan if v["lines"] and v["urgency"] not in ("ordered", "nothing needed")]
+        for v in needing[:2 if context == "brief" else 1]:  # after the brief, every suggested draft (an order goes to one vendor)
+            out.append({"text": f"Plan the next {v['vendor_name'].split(',')[0].split()[0]} order", "kind": "order", "vendor": v["vendor_id"], "finding": None})
+        if not needing:
             out.append({"text": "What's next to order?", "kind": "planner", "vendor": None, "finding": None})
         return {"context": context, "suggestions": out[:5]}
 
@@ -878,20 +878,21 @@ class App:
             onboarded = led.meta("onboarded_at")
             footer = render.retained_block(report, led, onboarded)
             changes = render.changes_block(report, records)
+            orders = ordering.orders_block(records, led)  # the page draws this as its own card, so the text stays out of `deterministic`
             deterministic = render.brief_text(records, findings, burn, window, footer, changes)
             emit({"type": "start", "mode": "brief", "allowed": tools.allowed("brief"), "deterministic": deterministic,
-                  "footer": footer, "changes": changes, "revision": records.revision})
+                  "footer": footer, "changes": changes, "revision": records.revision, "orders": orders})
             if self.cfg.dry or not self.key_present():
-                emit({"type": "done", "text": None, "footer": footer, "note": "no model; deterministic brief shown"})
+                emit({"type": "done", "text": None, "footer": footer, "note": "no model; deterministic brief shown", "orders": orders})
                 return
             ctx = tools.ToolContext(records, led, "brief", params, findings)
             try:
-                result = llm.run(self.cfg, "brief", narration_request(records, findings, burn, window, onboarded, changes),
-                                 ctx, on_event=emit)
+                result = llm.run(self.cfg, "brief", narration_request(records, findings, burn, window, onboarded, changes,
+                                                                       ordering.orders_summary(orders)), ctx, on_event=emit)
             except llm.ModelUnavailable as e:
                 emit({"type": "error", "message": str(e)})
                 return
-            emit({"type": "done", "text": result.text, "footer": footer, "citations": render.citation_links(result.text or ""),
+            emit({"type": "done", "text": result.text, "footer": footer, "citations": render.citation_links(result.text or ""), "orders": orders,
                   "note": result.note, "usage": {**result.usage.__dict__, "usd": result.usage.usd(self.cfg.model)},
                   "tool_calls": [{"name": c.name, "ok": c.ok, "ms": c.ms, "summary": c.summary} for c in result.tool_calls]})
 

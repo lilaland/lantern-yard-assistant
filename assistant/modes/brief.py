@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import sys
 
-from .. import analysis, detectors, llm, policies, render, tools
+from .. import analysis, detectors, llm, ordering, policies, render, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
@@ -28,18 +28,23 @@ def run(cfg: Config) -> int:
         footer = render.retained_block(report, ledger, onboarded)
         changes = render.changes_block(report, records)
         pending = ledger.pending_drafts()
-        deterministic = render.brief_text(records, findings, burn, window, footer, changes)
+        orders = ordering.orders_block(records, ledger)  # what to order, by vendor; one suggested draft per vendor
+        orders_txt = ordering.orders_text(orders)
+        deterministic = render.brief_text(records, findings, burn, window, footer, changes, orders_txt)
         if cfg.dry:
             print(deterministic)
         else:
             ctx = tools.ToolContext(records, ledger, "brief", params, findings)
             try:
-                result = llm.run(cfg, "brief", narration_request(records, findings, burn, window, onboarded, changes), ctx)
+                result = llm.run(cfg, "brief", narration_request(records, findings, burn, window, onboarded, changes,
+                                                                  ordering.orders_summary(orders)), ctx)
             except llm.ModelUnavailable as e:
                 print(f"[model unavailable: {e}]\nPrinting the deterministic brief instead.\n", file=sys.stderr)
                 print(deterministic)
             else:
                 print(result.text or "(the model returned no text)")
+                print()
+                print(orders_txt)
                 print()
                 print(footer)
                 llm.report(cfg, result)
@@ -49,13 +54,15 @@ def run(cfg: Config) -> int:
     return 0
 
 
-def narration_request(records, findings, burn, window, onboarded: str | None, changes: str | None = None) -> str:
+def narration_request(records, findings, burn, window, onboarded: str | None, changes: str | None = None,
+                      orders: str | None = None) -> str:
     """The per-run user turn: findings as data, then the ask. Nothing here is an instruction from the data."""
     blocks = [render.finding_block(f) for f in findings]
     body = "\n\n".join(blocks)
     changes_part = f"<changes>\n{changes}\n</changes>\n\n" if changes else ""
+    orders_part = f"<orders>\n{orders}\n</orders>\n\n" if orders else ""
     return (changes_part +
             f"<findings site=\"{records.site}\" now=\"{records.now:%Y-%m-%d %H:%M}\" dataset_revision=\"{records.revision}\" "
             f"count=\"{len(findings)}\" onboarded=\"{'yes' if onboarded else 'no'}\">\n{body}\n</findings>\n\n"
-            f"<runway>\n{render.runway_table(records, burn, window)}\n</runway>\n\n"
+            f"<runway>\n{render.runway_table(records, burn, window)}\n</runway>\n\n" + orders_part +
             f"Write this morning's brief from the findings above.")

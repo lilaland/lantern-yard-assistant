@@ -54,8 +54,8 @@ Every run fetches all twelve resources at one `dataset_revision`, parses them in
 carries citations (file, restaurant, row or note id, revision), uncertainties, a next step and its
 numbers. `policies.py` turns active beliefs into detector parameters before the run and afterwards
 re-records observations, rechecks evidence assertions and reports what moved. In live mode the
-deterministic text goes to the model as data with READ and ANALYSIS tools; the output is narration,
-and the retained/rechecked footer always comes from code. The web server exposes the same functions as
+deterministic text goes to the model as data with READ and ANALYSIS tools; the output is narration; the "orders to cover" table (the planner's view, one suggested draft per vendor) and the
+retained/rechecked footer always come from code. The web server exposes the same functions as
 JSON, streams model turns over SSE, and holds a memory write until the browser answers the approval
 card. Marbly's four setup steps stay pinned until each is true in the ledger.
 

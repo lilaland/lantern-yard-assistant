@@ -148,4 +148,5 @@ tr.dropped td { opacity:.45; text-decoration: line-through; }
 .bubble.u .memo-row { text-align:right; }
 .bad { color: var(--bad); }
 .orders .alertcard { padding:8px 10px; margin:6px 0; } .orders .alertcard p { margin:3px 0; } .orders .row .spacer { flex:1; }
+.bubble .orders { margin-top:10px; white-space:normal; } .bubble .orders h4 { margin:0 0 4px; } .bubble .orders table { font-size:13px; }
 button[data-orderlink] { background:#fff; border:1px solid var(--line); color:var(--accent); } button[data-orderlink]::before { content:'↗ '; }

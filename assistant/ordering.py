@@ -356,8 +356,75 @@ def net_lines(p: Proposal, covered: dict[str, int]) -> list[dict]:
         left = l.cases - covered.get(l.sku, 0)
         if left > 0:
             out.append(l.api_line | {"quantity": left, "ingredient": l.ingredient, "cases": left, "proposed": l.cases,
-                                     "already_ordered": covered.get(l.sku, 0)})
+                                     "already_ordered": covered.get(l.sku, 0), "on_hand": l.on_hand, "count_unit": l.pack_unit,
+                                     "days_left": round(l.on_hand / l.burn_per_day, 1) if l.burn_per_day > 0 else None})
     return out
+
+
+def _q(v: float) -> str:
+    return f"{v:.1f}".rstrip("0").rstrip(".")
+
+
+def orders_block(records: Records, ledger: Ledger) -> dict:
+    """The brief's "Orders to cover": every item still to order, grouped by vendor with the next feasible delivery, the
+    cutoff and the suggested cases, from the planner (net of accepted orders). One draft is suggested per vendor,
+    because an order goes to one vendor: needs across two vendors take two orders, or something runs out."""
+    plan = planner(records, ledger)
+    vendors = []
+    for v in plan:
+        if not v["lines"] or v["urgency"] in ("ordered", "nothing needed"):
+            continue
+        runs_out = {r["ingredient"] for r in v["runs_out_before_delivery"]}
+        vendors.append({"vendor_id": v["vendor_id"], "vendor_name": v["vendor_name"], "short": v["vendor_name"].split(",")[0].split()[0],
+                        "urgency": v["urgency"], "delivery_date": str(v["delivery_date"]) if v["delivery_date"] else None,
+                        "order_by": v["order_by"].isoformat() if v["order_by"] else None, "hours_to_cutoff": v["hours_to_cutoff"],
+                        "est_total_usd": str(v["est_total_usd"]) if v["est_total_usd"] is not None else None, "over_max": v["over_max"],
+                        "lines": [l | {"runs_out": l["ingredient"] in runs_out} for l in v["lines"]],
+                        "open_draft": v["open_draft"], "warnings": v["warnings"]})
+    covered = [{"vendor_name": v["vendor_name"], "accepted": v["accepted"]} for v in plan if v["accepted"]]
+    n = len(vendors)
+    if n == 0:
+        note = "every need is covered by an accepted order." if covered else "stock covers the window; nothing to order."
+    elif n == 1:
+        note = f"1 draft suggested ({vendors[0]['short']})."
+    else:
+        note = (f"{n} drafts suggested, one per vendor ({', '.join(v['short'] for v in vendors)}): an order goes to one vendor, "
+                f"so needs across {n} vendors take {n} orders or something runs out.")
+    return {"vendors": vendors, "covered": covered, "note": note,
+            "suggested": [{"vendor_id": v["vendor_id"], "vendor_name": v["vendor_name"], "lines": len(v["lines"]),
+                           "est_total_usd": v["est_total_usd"], "order_by": v["order_by"], "delivery_date": v["delivery_date"]} for v in vendors]}
+
+
+def orders_text(o: dict) -> str:
+    """The same block as plain text for the CLI brief."""
+    out = [f"Orders to cover: {o['note']}"]
+    for v in o["vendors"]:
+        when = (f"deliver {v['delivery_date']}, order by {v['order_by'][:16].replace('T', ' ')}" if v["delivery_date"] else "no delivery day known")
+        h = v["hours_to_cutoff"]
+        hrs = "" if h is None else (f" ({h:.0f} h left)" if h >= 0 else " (cutoff passed)")
+        est = f", est. ${float(v['est_total_usd']):,.2f}" if v["est_total_usd"] else ""
+        out.append(f"  {v['vendor_name']} — {when}{hrs}{est}")
+        for l in v["lines"]:
+            days = f"{l['days_left']:.1f} days" if l["days_left"] is not None else "no use rate"
+            out.append(f"    {l['ingredient']:32s} {_q(l['on_hand']):>6s} {l['count_unit']:4s} {days:>10s}   {l['quantity']} × {l['sku']}"
+                       + ("   runs out before delivery" if l["runs_out"] else ""))
+        if v["open_draft"]:
+            out.append(f"    open draft {v['open_draft']['draft_id']} is {v['open_draft']['status'].replace('_', ' ')}")
+    for c in o["covered"]:
+        for a in c["accepted"]:
+            out.append(f"  already ordered from {c['vendor_name']}: {a['draft_id']} → {a['order_id']} "
+                       f"({', '.join(str(l['quantity']) + ' × ' + l['sku'] for l in a['lines'])})")
+    return "\n".join(out)
+
+
+def orders_summary(o: dict) -> str:
+    """One line per vendor for the model: what the table below its text will say, as data."""
+    lines = [o["note"]]
+    for v in o["vendors"]:
+        lines.append(f"{v['vendor_name']}: {len(v['lines'])} line(s), order by {v['order_by'][:16].replace('T', ' ') if v['order_by'] else 'n/a'} "
+                     f"for delivery {v['delivery_date'] or 'n/a'}" + (f", est. ${float(v['est_total_usd']):,.2f}" if v["est_total_usd"] else "")
+                     + ("; runs out before delivery: " + ", ".join(l["ingredient"] for l in v["lines"] if l["runs_out"]) if any(l["runs_out"] for l in v["lines"]) else ""))
+    return "\n".join(lines)
 
 
 def planner(records: Records, ledger: Ledger) -> list[dict]:

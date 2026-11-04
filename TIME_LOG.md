@@ -55,7 +55,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Pre-demo pass: STATUS, README, VERIFICATION and ARCHITECTURE brought to the current truth (live runs and spend, time, unfinished list); `demo/CHECKLIST.md` | 11:31 | 11:34 | ~0.05 | no model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~3.23 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | The brief closes with "Orders to cover": items still to order by vendor with delivery, cutoff, days left and cases; one suggested draft per vendor (CLI text, web card with draft buttons, model told to point at it); brief chips offer every suggested draft | 11:43 | 11:50 | ~0.12 | no model spend |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~3.35 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

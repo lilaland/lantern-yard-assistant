@@ -66,7 +66,7 @@ def runway_table(records: Records, burn: dict[str, float], window: tuple) -> str
 
 
 def brief_text(records: Records, findings: list[Finding], burn: dict[str, float], window: tuple,
-               retained_block: str | None = None, changes_block: str | None = None) -> str:
+               retained_block: str | None = None, changes_block: str | None = None, orders_block: str | None = None) -> str:
     head = (f"Lantern Yard Kitchen ({records.site}) — morning brief\n"
             f"now {records.now:%Y-%m-%d %H:%M} · dataset revision {records.revision} · "
             f"{len(findings)} findings")
@@ -85,6 +85,9 @@ def brief_text(records: Records, findings: list[Finding], burn: dict[str, float]
     parts.append("Stock runway (daily-service ingredients and others):")
     parts.append(runway_table(records, burn, window))
     parts.append("")
+    if orders_block:
+        parts.append(orders_block)
+        parts.append("")
     parts.append(retained_block or f"Rechecked from the API this run: every resource at dataset revision "
                                    f"{records.revision}. Retained beliefs: ledger not wired yet.")
     return "\n".join(parts)

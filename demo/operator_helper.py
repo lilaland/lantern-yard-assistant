@@ -69,7 +69,7 @@ class Supplier:
 
     def stop(self) -> None:
         if self.proc and self.proc.poll() is None:
-            self.proc.send_signal(signal.SIGINT)
+            self.proc.terminate()  # SIGTERM: a background job's child ignores SIGINT; the simulator commits per request, so this is safe
             try:
                 self.proc.wait(timeout=5)
             except subprocess.TimeoutExpired:

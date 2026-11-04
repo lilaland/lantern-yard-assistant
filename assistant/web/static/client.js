@@ -2,6 +2,7 @@
 (() => {
   const L = window.LY; const { api, stream, el, linkify, openEvidence, toast, usd } = L;
   const main = document.getElementById('main');
+  const kids = (...xs) => xs.flat().filter(x => x !== null && x !== undefined);
   let intro = null, feed = null, chips = null, bell = null, inboxOpen = null, pending = null;
 
   const say = (text, who = 'Marbly', node = null) => { const b = el('div', { class: `bubble ${who === 'Marbly' ? 'm' : 'u'}` }, el('div', { class: 'who' }, who), node || text); feed.append(b); b.scrollIntoView({ block: 'start', behavior: 'smooth' }); return b; };
@@ -151,7 +152,7 @@
     await api('/api/onboarding/complete', { method: 'POST' });
     L.refreshStatus();
     const t = typing();
-    await api('/api/brief/dry');  // the recheck: findings against what you told me
+    await api('/api/brief/dry?kind=onboarding');  // the recheck: findings against what you told me
     const a = await api('/api/alerts');
     t.remove();
     const crit = a.alerts.filter(x => x.severity === 'HIGH');
@@ -177,7 +178,7 @@
     const gates = el('div', {}); out.append(gates);
     await stream('/api/chat', { text, mode: 'ask' }, (ev) => {
       if (ev.type === 'gate') { gateIntro(out); L.gateCard(ev, gates); }
-      else if (ev.type === 'done') { out.replaceChildren(el('div', { class: 'who' }, 'Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookups · ${usd(ev.usage.usd)}` : '')); }
+      else if (ev.type === 'done') { out.replaceChildren(...kids(el('div', { class: 'who' }, 'Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookups · ${usd(ev.usage.usd)}` : ''))); }
       else if (ev.type === 'error') out.replaceChildren(el('div', { class: 'who' }, 'Marbly'), el('div', {}, `I can't reach my model right now (${ev.message}). You can still use the inbox, memory and the order steps.`));
       feed.scrollTop = feed.scrollHeight;
     });
@@ -188,7 +189,7 @@
     pending = true;
     const out = say('…');
     await stream('/api/brief', {}, (ev) => {
-      if (ev.type === 'done') out.replaceChildren(el('div', { class: 'who' }, 'Marbly · morning brief'), el('div', {}, linkify(ev.text || ev.deterministic || '', ev.citations)), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : ''));
+      if (ev.type === 'done') out.replaceChildren(...kids(el('div', { class: 'who' }, 'Marbly · morning brief'), el('div', {}, linkify(ev.text || ev.deterministic || '', ev.citations)), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : '')));
       else if (ev.type === 'start' && !ev.deterministic) out.replaceChildren(el('div', { class: 'who' }, 'Marbly'), '…');
       else if (ev.type === 'error') out.append(el('p', { class: 'small' }, ev.message));
       feed.scrollTop = feed.scrollHeight;

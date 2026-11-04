@@ -95,3 +95,14 @@ def test_cli_brief_before_and_after_the_correction(sim, tmp_path):
     assert lines[3].startswith("What changed since the last brief") and "revision 1 -> 2" in lines[3]
     assert "New note N16" in second and second.index("What changed") < second.index("[HIGH] INV-010")
     assert "No changes since the last brief" in third.splitlines()[3]
+
+
+def test_first_brief_after_onboarding_does_not_say_no_changes(client, ledger):
+    records = load_all(client)
+    params = policies.detector_params(ledger)
+    findings = detectors.run_all(records, params)
+    policies.recheck(ledger, records, findings, kind="onboarding")
+    r = policies.recheck(ledger, records, findings)
+    assert r.previous_run_kind == "onboarding" and render.changes_block(r, records) is None
+    r2 = policies.recheck(ledger, records, findings)
+    assert r2.previous_run_kind == "brief" and render.changes_block(r2, records).startswith("No changes since the last brief")

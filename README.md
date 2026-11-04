@@ -72,7 +72,7 @@ Operator steps during the demo, in terminal A with the same `--state`:
 python -m assistant web            # http://127.0.0.1:8780 ; needs the simulator; --dry disables model turns
 ```
 
-The default page is **Marbly**, the client experience: a chat that opens with onboarding (each
+The default page is **Marbly**, the client experience (driven live end to end on 2026-11-03 for $0.1720 with Sonnet 5.5): a chat that opens with onboarding (each
 question is a card whose options and ledger effects are fixed in code; the model may only word the
 lead-in), then rechecks the findings against the answers, raises the critical alerts, introduces the
 alerts inbox (bell) and Memory (book), and offers the three capabilities with sample prompts. The
@@ -142,7 +142,7 @@ Default model `claude-opus-5-5` ($4 / $20 per million input / output tokens), ov
 UI's Memory page print the totals. Measured on 2026-11-03 through the agentic eval suite: a narrated
 brief costs about $0.04, an `ask` turn about $0.016, an order explanation about $0.04, a Sonnet judge
 verdict about $0.02; one full suite iteration of eight scenarios about $0.60. Spend across three live
-iterations and their calibration: $1.68 (78 calls). The deterministic path (`--dry`) is what every test
+iterations, their calibration and one full client-flow pass: $1.8508 (84 calls). The deterministic path (`--dry`) is what every test
 and the smoke demo exercise.
 
 ## Actual time spent

@@ -198,12 +198,16 @@ def changes_block(report, records: Records) -> str | None:
     """Manager-facing 'what changed since the last brief'. None on the first run."""
     if report.first_run:
         return None
+    after_onboarding = report.previous_run_kind == "onboarding"
+    if after_onboarding and not report.anything_changed:
+        return None  # the first brief after onboarding reads like a first brief
     when = f" at {report.previous_run_wall[11:16]} on {report.previous_run_wall[:10]}" if report.previous_run_wall else ""
+    since = "since onboarding" if after_onboarding else f"since the last brief{when}"
     rev = (f"dataset revision {report.previous_revision} -> {report.revision}" if report.revision_changed
            else f"dataset revision {report.revision}")
     if not report.anything_changed:
-        return f"No changes since the last brief{when} ({rev}). Same findings, same beliefs."
-    lines = [f"What changed since the last brief{when} ({rev}):"]
+        return f"No changes {since} ({rev}). Same findings, same beliefs."
+    lines = [f"What changed {since} ({rev}):"]
     if report.headline_changed:
         o, n = report.previous_headline, report.headline
         lines.append(f"  - Headline: was [{SEVERITY_LABEL[o['severity']]}] {o['title']}; now [{SEVERITY_LABEL[n['severity']]}] {n['title']}.")

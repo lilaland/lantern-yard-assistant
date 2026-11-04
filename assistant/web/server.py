@@ -144,13 +144,13 @@ class App:
         with self.ledger() as led:
             return {"reports": json.loads(led.meta("last_recheck") or "[]")}
 
-    def dry_brief(self) -> dict:
-        """The deterministic brief, running the recheck exactly like the CLI does."""
+    def dry_brief(self, kind: str = "brief") -> dict:
+        """The deterministic brief, running the recheck exactly like the CLI does (``kind`` = brief | onboarding)."""
         records = self.records(fresh=True)
         with self.ledger() as led:
             params = policies.detector_params(led)
             findings = detectors.run_all(records, params)
-            report = policies.recheck(led, records, findings)
+            report = policies.recheck(led, records, findings, kind)
             burn, window = analysis.daily_burn(records, 7)
             footer = render.retained_block(report, led, led.meta("onboarded_at"))
             changes = render.changes_block(report, records)
@@ -773,7 +773,7 @@ def make_handler(app: App):
             if path == "/api/findings/diff":
                 return a.findings_diff()
             if path == "/api/brief/dry":
-                return a.dry_brief()
+                return a.dry_brief("onboarding" if q.get("kind") == "onboarding" else "brief")
             if path == "/api/beliefs":
                 return a.beliefs(q)
             if path == "/api/exchanges":

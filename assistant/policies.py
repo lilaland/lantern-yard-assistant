@@ -211,6 +211,7 @@ class RecheckReport:
     headline: dict | None = None
     new_notes: list = field(default_factory=list)  # UntrustedText not seen on the last run
     previous_run_wall: str | None = None          # wall-clock time of the last run
+    previous_run_kind: str | None = None          # "brief" or "onboarding"
 
     @property
     def revision_changed(self) -> bool:
@@ -231,14 +232,18 @@ def observation_value(f: Finding) -> dict:
     return {"severity": f.severity, "title": f.title, "numbers": f.numbers}
 
 
-def recheck(ledger: Ledger, records: Records, findings: list[Finding]) -> RecheckReport:
-    """Re-record detector observations, recheck evidence assertions, and report what moved."""
+def recheck(ledger: Ledger, records: Records, findings: list[Finding], kind: str = "brief") -> RecheckReport:
+    """Re-record detector observations, recheck evidence assertions, and report what moved.
+
+    ``kind`` names the run ("brief" or "onboarding") so the next brief can tell whether the previous
+    recheck was a brief a person read or the onboarding pass."""
     import json as _json
     from datetime import datetime as _dt
     rev = records.revision
     prev = ledger.meta("last_revision")
     report = RecheckReport(rev, int(prev) if prev else None, prev is None)
     report.previous_run_wall = ledger.meta("last_run_wall")
+    report.previous_run_kind = ledger.meta("last_run_kind")
     prev_head = ledger.meta("last_headline")
     report.previous_headline = _json.loads(prev_head) if prev_head else None
     if findings:
@@ -293,6 +298,7 @@ def recheck(ledger: Ledger, records: Records, findings: list[Finding]) -> Rechec
     ledger.set_meta("last_revision", str(rev))
     ledger.set_meta("last_run_at", records.now.isoformat())
     ledger.set_meta("last_run_wall", _dt.now().astimezone().isoformat(timespec="seconds"))
+    ledger.set_meta("last_run_kind", kind)
     ledger.set_meta("last_headline", _json.dumps(report.headline))
     ledger.set_meta("last_note_refs", _json.dumps([n.ref for n in records.notes]))
     history = _json.loads(ledger.meta("last_recheck") or "[]")

@@ -62,7 +62,9 @@ No live scenario, judge calibration or persona turn has run with a real model.
 | 22:04 | same, after prompt, ledger-note and rubric fixes | 6/8 OK; all deterministic checks pass; judge calibrated 4/4 | $0.60 (174 s) | Remaining: the eggs answer ran twelve sentences against a six-sentence rule (prompt tightened again); one rubric misread the "unknown" onboarding answer (reworded). |
 | 22:10 | same, after those two changes | 6/8 OK; judge calibrated 4/4 | $0.57 (163 s) | Both earlier failures cleared. New: the brief opened with "Defaults are not in force; you are onboarded" (the prompt only covered the not-onboarded case; fixed); the eggs answer rounded a tool's 2.1622 days to 2.2 (the tool now reports the brief's rounding); ten sentences against a six-sentence rule (rule moved to the end of the prompt as a hard limit); one judge call over-strict about a need figure (rubric clarified). Not yet re-run. |
 
-Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 78 calls and $1.68 at 22:13, every model call from the three runs including judge and persona.
+| 22:27 | Client experience, live, driven in the browser (`python -m assistant web`, Sonnet 5.5 per `.env`) | Full flow completed: model-worded onboarding lead-ins, six answers, recheck ("2 alerts need a decision today"), narrated brief with 8 citation links in 5 s, "use two days of buffer" → approval card in 3 s → recorded, delivery correction → brief opening with the change, N16 and "4 policies and 6 preferences were retained", order wizard: explanation in 8 s, draft, operator approval under `supplier-timeout`, outcome "accepted … verified by lookup" in 2 s, "Ask Marbly to confirm" answered from `fulfilment_status` | $0.1720 (6 calls) | Found and fixed: the first brief after onboarding said "No changes since the last brief" because the onboarding recheck counted as a brief (the recheck now records its kind); a literal "null" rendered in chat bubbles (`replaceChildren` with a null child). |
+
+Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 84 calls and $1.8508 at 22:34, every model call from the three runs including judge and persona.
 
 ## Smoke path
 
@@ -89,9 +91,9 @@ revision 1, `why`, delivery correction and brief at revision 2, order proposal, 
 
 ## Not verified
 
-- **Live use through the UI and CLI by a person.** The model paths have now run live only through
-  the agentic suite (two iterations, above); the narrated `brief` and `ask` commands and the web
-  chat have not yet been driven by a person. A fourth iteration, after the changes from the third, has not been run.
+- **The CLI's narrated `brief` and `ask` driven by a person.** The web client flow has been driven
+  live end to end (above); the CLI model paths share the same code but have not been exercised by
+  hand. A fourth suite iteration, after the changes from the third, has not been run.
 - **Two-terminal rehearsal by hand.** Two scripted rehearsals are recorded in `demo/REHEARSAL.md`;
   the runbook has not yet been rehearsed with a person typing in terminal A.
 - **Scale dataset.** Only the small dataset is exercised; the scale file was never loaded.

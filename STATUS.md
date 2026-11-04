@@ -50,9 +50,9 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 - The agentic suite has run live three times (3/8, 6/8, 6/8); the per-step cost table in `--list` is
   measured. Each run surfaced a different defect; the fixes from the third (onboarded sentence in the
   brief, tool-side rounding of runway days, hard length rule in `ask`) have not been re-run.
-- The client experience has been clicked through in dry mode (onboarding, recheck, inbox, memory,
-  wizard step 1); no person has yet driven it with a key, so the model-worded question lead-ins and
-  the approval card in Marbly's chat are unexercised live.
+- The client experience has been driven live end to end with Sonnet 5.5 ($0.1720 for the whole
+  flow): model-worded lead-ins, recheck, narrated brief, approval card, correction brief, order wizard
+  with the lost response. Two defects found there are fixed (see VERIFICATION.md).
 - The Memory page's usage table links each row to a run transcript by timestamp prefix; two calls in
   the same second could link to the wrong file.
 

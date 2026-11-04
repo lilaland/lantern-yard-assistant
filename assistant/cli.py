@@ -33,6 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
         sp = sub.add_parser(name, help=help_text)
         if name == "onboard":
             sp.add_argument("--defaults", action="store_true", help="Record default policies without asking.")
+            sp.add_argument("--answers", help="Non-interactive answers: JSON object or id=key,... (e.g. inbound=not_seen).")
+            sp.add_argument("--again", action="store_true", help="Ask every question again, not only new ones.")
         if name == "why":
             sp.add_argument("subject")
         if name == "reset":
@@ -102,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         return brief.run(cfg)
     if args.command == "onboard":
         from .modes import onboard
-        return onboard.run_defaults(cfg) if args.defaults else onboard.run_interactive(cfg)
+        return onboard.run_defaults(cfg) if args.defaults else onboard.run_interactive(cfg, args.answers, args.again)
     if args.command == "memory":
         return cmd_memory(cfg, args)
     if args.command == "order":

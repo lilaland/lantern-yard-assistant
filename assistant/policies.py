@@ -128,6 +128,10 @@ def detector_params(ledger: Ledger) -> Params:
     if b:
         kw["brunch_uplift"] = float(b.value["uplift"])
         applied["brunch_uplift"] = f"{b.subject}={b.value['uplift']} ({b.source})"
+    b = ledger.one("policy", "recipes.missing_item_rule")
+    if b:
+        kw["missing_recipe_rule"] = b.value["rule"]
+        applied["missing_recipe_rule"] = f"{b.subject}={b.value['rule']} ({b.source})"
     received, not_received = set(), set()
     for a in ledger.active("assertion"):
         m = re.fullmatch(r"invoice\.([A-Z0-9-]+)\.physically_received", a.subject)

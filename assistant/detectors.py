@@ -60,6 +60,7 @@ class Params:
     runway_threshold_days: float = 3.0
     brunch_uplift: float = 0.0
     delivery_days: dict = field(default_factory=dict)  # vendor_id -> tuple of weekday names
+    missing_recipe_rule: str = "unknown_and_flag"      # or "ignore": do not list items without a recipe
     applied: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -338,7 +339,8 @@ def detect_reference_table_stale(ctx: Ctx) -> list[Finding]:
         if parts:
             summary += f" Since then deliveries landed on other days: {'; '.join(parts)}."
         if notes:
-            summary += f" Note{'s' if len(notes) > 1 else ''} {', '.join(n.ref for n in notes)} mention a route change."
+            summary += (f" Note{'s' if len(notes) > 1 else ''} {', '.join(n.ref for n in notes)} "
+                        f"mention{'' if len(notes) > 1 else 's'} a route change.")
         override = ctx.params.delivery_days.get(v.vendor_id)
         applied = ctx.params.label(f"delivery_days:{v.vendor_id}")
         if override:
@@ -416,6 +418,8 @@ def detect_sku_substitution(ctx: Ctx) -> list[Finding]:
 def detect_items_without_recipe(ctx: Ctx) -> list[Finding]:
     r = ctx.records
     out = []
+    if ctx.params.missing_recipe_rule == "ignore":
+        return out  # the manager chose not to see these; usage still counts as unknown everywhere else
     for item, portions in ctx.usage.unknown_items.items():
         menu = next((m for m in r.menu if m.pos_item_id == item), None)
         name = menu.name if menu else item

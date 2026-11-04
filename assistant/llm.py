@@ -133,7 +133,9 @@ def _text_of(content: list) -> str:
 # ----- the loop --------------------------------------------------------------------------
 
 def run(cfg: Config, mode: str, user_content: str | list, ctx: tools.ToolContext, history: list | None = None,
-        call: Callable[[dict], Any] | None = None, max_rounds: int = 12, log: bool = True) -> Result:
+        call: Callable[[dict], Any] | None = None, max_rounds: int = 12, log: bool = True,
+        output_format: dict | None = None, effort: str | None = None) -> Result:
+    """Drive one conversation. ``output_format`` is an output_config.format object (structured output)."""
     call = call or api_call
     messages = list(history or []) + [{"role": "user", "content": user_content}]
     defs = tools.definitions(mode)
@@ -151,7 +153,7 @@ def run(cfg: Config, mode: str, user_content: str | list, ctx: tools.ToolContext
             "system": system_blocks(mode),
             "tools": defs,
             "messages": messages,
-            "output_config": {"effort": cfg.effort},
+            "output_config": {"effort": effort or cfg.effort, **({"format": output_format} if output_format else {})},
         })
         usage.add(getattr(msg, "usage", None))
         content = [_block_dict(b) for b in msg.content]

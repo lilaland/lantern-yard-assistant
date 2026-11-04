@@ -28,7 +28,8 @@ def ctx(records, tmp_path):
 def test_allowlists_by_mode():
     brief, ask, order = tools.allowed("brief"), tools.allowed("ask"), tools.allowed("order")
     assert "record_belief" not in brief and "record_belief" in ask
-    assert set(brief) == set(order) and set(brief) < set(ask)  # the model never gets order or memory tools in order mode
+    assert set(brief) == set(order) == set(tools.allowed("onboard")) and set(brief) < set(ask)
+    # only `ask` lets the model record a belief; onboarding and ordering record from the operator's typed answers
     assert not any(n.startswith(("create_draft", "submit", "propose")) for n in tools.REGISTRY)
     forbidden = {"approve", "scenario", "control", "state", "sqlite", "site"}
     for name in tools.REGISTRY:

@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 6 (2026-11-03 evening). This is the honest state of the submission; the
+Updated after block 7 (2026-11-03 evening). This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -15,19 +15,20 @@ README's "unfinished work" section is written from it.
 | Model tools with per-mode allowlists; evidence wrapping | `assistant/tools.py` | `tests/test_tools.py` |
 | Tool loop, usage/cost log, keyless fallback | `assistant/llm.py` | `tests/test_llm.py` (fake API) |
 | Order sizing with rationale; state machine; lost-response recovery | `assistant/ordering.py`, `orderflow.py`, `modes/order.py` | `tests/test_order_flow.py` against the real simulator |
-| CLI: `onboard --defaults`, `brief`, `order`, `why`, `memory`, `reset` | `assistant/cli.py` | subprocess tests above; `demo/demo.sh` |
+| Interactive onboarding: six questions from findings, options/defaults/ledger effects fixed in code, "unknown" keeps facts at evidence level, idempotent re-run, `--answers` for scripts | `assistant/onboarding.py`, `modes/onboard.py` | `tests/test_onboarding.py` incl. a CLI run followed by a brief |
+| CLI: `onboard [--defaults|--answers|--again]`, `brief`, `order`, `why`, `memory`, `reset` | `assistant/cli.py` | subprocess tests above; `demo/demo.sh` |
 
 ## Not yet verified
 
 - **A live model call.** No `ANTHROPIC_API_KEY` was available while building. The loop is tested
   against a fake API, and the installed SDK accepts every field the loop sends, but no narrated
-  brief has been produced yet. Measured cost is therefore zero so far.
+  brief, order explanation or model-worded onboarding question has been produced yet. Measured
+  cost is therefore zero so far.
 
 ## Unfinished (planned for the second session)
 
 | Block | Item | Why it matters |
 |---|---|---|
-| 7 | Interactive `onboard` (six questions from findings, `unknown — keep checking` answers, idempotent re-run) | The brief's "establish a baseline with the human" idea; today only `--defaults` exists |
 | 8 | `ask` REPL with `record_belief` from conversation; `why` inside it | Follow-up Q&A and "remember a preference" through natural language rather than a Python one-liner |
 | 9 | Brief diff before/after `delivery-correction`; sizing change narrated | The footer already shows cleared/superseded rows; the narrated comparison is not written |
 | 10 | `test_injection.py`, `test_scope.py`, `VERIFICATION.md` | Injection and scope are covered indirectly (detector test, tool allowlist test, client site pinning) but not as named tests with a written record |
@@ -46,4 +47,6 @@ README's "unfinished work" section is written from it.
   note would be a new detector finding, not an automatic assertion update.
 - `SITE_PROFILE.md` carries an informal annotation on its last line that is in git history; strip
   it before sharing if it should not be there.
+- Onboarding questions are generated from finding classes present now; a brand-new class would
+  need a new question builder (one function in `onboarding.py`).
 - Time log: session-1 design hours are still an estimate to fill in.

@@ -66,7 +66,8 @@ REGISTRY: dict[str, Tool] = {}
 SETS = ("READ", "ANALYSIS", "MEMORY", "ORDER")
 MODE_SETS = {
     "brief": ("READ", "ANALYSIS"),
-    "onboard": ("READ", "ANALYSIS", "MEMORY"),
+    # Onboard mode: the model words the questions; the operator's typed answers are recorded by code.
+    "onboard": ("READ", "ANALYSIS"),
     "ask": ("READ", "ANALYSIS", "MEMORY"),
     # Order mode: the model explains a proposal; the state machine in orderflow.py is driven by the operator,
     # so the model gets no order tools and no memory tool. The ORDER set stays empty on purpose.

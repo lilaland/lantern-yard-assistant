@@ -26,6 +26,6 @@ Adjust the estimates marked `~` to what actually happened.
 
 | 2026-11-03 | Live tuning (additional): four live suite runs, two API-limit fixes, prompt/ledger/tool/rubric fixes, measured costs | 21:52 | 22:15 | ~0.4 | $1.68 of model spend, all in .marble/costs.jsonl |
 
-| 2026-11-03 | Client experience (additional): Marbly page with onboarding cards, recheck, alerts inbox, client memory, order wizard, settings; dev chat mode switch; alerts page relayout; 2 endpoint tests | 22:16 | 22:38 | ~0.35 | clicked through in dry mode; no live key run yet |
+| 2026-11-03 | Client experience (additional): Marbly page with onboarding cards, recheck, alerts inbox, client memory, order wizard, settings; dev chat mode switch; alerts page relayout; 2 endpoint tests | 22:16 | 22:25 | ~0.15 | clicked through in dry mode; no live key run yet |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.35 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.15 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

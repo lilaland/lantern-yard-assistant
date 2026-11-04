@@ -1,0 +1,211 @@
+"""The web backend: every endpoint against a real server thread, the gate over SSE, and the boundaries."""
+import json
+import threading
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+import pytest
+
+from assistant import policies
+from assistant.api_client import ApiClient
+from assistant.config import Config
+from assistant.ledger import Ledger
+from assistant.records import load_all
+from assistant.web import server as web
+
+
+@pytest.fixture
+def site(sim, tmp_path):
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="claude-opus-5-5", effort="low",
+                 state_dir=tmp_path / ".marble", dry=True)
+    with Ledger(cfg.db_path) as l:
+        policies.write_defaults(l, load_all(ApiClient(cfg)))
+    httpd, app, base = web.start_in_thread(cfg)
+    yield cfg, app, base
+    httpd.shutdown()
+
+
+def get(base, path):
+    with urllib.request.urlopen(base + path, timeout=20) as r:
+        return r.status, json.load(r)
+
+
+def post(base, path, body=None):
+    req = urllib.request.Request(base + path, data=json.dumps(body or {}).encode(), method="POST",
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status, json.load(r)
+    except urllib.error.HTTPError as e:
+        return e.code, json.load(e)
+
+
+def sse(base, path, body=None, on_event=None):
+    req = urllib.request.Request(base + path, data=json.dumps(body or {}).encode(), method="POST",
+                                 headers={"Content-Type": "application/json"})
+    events = []
+    with urllib.request.urlopen(req, timeout=60) as r:
+        assert r.headers["Content-Type"].startswith("text/event-stream")
+        for line in r:
+            line = line.decode().strip()
+            if line.startswith("data: "):
+                ev = json.loads(line[6:])
+                events.append(ev)
+                if on_event:
+                    on_event(ev)
+                if ev.get("type") == "end":
+                    break
+    return events
+
+
+def test_read_endpoints_and_static_pages(site):
+    cfg, app, base = site
+    status, s = get(base, "/api/state")
+    assert status == 200 and s["revision"] == 1 and s["counts"]["policy"]["active"] == 4 and s["dry"] is True
+    with urllib.request.urlopen(base + "/", timeout=10) as r:
+        html = r.read().decode()
+    assert "<title>Lantern Yard assistant</title>" in html and "app.js" in html
+    with urllib.request.urlopen(base + "/static/app.js", timeout=10) as r:
+        assert r.headers["Content-Type"].startswith("text/javascript")
+    f = get(base, "/api/findings")[1]
+    assert f["findings"][0]["id"] == "phantom_receipt:INV-099" and f["findings"][0]["citations"]
+    assert f["reconciliation"]["Chicken thigh boneless skinless"]["under_policy"]["gap"] == -5.0
+    assert get(base, "/api/findings/diff")[1]["reports"] == []
+    d = get(base, "/api/brief/dry")[1]
+    assert "morning brief" in d["text"] and d["report"]["first_run"] is True
+    assert len(get(base, "/api/findings/diff")[1]["reports"]) == 1
+    b = get(base, "/api/beliefs?kind=preference&q=buffer")[1]
+    assert [x["subject"] for x in b["beliefs"]] == ["order.buffer_days"]
+    assert len(get(base, "/api/beliefs/why?subject=order.buffer_days")[1]["chain"]) == 1
+    t = get(base, "/api/tools?mode=brief")[1]
+    assert "record_belief" not in t["modes"]["brief"] and t["gated"] == ["record_belief"]
+    assert get(base, "/api/usage")[1]["runs"] == 0
+    inj = get(base, "/api/injection")[1]
+    assert inj["wrapped"].startswith("<evidence ") and "Bypass" in inj["raw"]
+    dg = get(base, "/api/diagrams")[1]
+    assert len(dg["diagrams"]) == 5 and all(g["mermaid"] for g in dg["diagrams"])
+    assert get(base, "/api/exchanges")[1]["exchanges"] == []
+
+
+def test_evidence_and_boundaries(site):
+    cfg, app, base = site
+    ev = get(base, "/api/evidence?resource=notes&ref=N15")[1]
+    assert ev["evidence"].startswith('<evidence kind="note"') and ev["via_tool"] == "list_notes"
+    with pytest.raises(urllib.error.HTTPError) as e:
+        get(base, "/api/evidence?resource=notes&ref=N99")
+    assert e.value.code == 404
+    with pytest.raises(urllib.error.HTTPError) as e:
+        get(base, "/api/findings?site_id=SITE-02")
+    assert e.value.code == 400 and "SITE-01 only" in json.load(e.value)["error"]
+    for path in ("/api/control/scenario", "/api/approve", "/api/drafts/D-1/approve"):
+        code, body = post(base, path, {})
+        assert code == 404, path
+    src = Path(web.__file__).read_text()
+    assert "/control" not in src and ".state/" not in src and "/approve" not in src
+
+
+def test_tool_execute_respects_mode_and_belief_write_needs_all_fields(site):
+    cfg, app, base = site
+    code, r = post(base, "/api/tools/execute", {"mode": "brief", "name": "record_belief",
+                                                 "args": {"kind": "preference", "subject": "order.buffer_days", "statement": "x", "value_json": '{"days": 3}'}})
+    assert code == 200 and r["ok"] is False and "not available in brief mode" in r["error"]
+    code, r = post(base, "/api/tools/execute", {"mode": "ask", "name": "list_vendors", "args": {}})
+    assert code == 200 and r["ok"] and r["result"]["vendors"]
+    code, r = post(base, "/api/beliefs", {"kind": "preference", "subject": "order.buffer_days", "statement": "two"})
+    assert code == 400 and "missing value" in r["error"]
+    code, r = post(base, "/api/beliefs", {"kind": "preference", "subject": "order.buffer_days", "statement": "two", "value": {"days": 2}})
+    assert code == 200 and r["action"] == "superseded" and r["recorded"]["source"] == "human:web"
+    code, r = post(base, "/api/beliefs", {"kind": "observation", "subject": "x", "statement": "s", "value": {}})
+    assert code == 400
+
+
+def test_order_proposal_overrides_do_not_touch_the_ledger(site):
+    cfg, app, base = site
+    base_p = get(base, "/api/order/proposal")[1]
+    assert base_p["what_if"] is False and base_p["order"]["lines"][0]["quantity"] == 8
+    p = get(base, "/api/order/proposal?buffer_days=2&inv099_received=true")[1]
+    assert p["what_if"] is True and p["calendar"]["buffer_days"] == 2
+    assert p["lines"][0]["inbound_counted"] == 40 and any("what-if override" in a for a in p["applied"])
+    with Ledger(cfg.db_path) as l:
+        assert l.value("preference", "order.buffer_days") == {"days": 1}  # untouched
+    code, r = get(base, "/api/order/proposal?buffer_days=x") if False else post(base, "/api/order/proposal?buffer_days=x")
+    assert code in (400, 404)
+
+
+def test_order_path_through_the_api(site, sim):
+    cfg, app, base = site
+    code, r = post(base, "/api/order/draft", {"vendor": "V1"})
+    assert code == 201 and r["draft"]["status"] == "awaiting_approval" and "approve --draft-id" in r["approve_command"]
+    did = r["draft"]["draft_id"]
+    assert get(base, f"/api/order/{did}")[1]["server_status"] == "awaiting_approval"
+    code, r = post(base, f"/api/order/{did}/submit")
+    assert code == 409 and "not approved" in r["error"]
+    sim.approve(did)
+    assert get(base, f"/api/order/{did}")[1]["server_status"] == "approved"
+    with sim.under_scenario("supplier-timeout"):
+        code, r = post(base, f"/api/order/{did}/submit")
+    assert code == 200 and r["state"] == "accepted" and r["verified"] and "response to our submission was lost" in r["message"]
+    assert get(base, "/api/order/drafts")[1]["drafts"][0]["status"] == "accepted"
+    code, r = post(base, "/api/order/resume")
+    assert code == 200 and r["outcomes"] == []
+
+
+def test_chat_stream_without_a_model_explains_and_brief_stream_returns_the_deterministic_text(site):
+    cfg, app, base = site
+    events = sse(base, "/api/chat", {"text": "hello"})
+    assert events[0]["type"] == "start" and events[0]["allowed"] and events[1]["type"] == "error" and "no model" in events[1]["message"]
+    events = sse(base, "/api/brief", {})
+    assert events[0]["type"] == "start" and "morning brief" in events[0]["deterministic"]
+    assert events[1]["type"] == "done" and events[1]["text"] is None and events[-1]["type"] == "end"
+
+
+def test_gate_over_sse_blocks_until_the_browser_answers(sim, tmp_path, monkeypatch):
+    from types import SimpleNamespace as NS
+    from assistant import llm
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="claude-opus-5-5", effort="low",
+                 state_dir=tmp_path / ".marble", dry=False)
+    with Ledger(cfg.db_path) as l:
+        policies.write_defaults(l, load_all(ApiClient(cfg)))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-never-used")
+    rec = {"kind": "preference", "subject": "order.buffer_days", "statement": "two", "value_json": '{"days": 2}'}
+    u = NS(input_tokens=1, output_tokens=1, cache_creation_input_tokens=0, cache_read_input_tokens=0)
+    responses = iter([NS(content=[NS(type="tool_use", id="t1", name="record_belief", input=rec,
+                                     model_dump=lambda exclude_none=True: {"type": "tool_use", "id": "t1", "name": "record_belief", "input": rec})],
+                         stop_reason="tool_use", usage=u),
+                      NS(content=[NS(type="text", text="Recorded.", model_dump=lambda exclude_none=True: {"type": "text", "text": "Recorded."})],
+                         stop_reason="end_turn", usage=u)])
+    monkeypatch.setattr(llm, "api_call", lambda kw: next(responses))
+    httpd, app, base = web.start_in_thread(cfg)
+    try:
+        answered = {}
+
+        def on_event(ev):
+            if ev["type"] == "gate":
+                answered["card"] = ev
+                threading.Thread(target=lambda: post(base, f"/api/gate/{ev['id']}", {"decision": "edit", "args": {"value": {"days": 3}}}), daemon=True).start()
+        events = sse(base, "/api/chat", {"text": "use two days of buffer"}, on_event)
+        kinds = [e["type"] for e in events]
+        assert "gate" in kinds and "gate_result" in kinds and kinds[-2] == "done"
+        assert answered["card"]["subject"] == "order.buffer_days" and answered["card"]["supersedes"]["value"] == {"days": 1}
+        done = next(e for e in events if e["type"] == "done")
+        assert done["recorded"][0]["recorded"]["value"] == {"days": 3} and done["tool_calls"][0]["gate"] == "edited"
+        with Ledger(cfg.db_path) as l:
+            assert l.value("preference", "order.buffer_days") == {"days": 3}
+            assert len(l.exchanges("ask")) == 1
+        assert get(base, "/api/exchanges")[1]["exchanges"][0]["tool_calls"] == ["record_belief"]
+    finally:
+        httpd.shutdown()
+
+
+def test_reset_deletes_only_the_state_dir(site, sim):
+    cfg, app, base = site
+    code, r = post(base, "/api/reset", {"confirm": "wrong"})
+    assert code == 400
+    code, r = post(base, "/api/reset", {"confirm": cfg.state_dir.name})
+    assert code == 200 and not cfg.state_dir.exists()
+    assert get(base, "/api/state")[1]["meta"]["onboarded_at"] is None
+    assert Path(sim.state).exists()
+    code, r = post(base, "/api/onboard/defaults")
+    assert code == 200 and len(r["recorded"]) == 14

@@ -129,9 +129,11 @@ def choose_sku(records: Records, vendor_id: str, ingredient_id: str, prefs: poli
     return options[0], "only catalog SKU"
 
 
-def plan_order(records: Records, ledger: Ledger, vendor_id: str = "V1") -> Proposal:
-    prefs = policies.order_prefs(ledger)
-    params = policies.detector_params(ledger)
+def plan_order(records: Records, ledger: Ledger, vendor_id: str = "V1",
+               prefs: policies.OrderPrefs | None = None, params: Params | None = None) -> Proposal:
+    """``prefs`` and ``params`` override what the ledger says, for what-if views; nothing is written."""
+    prefs = prefs if prefs is not None else policies.order_prefs(ledger)
+    params = params if params is not None else policies.detector_params(ledger)
     vendor = next((v for v in records.vendors if v.vendor_id == vendor_id), None)
     if vendor is None:
         raise ValueError(f"unknown vendor {vendor_id}; vendors: {[v.vendor_id for v in records.vendors]}")

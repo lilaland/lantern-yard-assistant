@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 12 (2026-11-03 evening). All planned blocks are done; what remains is listed below. This is the honest state of the submission; the
+Updated after block 12 and the first frontend phase (2026-11-03 evening). All planned blocks are done; what remains is listed below. This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -28,6 +28,10 @@ README's "unfinished work" section is written from it.
   brief, order explanation or model-worded onboarding question has been produced yet. Measured
   cost is therefore zero so far.
 
+| Observability UI (additional): stdlib web server, SSE model turns, approval gate cards, seven pages, what-if order lab, tool matrix with try-it, injection lab, diagrams | `assistant/web/`, `docs/diagrams/` | `tests/test_web.py` (endpoints, gate over SSE, boundaries), `test_gate.py`, `test_citations.py`; viewed in a browser |
+| Evaluators: eight deterministic checks over recorded runs, fixtures from real tool outputs, negatives, `--live` with a budget | `evals/` | `tests/test_evals.py`; `python evals/run.py` |
+| Machine-wide cost log across state dirs, evals and the UI | `config.cost_log`, `llm._log`, Memory page | `tests/test_llm.py` |
+
 Submission documents: `ARCHITECTURE.md` (one Mermaid diagram, decisions, the retained-versus-rechecked
 table, limits; about two pages), the README's "Submission" section (setup, demo commands, credentials,
 model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `transcripts/`.
@@ -37,6 +41,15 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 | Block | Item | Why it matters |
 |---|---|---|
 | 12 (part) | One rehearsal of `demo/DEMO_SCRIPT.md` with a person typing in terminal A and a key in `.env` | Two scripted rehearsals are recorded in `demo/REHEARSAL.md`; the human one and the live model are the same gap |
+
+## Frontend and evaluator gaps
+
+- No live model turn has been made through the UI yet; the gate card, timeline and cost line are
+  exercised by tests with a fake API only.
+- The evaluators are deterministic; an LLM-as-judge layer for rubric checks (brief quality,
+  onboarding behaviour, information-flow coverage) is designed but not built.
+- The Memory page's usage table links each row to a run transcript by timestamp prefix; two calls in
+  the same second could link to the wrong file.
 
 ## Known limitations in what exists
 

@@ -66,6 +66,37 @@ Operator steps during the demo, in terminal A with the same `--state`:
 `approve --draft-id D-…`. The full 15-minute runbook is [`demo/DEMO_SCRIPT.md`](demo/DEMO_SCRIPT.md);
 `demo/demo.sh --no-pause` plays both terminals as a smoke test.
 
+## Observability UI (additional, beyond the brief's deliverables)
+
+```bash
+python -m assistant web            # http://127.0.0.1:8780 ; needs the simulator; --dry disables model turns
+```
+
+Seven pages over the same code the CLI runs: Chat (ask mode with approval cards for anything the
+model wants to remember), Memory (beliefs, chains, conflicts, drafts, usage), Findings (ranked cards
+with citation links, the revision diff, runway and reconciliation), Order lab (what-if sliders that
+never touch the ledger, the real draft path with the approve command displayed, never executed),
+Tools (the tool × mode matrix with a "try it" form), Injection lab, About (diagrams from
+`docs/diagrams/`). Standard library only; Mermaid comes from a pinned CDN. Design notes in
+`HANDOFF_FRONTEND.md`; its hours are logged separately in `TIME_LOG.md`.
+
+Every model call, from any command, state directory, the UI or the evaluators, appends to
+`.marble/usage.jsonl` (per state dir) and to the machine-wide `.marble/costs.jsonl`
+(`MARBLE_COST_LOG`); the Memory page and the status bar show both totals.
+
+## Evaluators
+
+```bash
+python evals/run.py                    # fixtures against a throwaway simulator; exit 1 on any unmet expectation
+python evals/run.py --runs .marble/runs   # also grade every real conversation recorded on this machine
+python evals/run.py --live --budget-usd 1.00   # scripted live conversations with the real model, cost-capped
+```
+
+Eight deterministic evaluators over a run's messages (numbers grounded in tool results, citations
+resolve at the right revision, allowlist respected, status vocabulary, memory only from the person
+or a gate, injection quoted not followed, brief shape, cost bound), five passing fixtures built from
+real tool outputs and two negatives that must fail. See `evals/evaluators.py`.
+
 ## Credentials
 
 The assistant runtime receives only the agent token `demo-agent-site-01` (`MARBLE_AGENT_TOKEN`) and,

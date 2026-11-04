@@ -1,0 +1,136 @@
+{
+ "name": "ask_eggs_pass",
+ "tags": [
+  "ask"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "ts": "2026-11-03T21:30:00-05:00",
+  "mode": "ask",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "rounds": 4,
+  "input_tokens": 11000,
+  "output_tokens": 200,
+  "cache_write_tokens": 0,
+  "cache_read_tokens": 0,
+  "usd": 0.048,
+  "seconds": 9.0,
+  "stop_reason": "end_turn",
+  "tool_calls": [
+   "weekend_forecast",
+   "list_counts",
+   "list_catalog"
+  ],
+  "calls": [
+   {
+    "name": "weekend_forecast",
+    "ok": true,
+    "gate": null,
+    "ms": 3
+   },
+   {
+    "name": "list_counts",
+    "ok": true,
+    "gate": null,
+    "ms": 1
+   },
+   {
+    "name": "list_catalog",
+    "ok": true,
+    "gate": null,
+    "ms": 1
+   }
+  ],
+  "revision": 1,
+  "user_text": "how are we on eggs for Saturday?"
+ },
+ "system": "",
+ "messages": [
+  {
+   "role": "user",
+   "content": "how are we on eggs for Saturday?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "t1",
+     "name": "weekend_forecast",
+     "input": {
+      "pos_item_id": "M05",
+      "uplift": null
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "t1",
+     "content": "{\"revision\": 1, \"item\": \"M05\", \"days\": [\"2026-10-10\", \"2026-10-11\"], \"uplift\": 0.25, \"portions_per_day\": 66.0, \"portions_total\": 165.0, \"needs\": {\"Large shell eggs\": 330.0, \"6 inch flour tortilla\": 330.0, \"Shredded cheddar\": 9.9, \"Mixed bell peppers, trimmed\": 6.6, \"Canola oil\": 2.475}, \"units\": {\"Large shell eggs\": \"each\", \"6 inch flour tortilla\": \"each\", \"Shredded cheddar\": \"lb\", \"Mixed bell peppers, trimmed\": \"lb\", \"Canola oil\": \"lb\"}, \"on_hand_at_last_count\": {\"Mixed bell peppers, trimmed\": 25.74, \"Large shell eggs\": 84.0, \"6 inch flour tortilla\": 280.0, \"Shredded cheddar\": 14.68, \"Canola oil\": 39.335}, \"cites\": [\"pos_daily.csv SITE-01 POS-13-M05 rev1: 2026-09-26 62 sold\", \"pos_daily.csv SITE-01 POS-14-M05 rev1: 2026-09-27 66 sold\", \"pos_daily.csv SITE-01 POS-20-M05 rev1: 2026-10-03 66 sold\", \"pos_daily.csv SITE-01 POS-21-M05 rev1: 2026-10-04 70 sold\", \"recipes.csv SITE-01 REC-M05-EGG rev1: 2 each per portion\", \"recipes.csv SITE-01 REC-M05-TORTILLA rev1: 2 each per portion\", \"recipes.csv SITE-01 REC-M05-CHEESE rev1: 0.06 lb per portion\", \"recipes.csv SITE-01 REC-M05-PEPPER rev1: 0.04 lb per portion\", \"recipes.csv SITE-01 REC-M05-OIL rev1: 0.015 lb per portion\"]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "t2",
+     "name": "list_counts",
+     "input": {
+      "ingredient": "Large shell eggs"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "t2",
+     "content": "{\"revision\": 1, \"counts\": [{\"cite\": \"inventory_counts.csv SITE-01 COUNT-OPEN-EGG rev1\", \"row_id\": \"COUNT-OPEN-EGG\", \"counted_at\": \"2026-09-14T00:00:00-04:00\", \"ingredient_name\": \"Large shell eggs\", \"quantity\": 72.0, \"unit\": \"each\", \"counted_by\": \"Maya\", \"comment\": \"includes dry storage and walk-in\"}, {\"cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-EGG rev1\", \"row_id\": \"COUNT-CLOSE-EGG\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"ingredient_name\": \"Large shell eggs\", \"quantity\": 84.0, \"unit\": \"each\", \"counted_by\": \"Maya\", \"comment\": \"includes dry storage and walk-in\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "t3",
+     "name": "list_catalog",
+     "input": {
+      "vendor_id": "V1"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "t3",
+     "content": "{\"revision\": 1, \"catalog\": [{\"cite\": \"vendor_catalog.csv SITE-01 CAT-CHICKEN rev1\", \"catalog_row_id\": \"CAT-CHICKEN\", \"vendor_id\": \"V1\", \"sku\": \"V1-CHICKEN\", \"description\": \"Chicken thigh boneless skinless\", \"pack_quantity\": 40.0, \"pack_unit\": \"lb\", \"order_unit\": \"case\", \"ingredient_id\": \"ING-CHICKEN\", \"ingredient_name\": \"Chicken thigh boneless skinless\"}, {\"cite\": \"vendor_catalog.csv SITE-01 CAT-EGG rev1\", \"catalog_row_id\": \"CAT-EGG\", \"vendor_id\": \"V1\", \"sku\": \"V1-EGG\", \"description\": \"Large shell eggs\", \"pack_quantity\": 180.0, \"pack_unit\": \"each\", \"order_unit\": \"case\", \"ingredient_id\": \"ING-EGG\", \"ingredient_name\": \"Large shell eggs\"}, {\"cite\": \"vendor_catalog.csv SITE-01 CAT-CHEESE rev1\", \"catalog_row_id\": \"CAT-CHEESE\", \"vendor_id\": \"V1\", \"sku\": \"V1-CHEESE\", \"description\": \"Shredded cheddar\", \"pack_quantity\": 10.0, \"pack_unit\": \"lb\", \"order_unit\": \"case\", \"ingredient_id\": \"ING-CHEESE\", \"ingredient_name\": \"Shredded cheddar\"}, {\"cite\": \"vendor_catalog.csv SITE-01 CAT-CHICKEN20 rev1\", \"catalog_row_id\": \"CAT-CHICKEN20\", \"vendor_id\": \"V1\", \"sku\": \"AW-CHK20\", \"description\": \"Bnls thigh / skin off 2 x 10lb\", \"pack_quantity\": 20.0, \"pack_unit\": \"lb\", \"order_unit\": \"case\", \"ingredient_id\": \"ING-CHICKEN\", \"ingredient_name\": \"Chicken thigh boneless skinless\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Breakfast tacos averaged 66 portions per weekend day, so Saturday and Sunday (2026-10-10 and 2026-10-11) need about 330 eggs with your 25% brunch uplift. The last count has 84 eggs on hand (inventory_counts.csv SITE-01 COUNT-CLOSE-EGG rev1), so the Alder order needs to cover the difference; Alder's eggs come 180 to a case."
+    }
+   ]
+  }
+ ]
+}

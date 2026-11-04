@@ -417,3 +417,57 @@ def record_belief(ctx, kind, subject, statement, value_json):
 
 # There are deliberately no ORDER tools: see MODE_SETS. Drafting, approval, submission and verification
 # happen in assistant/orderflow.py under the operator's keyboard, never under the model's.
+
+
+# ----- evidence lookup (not a model tool) ----------------------------------------------
+
+def evidence(ctx: ToolContext, resource: str, ref: str) -> dict:
+    """Fetch the record behind a citation through the READ tool the model would use. Not registered as a tool."""
+    r = ctx.records
+    via, record, wrapped = None, None, None
+    if resource == "notes":
+        via = "list_notes"
+        record = next((plain(n) for n in r.notes if n.ref == ref), None)
+    elif resource == "supplier_documents":
+        via = "list_supplier_documents"
+        record = next((plain(d) for d in r.supplier_documents if d.ref == ref), None)
+    elif resource == "invoice_headers":
+        via = "list_invoices"
+        h = r.header(ref)
+        record = {**plain(h), "lines": plain(r.lines_for(ref))} if h else None
+    elif resource == "invoice_lines":
+        via = "list_invoices"
+        line = next((l for l in r.invoice_lines if l.row_id == ref), None)
+        record = {"line": plain(line), "header": plain(r.header(line.invoice_id))} if line else None
+    elif resource == "pos_daily":
+        via = "list_sales"
+        if ref.split(" ")[0].isdigit():
+            record = {"aggregate": ref, "rows": len(r.sales), "note": "a stated aggregate over the sales rows, not one row"}
+        else:
+            record = next((plain(x) for x in r.sales if x.row_id == ref), None)
+    elif resource == "inventory_counts":
+        via = "list_counts"
+        record = next((plain(c) for c in r.counts if c.row_id == ref), None)
+    elif resource == "vendors":
+        via = "list_vendors"
+        record = next((plain(v) for v in r.vendors if v.vendor_id == ref), None)
+    elif resource == "vendor_catalog":
+        via = "list_catalog"
+        record = next((plain(c) for c in r.catalog if c.catalog_row_id == ref), None)
+    elif resource == "menu":
+        via = "list_menu"
+        record = next((plain(m) for m in r.menu if m.pos_item_id == ref), None)
+    elif resource == "recipes":
+        via = "list_recipes"
+        record = next((plain(x) for x in r.recipes if x.row_id == ref), None)
+    elif resource == "ingredient_mappings":
+        via = "list_catalog"
+        record = next((plain(m) for m in r.mappings if m.mapping_id == ref), None)
+    else:
+        raise ToolError(f"unknown resource {resource!r}")
+    if record is None:
+        raise ToolError(f"no {resource} record {ref!r} at revision {r.revision}")
+    if isinstance(record, dict) and "evidence" in record:
+        wrapped = record["evidence"]
+    return {"resource": resource, "ref": ref, "revision": r.revision, "via_tool": via, "record": record,
+            "evidence": wrapped}

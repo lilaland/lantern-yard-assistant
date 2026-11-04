@@ -22,7 +22,7 @@ KEEP_EXCHANGES = 6
 
 
 def run(cfg: Config, once: str | None = None, resume: bool = True, input_fn: Callable[[str], str] = input,
-        call=None, keep: int = KEEP_EXCHANGES) -> int:
+        call=None, keep: int = KEEP_EXCHANGES, auto_approve: bool | None = None) -> int:
     try:
         records = load_all(ApiClient(cfg))
     except ServerUnavailable:
@@ -32,7 +32,9 @@ def run(cfg: Config, once: str | None = None, resume: bool = True, input_fn: Cal
         params = policies.detector_params(ledger)
         findings = detectors.run_all(records, params)
         ctx = tools.ToolContext(records, ledger, "ask", params, findings)
-        session = Session(cfg, ctx, call, keep, resume)
+        if auto_approve is None:
+            auto_approve = not sys.stdin.isatty() or once is not None
+        session = Session(cfg, ctx, call, keep, resume, input_fn, auto_approve)
         if once is not None:
             session.handle(once)
             return 0
@@ -53,8 +55,10 @@ def run(cfg: Config, once: str | None = None, resume: bool = True, input_fn: Cal
 
 
 class Session:
-    def __init__(self, cfg: Config, ctx: tools.ToolContext, call, keep: int, resume: bool):
+    def __init__(self, cfg: Config, ctx: tools.ToolContext, call, keep: int, resume: bool,
+                 input_fn: Callable[[str], str] = input, auto_approve: bool = True):
         self.cfg, self.ctx, self.call, self.keep = cfg, ctx, call, keep
+        self.input_fn, self.auto_approve = input_fn, auto_approve
         self.ledger = ctx.ledger
         past = self.ledger.exchanges("ask", last=keep) if resume else []
         self.loaded = len(past)
@@ -114,7 +118,7 @@ class Session:
             print("(no model in --dry mode) " + HELP)
             return
         try:
-            result = llm.run(self.cfg, "ask", line, self.ctx, history=self.history, call=self.call)
+            result = llm.run(self.cfg, "ask", line, self.ctx, history=self.history, call=self.call, gate=self.gate)
         except llm.ModelUnavailable as e:
             print(f"[model unavailable: {e}]\n{HELP}")
             return
@@ -127,6 +131,28 @@ class Session:
         self.history = [m for ex in self.ledger.exchanges("ask", last=self.keep) for m in ex.messages]
         self.ctx.params = policies.detector_params(self.ledger)  # a recorded belief applies to the next question
         llm.report(self.cfg, result)
+
+    def gate(self, name: str, args: dict) -> tuple:
+        """The CLI's human gate: show what the model wants to record and ask. Scripted runs auto-approve."""
+        if self.auto_approve:
+            return "approve", None, None
+        print(f"  The assistant wants to record a {args.get('kind')}: {args.get('subject')} = {args.get('value_json')}")
+        print(f"  Statement: {args.get('statement')}")
+        while True:
+            raw = self.input_fn("  Record it? [Y/n/edit] ").strip().lower()
+            if raw in ("", "y", "yes"):
+                return "approve", None, None
+            if raw in ("n", "no"):
+                return "reject", None, "the manager said no"
+            if raw in ("e", "edit"):
+                while True:
+                    new = self.input_fn("  New value (JSON object): ").strip()
+                    try:
+                        if not isinstance(json.loads(new), dict):
+                            raise ValueError("not an object")
+                        return "edit", {**args, "value_json": new}, None
+                    except ValueError:
+                        print("  not valid JSON")
 
     @staticmethod
     def echo_recorded(out: dict) -> None:

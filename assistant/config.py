@@ -26,6 +26,7 @@ DEFAULTS = {
     "MARBLE_MODEL": "claude-opus-5-5",
     "MARBLE_EFFORT": "medium",
     "MARBLE_STATE_DIR": str(ROOT / ".marble"),
+    "MARBLE_COST_LOG": str(ROOT / ".marble" / "costs.jsonl"),
 }
 
 
@@ -49,6 +50,7 @@ class Config:
     effort: str
     state_dir: Path
     dry: bool = False
+    cost_log: Path | None = None  # every model call from any state dir also lands here (set by load())
 
     @property
     def db_path(self) -> Path:
@@ -72,6 +74,7 @@ def load(dry: bool = False, state_dir: str | None = None) -> Config:
         effort=env("MARBLE_EFFORT"),
         state_dir=Path(state_dir or env("MARBLE_STATE_DIR")),
         dry=dry,
+        cost_log=Path(env("MARBLE_COST_LOG")) if env("MARBLE_COST_LOG") else None,
     )
 
 

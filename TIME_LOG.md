@@ -20,4 +20,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 11: ARCHITECTURE.md (diagram, decisions, retained vs rechecked, limits), README submission section | 21:02 | 21:05 | ~0.05 | |
 | 2026-11-03 | Block 12: two scripted rehearsals, three fixes (--dry position, resume message, runbook), REHEARSAL.md | 21:06 | 21:12 | ~0.1 | human rehearsal with a key still to do |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-03 | Frontend phase 1 (additional, beyond the brief): gate + event hooks, stdlib web server with all endpoints, seven pages, machine-wide cost log, evaluator suite with fixtures, 20 tests | 21:15 | 21:45 | ~0.5 | logged separately from the brief's deliverables; see HANDOFF_FRONTEND.md |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~0.5 h frontend/evals plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

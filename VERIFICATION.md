@@ -1,7 +1,7 @@
 # Verification record
 
 What the test suite proves, what it does not, and what failed on the way. Numbers are from the
-run on 2026-11-03 at 21:10 local time, commit after block 12.
+run on 2026-11-03 at 21:42 local time, after the first frontend phase.
 
 ## How to run
 
@@ -18,7 +18,7 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 
 ## Result
 
-117 passed, 0 failed, 0 skipped.
+141 passed, 0 failed, 0 skipped.
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -36,7 +36,17 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 | `test_ask.py` | 6 | The prompt lists every default subject; deterministic commands without a model; the model records a stated preference through `record_belief` and the conversation persists and is trimmed; a model cannot record outside the tool; a `set` in one process changes the order proposal in the next |
 | `test_correction.py` | 4 | The "what changed" block across `delivery-correction` (headline move, cleared finding, new note N16 cited, corrected records, unchanged counts), "no changes" on a repeat, a conflict surfaced as "Needs you", the order warning for inbound scheduled inside the window, the CLI before/after |
 | `test_injection.py` | 7 | SUP-V1-01 is flagged and marked not acted on; free text reaches the model only inside escaped `<evidence>`; the brief request quotes it as excerpts; no tool exists that could submit, approve or draft; a model that obeys the document gets error results and changes nothing; documents cannot write policies; the fixture enforces approval and the flow never invents a reference or calls an order accepted without a lookup |
+| `test_gate.py` | 4 | A gated tool call is not executed until a person approves; reject gives an error result and no row; edit records the edited value; ungated tools never consult the gate; events stream; the CLI gate prompts and honours no/edit |
+| `test_citations.py` | 2 | Every citation the renderer produces is parsed back and resolves through the READ tools; no false positives; unknown refs fail cleanly |
+| `test_web.py` | 8 | Every endpoint against a real server thread; evidence wrapper; `site_id` refused; no control/approve routes; tool execution respects the mode; what-if overrides never touch the ledger; the order path through the API with a lost response; the gate over SSE blocks until the browser answers; reset deletes only the state dir |
+| `test_evals.py` | 9 | Each fixture meets its stated expectation (five pass, two must fail on named evaluators); fresh violations are caught |
 | `test_scope.py` | 7 | The client refuses other sites before a request leaves; the fixture returns 403 for SITE-02; no tool takes or returns another site; every record and citation is SITE-01; the assistant source never imports `csv`, reads `data/`, or references `.state/`, `/control` or `/approve`; configuration carries only the agent token; every citation names file, row (or stated aggregate), and revision |
+
+## Evaluators
+
+`python evals/run.py` on 2026-11-03 at 21:37: 7/7 fixtures met their expectation (five passing
+fixtures built from real tool outputs, two negatives failing exactly on the named evaluators).
+No `--live` run yet.
 
 ## Smoke path
 

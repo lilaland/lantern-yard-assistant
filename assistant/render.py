@@ -1,6 +1,7 @@
 """Plain-text rendering of findings, tables and status blocks. No model."""
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 
 from . import analysis as an
@@ -223,3 +224,17 @@ def changes_block(report, records: Records) -> str | None:
     lines.append(f"  - Unchanged: {report.observations_unchanged} finding(s); {report.retained.get('policy', 0)} policies and "
                  f"{report.retained.get('preference', 0)} preferences retained as you set them.")
     return "\n".join(lines)
+
+
+# ----- citations -------------------------------------------------------------------------
+
+CITE_RE = re.compile(r"\b([a-z_]+)\.csv SITE-01 ((?:\d+ rows [0-9.-]+)|[A-Za-z0-9-]+) rev(\d+)\b")
+
+
+def citation_links(text: str) -> list[dict]:
+    """Every citation in a text, in order: span, the citation text, the API resource, the row ref, revision."""
+    out = []
+    for m in CITE_RE.finditer(text):
+        out.append({"span": [m.start(), m.end()], "text": m.group(0), "resource": m.group(1), "ref": m.group(2),
+                    "revision": int(m.group(3)), "aggregate": m.group(2).split(" ")[0].isdigit()})
+    return out

@@ -76,7 +76,7 @@ def test_the_assistant_never_reads_the_csvs_or_the_fixture_state():
 
 def test_configuration_carries_only_the_agent_token():
     names = {f.name for f in fields(Config)}
-    assert names == {"api_base", "agent_token", "model", "effort", "state_dir", "dry"}
+    assert names == {"api_base", "agent_token", "model", "effort", "state_dir", "dry", "cost_log"}  # no credential but the agent token
     assert not any("operator" in k.lower() or "state_path" in k.lower() for k in config.DEFAULTS)
     cfg = config.load(dry=True)
     assert cfg.agent_token == "demo-agent-site-01" and cfg.db_path.parent == cfg.state_dir

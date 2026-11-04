@@ -295,7 +295,34 @@ def recheck(ledger: Ledger, records: Records, findings: list[Finding]) -> Rechec
     ledger.set_meta("last_run_wall", _dt.now().astimezone().isoformat(timespec="seconds"))
     ledger.set_meta("last_headline", _json.dumps(report.headline))
     ledger.set_meta("last_note_refs", _json.dumps([n.ref for n in records.notes]))
+    history = _json.loads(ledger.meta("last_recheck") or "[]")
+    history = (history + [report_dict(report)])[-2:]
+    ledger.set_meta("last_recheck", _json.dumps(history, default=str))
     return report
+
+
+def _bd(b: Belief) -> dict:
+    return {"id": b.id, "kind": b.kind, "subject": b.subject, "statement": b.statement, "value": b.value,
+            "source": b.source, "recorded_at": b.recorded_at, "status": b.status, "revision": b.revision}
+
+
+def report_dict(r: RecheckReport) -> dict:
+    """JSON view of a recheck, stored under meta.last_recheck (last two) for the findings diff."""
+    return {"revision": r.revision, "previous_revision": r.previous_revision, "first_run": r.first_run,
+            "run_wall": _now_wall(), "previous_run_wall": r.previous_run_wall,
+            "headline": r.headline, "previous_headline": r.previous_headline,
+            "new": [_bd(b) for b in r.observations_new],
+            "changed": [{"old": _bd(o), "new": _bd(n)} for o, n in r.observations_changed],
+            "cleared": [{"belief": _bd(b), "reason": why} for b, why in r.observations_cleared],
+            "unchanged": r.observations_unchanged,
+            "assertions_superseded": [{"old": _bd(o), "new": _bd(n)} for o, n in r.assertions_superseded],
+            "assertions_conflicted": [{"old": _bd(o), "new": _bd(n)} for o, n in r.assertions_conflicted],
+            "retained": r.retained, "new_notes": [n.ref for n in r.new_notes]}
+
+
+def _now_wall() -> str:
+    from datetime import datetime as _dt
+    return _dt.now().astimezone().isoformat(timespec="seconds")
 
 
 def _cleared_reason(subject: str, records: Records) -> str:

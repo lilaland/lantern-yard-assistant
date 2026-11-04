@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern Yard assistant</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">Lantern Yard Kitchen <span class="muted">SITE-01 · assistant observatory</span></div>
+  <nav id="nav">
+    <a href="#/chat">Chat</a>
+    <a href="#/memory">Memory</a>
+    <a href="#/findings">Findings</a>
+    <a href="#/order">Order lab</a>
+    <a href="#/tools">Tools</a>
+    <a href="#/injection">Injection lab</a>
+    <a href="#/about">About</a>
+  </nav>
+  <div id="status" class="status muted">connecting…</div>
+</header>
+<main id="main"><p class="muted">Loading…</p></main>
+<aside id="drawer" class="drawer hidden">
+  <div class="drawer-head"><strong id="drawer-title">Evidence</strong><button id="drawer-close" class="ghost">close</button></div>
+  <div id="drawer-body"></div>
+</aside>
+<div id="toast" class="toast hidden"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js" defer></script>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

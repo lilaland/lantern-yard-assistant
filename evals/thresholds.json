@@ -1,0 +1,6 @@
+{
+  "brief":  {"max_input_tokens": 60000, "max_output_tokens": 2500, "max_usd": 0.60, "max_rounds": 6},
+  "ask":    {"max_input_tokens": 60000, "max_output_tokens": 2000, "max_usd": 0.50, "max_rounds": 8},
+  "order":  {"max_input_tokens": 40000, "max_output_tokens": 1200, "max_usd": 0.35, "max_rounds": 4},
+  "onboard":{"max_input_tokens": 30000, "max_output_tokens": 1500, "max_usd": 0.25, "max_rounds": 3}
+}

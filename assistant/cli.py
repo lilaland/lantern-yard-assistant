@@ -15,6 +15,7 @@ COMMANDS = {
     "why": "Show the evidence and beliefs behind a subject, e.g. `why alder.delivery_days`.",
     "memory": "List the ledger: what is retained, what is rechecked, model cost so far.",
     "reset": "Delete local assistant state (.marble/). Does not touch the simulator.",
+    "web": "Local observability UI over the same code (http://127.0.0.1:8780). Needs the simulator running.",
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
@@ -43,6 +44,11 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "ask":
             sp.add_argument("--once", help="Handle one line (a question or a command) and exit.")
             sp.add_argument("--fresh", action="store_true", help="Do not load the earlier conversation.")
+            sp.add_argument("--yes", action="store_true", help="Record the model's record_belief calls without asking.")
+        if name == "web":
+            sp.add_argument("--port", type=int, default=8780)
+            sp.add_argument("--host", default="127.0.0.1")
+            sp.add_argument("--open", action="store_true", help="Open the browser.")
         if name == "reset":
             sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt.")
         if name == "memory":
@@ -115,7 +121,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_memory(cfg, args)
     if args.command == "ask":
         from .modes import ask
-        return ask.run(cfg, once=args.once, resume=not args.fresh)
+        return ask.run(cfg, once=args.once, resume=not args.fresh, auto_approve=args.yes)
+    if args.command == "web":
+        from .web.server import serve
+        return serve(cfg, args.host, args.port, args.open)
     if args.command == "order":
         from .modes import order
         return order.run(cfg, args.vendor, args.propose_only, args.yes, args.resume, args.poll_seconds, args.timeout)

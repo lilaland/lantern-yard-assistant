@@ -84,6 +84,20 @@ def test_tool_loop_returns_all_results_in_one_user_message(setup):
     assert entry["usd"] == pytest.approx(r.usage.usd(cfg.model))
     runs = list((cfg.state_dir / "runs").glob("*-brief.json"))
     assert len(runs) == 1 and json.loads(runs[0].read_text())["messages"][0]["content"] == "write the brief"
+    assert entry["revision"] == 1 and entry["user_text"] == "write the brief" and entry["calls"][1]["ok"] is False
+    assert cfg.cost_log is None  # tests never write the machine-wide cost log unless they ask for it
+
+
+def test_global_cost_log_collects_every_state_dir(setup, tmp_path):
+    cfg, ctx = setup
+    cost_log = tmp_path / "costs.jsonl"
+    cfg2 = Config(**{**cfg.__dict__, "cost_log": cost_log})
+    for _ in range(2):
+        llm.run(cfg2, "brief", "x", ctx, call=Script(msg([text("ok")])))
+    rows = [json.loads(l) for l in cost_log.read_text().splitlines()]
+    assert len(rows) == 2 and rows[0]["state_dir"] == str(cfg.state_dir) and rows[0]["usd"] > 0
+    total, runs, unknown = llm.usage_total(cost_log)
+    assert runs == 2 and total == pytest.approx(sum(r["usd"] for r in rows)) and not unknown
 
 
 def test_tools_outside_the_mode_are_refused_even_if_the_model_asks(setup):

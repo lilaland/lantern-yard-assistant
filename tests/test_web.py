@@ -3,6 +3,7 @@ import json
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -263,6 +264,27 @@ def test_chat_mode_parameter_picks_prompt_and_allowlist(site):
     with urllib.request.urlopen(req, timeout=20) as r:
         body = r.read().decode()
     assert "unknown mode" in body
+
+
+def test_suggestions_follow_the_findings(site):
+    """The chip row is worded in code from the ranked findings: the headline first, one order chip, ranked by what an answer touched."""
+    cfg, app, base = site
+    s = get(base, "/api/suggestions?context=brief")[1]["suggestions"]
+    assert s[0] == {"text": "Why aren't you counting INV-099 as on hand?", "kind": "ask", "vendor": None, "finding": "phantom_receipt:INV-099"}
+    assert sum(1 for x in s if x["kind"] == "order") == 1 and any(x["vendor"] == "V1" and x["text"] == "Plan the next Alder order" for x in s)
+    assert 3 <= len(s) <= 5 and any("Juniper" in x["text"] and "INV-010" in x["text"] for x in s)
+    h = get(base, "/api/suggestions?context=home")[1]["suggestions"]
+    assert h[0]["kind"] == "brief" and h[0]["text"] == "Give me this morning's brief" and len(h) <= 5
+    a = get(base, "/api/suggestions?context=ask&text=" + urllib.parse.quote("How many eggs do we need for the weekend brunch?"))[1]["suggestions"]
+    assert a[0]["text"] == "What do we need for next weekend?" and a[0]["finding"].startswith("weekend_readiness")
+    a = get(base, "/api/suggestions?context=ask&text=" + urllib.parse.quote("Why is INV-010 so expensive? The line bills peppers at $21.00/lb"))[1]["suggestions"]
+    assert a[0]["text"] == "What should I tell Juniper about INV-010?" and a[0]["finding"] == "unit_price_outlier:INV-010-L01"
+    if any(x["cls"] == "reference_table_stale" for x in get(base, "/api/alerts")[1]["alerts"]):
+        a = get(base, "/api/suggestions?context=ask&text=" + urllib.parse.quote("Why do you think Alder delivers on Wednesday?"))[1]["suggestions"]
+        assert a[0]["text"] == "Which days does Alder really deliver?"
+    with pytest.raises(urllib.error.HTTPError):
+        get(base, "/api/suggestions?context=nope")
+    assert [v["vendor_id"] for v in get(base, "/api/client/intro")[1]["vendors"]] == ["V1", "V2", "V3"]
 
 
 def test_tour_steps_are_derived_or_clicked(sim, tmp_path):

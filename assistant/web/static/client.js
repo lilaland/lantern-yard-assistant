@@ -88,7 +88,7 @@
   async function markTour(step, quiet = false) { const before = tour && tour.current; tour = await api('/api/client/tour', { method: 'POST', body: { step } }); renderTour(); if (before === step && !quiet) nextStepMessage(); }
   function nextStepMessage() {
     if (!tour) return;
-    if (tour.complete) { say("That's the setup done. The bell, the book, the calendar and the chips below are always here. Ask me anything about the numbers, or tell me a rule to remember."); return; }
+    if (tour.complete) { say("That's the setup done. The bell, the book, the calendar and the chips below are always here; the chips now follow what matters most today. Ask me anything about the numbers, or tell me a rule to remember."); refreshChips('home'); return; }
     if (tour.current === 'alerts') alertsStep();
     if (tour.current === 'capabilities') introduceCapabilities(true);
     if (tour.current === 'order') {
@@ -462,6 +462,21 @@
     if (step) dimSpot(chips, 'Try any of these to tick step 3. The order one starts step 4 straight away.');
   }
 
+  // ---------- the chip row: sample prompts during the setup, follow-ups from the findings afterwards ----------
+  function setChips(list) {
+    chips.replaceChildren(...list.map(s => el('button', { title: s.kind === 'order' ? 'opens the order panel' : s.kind === 'brief' ? 'the morning brief' : 'a question for Marbly', onclick: () => sendText(s.text) }, s.text)));
+    spotlight();
+  }
+  // context: home (after the setup, on return), brief (after the brief), ask (after an answer: ranked by what was mentioned)
+  async function refreshChips(context, text = '', exclude = '') {
+    if (tour && !tour.complete) return;  // the setup keeps the sample prompts; step 4 needs its order chip
+    try {
+      const s = await api(`/api/suggestions?context=${context}&text=${encodeURIComponent(text.slice(0, 800))}`);
+      setChips(s.suggestions.filter(x => x.text.toLowerCase() !== exclude.toLowerCase()));
+    } catch (e) { console.error(e); }
+  }
+  const vendorIn = (low) => ((intro.vendors || []).find(v => low.includes(v.vendor_name.split(' ')[0].toLowerCase())) || { vendor_id: 'V1' }).vendor_id;
+
   // ---------- chat ----------
   async function sendText(text) {
     if (pending) return;
@@ -474,32 +489,37 @@
     if (/\bbrief\b/.test(low) && /morning|give me|today|run/.test(low)) { await runBrief(); return tick(); }
     if (isOrder) {
       tick();
-      const w = wizards.V1;
-      say('', 'Marbly', el('div', {}, el('p', {}, w && !w.finished ? `Your ${w.name} order is still open where you left it; here it is again.` : 'Opening your next order. I will show every line and why before anything is drafted. Close the panel any time; this link brings it back as you left it.'), el('div', { class: 'chips' }, orderLink('V1'))));
-      return openWizard('V1');
+      const vendor = vendorIn(low), w = wizards[vendor];
+      say('', 'Marbly', el('div', {}, el('p', {}, w && !w.finished ? `Your ${w.name} order is still open where you left it; here it is again.` : 'Opening your next order. I will show every line and why before anything is drafted. Close the panel any time; this link brings it back as you left it.'), el('div', { class: 'chips' }, orderLink(vendor))));
+      return openWizard(vendor);
     }
+    let answer = '';
     think(true);
     const out = say('…');
     const gates = el('div', {}); out.append(gates);
     await stream('/api/chat', { text, mode: 'ask' }, (ev) => {
       if (ev.type === 'gate') { gateIntro(out); L.gateCard(ev, gates); }
-      else if (ev.type === 'done') { out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookup${ev.tool_calls.length === 1 ? '' : 's'} · ${usd(ev.usage.usd)}` : ''), el('div', { class: 'memo-row' }, el('button', { class: 'ghost small', onclick: (e) => { e.target.disabled = true; out.append(memoryForm((ev.text || '').slice(0, 140))); } }, '+ add to memory')))); }
+      else if (ev.type === 'done') { answer = ev.text || ''; out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookup${ev.tool_calls.length === 1 ? '' : 's'} · ${usd(ev.usage.usd)}` : ''), el('div', { class: 'memo-row' }, el('button', { class: 'ghost small', onclick: (e) => { e.target.disabled = true; out.append(memoryForm((ev.text || '').slice(0, 140))); } }, '+ add to memory')))); }
       else if (ev.type === 'error') out.replaceChildren(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, `I can't reach my model right now (${ev.message}). You can still use the alerts, memory and the order steps.`));
       feed.scrollTop = feed.scrollHeight;
     });
     think(false); refreshBell(); L.refreshStatus();
     await tick();
+    refreshChips('ask', `${text} ${answer}`, text);  // what to ask next, from what this answer touched
   }
   const gateIntro = (out) => { if (!out.dataset.gi) { out.dataset.gi = '1'; out.append(el('p', { class: 'small muted' }, 'I would like to remember this. Approve, change the value, or reject:')); } };
   async function runBrief() {
     think(true);
     const out = say('…');
+    let det = '';  // dry mode: the deterministic brief arrives on the start event, the done event has no text
     await stream('/api/brief', {}, (ev) => {
-      if (ev.type === 'done') out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly · morning brief'), el('div', {}, linkify(ev.text || ev.deterministic || '', ev.citations)), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : '')));
+      if (ev.type === 'start') det = ev.deterministic || '';
+      if (ev.type === 'done') out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly · morning brief'), el('div', {}, linkify(ev.text || det || '', ev.citations || [])), ev.text ? null : el('details', {}, el('summary', { class: 'small' }, 'full detail'), el('pre', { class: 'block small' }, ev.footer || '')), el('div', { class: 'small muted' }, ev.usage ? usd(ev.usage.usd) : '')));
       else if (ev.type === 'error') out.append(el('p', { class: 'small' }, ev.message));
       feed.scrollTop = feed.scrollHeight;
     });
     think(false); refreshBell();
+    refreshChips('brief');  // follow-ups on the brief's items
   }
 
   // ---------- page ----------
@@ -528,6 +548,6 @@
     const crit = a.alerts.filter(x => x.severity === 'HIGH');
     if (crit.length) { say(`${crit.length} critical alert${crit.length === 1 ? '' : 's'} today:`); for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true)); }
     if (!(tour && !tour.complete && tour.current === 'capabilities')) introduceCapabilities();  // otherwise step 3 introduces them
-    if (tour && !tour.complete) nextStepMessage();
+    if (tour && !tour.complete) nextStepMessage(); else refreshChips('home');
   };
 })();

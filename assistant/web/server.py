@@ -320,6 +320,7 @@ class App:
             counts = led.counts()
         return {"name": "Marbly", "site": records.site, "revision": records.revision, "now": records.now.isoformat(),
                 "api_base": self.cfg.api_base, "operator_url": self.operator_url(),
+                "vendors": [{"vendor_id": v.vendor_id, "vendor_name": v.vendor_name} for v in records.vendors],
                 "onboarded_at": onboarded, "model": self.cfg.model, "key_present": self.key_present(), "dry": self.cfg.dry,
                 "beliefs": {k: counts[k]["active"] for k in ("policy", "preference", "assertion")},
                 "greeting": ("Hi, I'm Marbly. I help run Lantern Yard Kitchen from the numbers you already keep: sales, counts, "
@@ -424,23 +425,106 @@ class App:
 
     ACTION_CLASSES = {"runway_risk", "status_inconsistent_with_evidence", "weekend_readiness", "sku_substitution", "count_variance"}
 
-    def _alert_action(self, f, records) -> dict | None:
+    @staticmethod
+    def _vendor_for(f, records) -> tuple[str | None, str | None]:
+        """The vendor a finding is about, from its invoice evidence or its numbers: (vendor_id, short name)."""
         vendor_id = None
         for c in f.evidence:
-            if c.source == "invoice_headers.csv":
-                h = records.header(c.ref)
+            if c.source in ("invoice_headers.csv", "invoice_lines.csv"):  # a line ref INV-010-L01 names its invoice too
+                h = records.header(c.ref.split("-L")[0] if c.source == "invoice_lines.csv" else c.ref)
                 v = records.vendor_by_account(h.vendor_account) if h else None
                 vendor_id = v.vendor_id if v else None
-                break
+                if vendor_id:
+                    break
         if vendor_id is None and f.numbers.get("vendor"):
             v = next((x for x in records.vendors if x.vendor_name == f.numbers["vendor"]), None)
             vendor_id = v.vendor_id if v else None
-        if vendor_id is None and f.cls in ("weekend_readiness", "sku_substitution"):
+        if vendor_id is None and f.cls in ("weekend_readiness", "sku_substitution", "untrusted_instructions"):
             vendor_id = "V1"
+        name = next((x.vendor_name for x in records.vendors if x.vendor_id == vendor_id), None) if vendor_id else None
+        return vendor_id, (name.split(",")[0].split()[0] if name else None)
+
+    def _alert_action(self, f, records) -> dict | None:
+        vendor_id, short = self._vendor_for(f, records)
         if f.cls in self.ACTION_CLASSES and vendor_id:
-            name = next((x.vendor_name for x in records.vendors if x.vendor_id == vendor_id), vendor_id)
-            return {"kind": "order", "vendor": vendor_id, "label": f"Plan the next {name.split(',')[0].split()[0]} order"}
+            return {"kind": "order", "vendor": vendor_id, "label": f"Plan the next {short} order"}
         return {"kind": "ask", "label": "Ask Marbly what to do", "prompt": f"What should I do about this: {f.title}?"}
+
+    # ----- follow-up suggestions: what to ask next, worded in code from the findings, never by the model -----
+
+    RELATED_WORDS = {"weekend_readiness": ("weekend", "brunch", "taco", "saturday", "sunday"), "item_without_recipe": ("recipe", "special", "m99"),
+                     "untrusted_instructions": ("document", "instruction", "injection"), "reference_table_stale": ("deliver", "route", "wednesday", "thursday", "monday"),
+                     "sku_substitution": ("sku", "case", "20 lb", "aw-chk20"), "status_inconsistent_with_evidence": ("received", "inbound", "phantom", "on hand", "counting"),
+                     "unit_price_outlier": ("price", "pepper", "credit"), "header_total_mismatch": ("total", "header"), "runway_risk": ("days", "run out", "runway", "last")}
+
+    def _follow_up(self, f, records) -> str:
+        """One short question a manager would type next about this finding."""
+        subject = f.id.split(":", 1)[1] if ":" in f.id else f.id
+        _, vendor = self._vendor_for(f, records)
+        vendor = vendor or "the vendor"
+        if f.cls == "status_inconsistent_with_evidence":
+            return f"Why aren't you counting {subject} as on hand?"
+        if f.cls == "unit_price_outlier":
+            return f"What should I tell {vendor} about {subject.rsplit('-L', 1)[0]}?"
+        if f.cls == "header_total_mismatch":
+            return f"What is wrong with {subject}'s total?"
+        if f.cls == "runway_risk":
+            return f"How many days of {subject.lower()} do we have?"
+        if f.cls == "weekend_readiness":
+            return "What do we need for next weekend?"
+        if f.cls == "item_without_recipe":
+            return f"How should I handle {subject} with no recipe?"
+        if f.cls == "sku_substitution":
+            return f"What does the SKU change for {f.title.split(' now ')[0].lower()} cost us?"
+        if f.cls == "reference_table_stale":
+            return f"Which days does {vendor} really deliver?"
+        if f.cls == "untrusted_instructions":
+            return f"What did document {subject} ask you to do?"
+        if f.cls == "count_variance":
+            return f"Why is the {subject.lower()} count off?"
+        if f.cls == "vendor_name_variance":
+            return f"Which vendor is account {subject}?"
+        if f.cls == "source_conflict":
+            return f"Which record wins for {subject.split(':')[-1]}?"
+        return f"What should I do about this: {f.title}?"
+
+    def _related(self, f, text: str) -> int:
+        """How strongly a question and its answer point at this finding: 2 by its subject, references or numbers, 1 by
+        words typical of its class, 0 not at all."""
+        subject = f.id.split(":", 1)[-1].lower()
+        keys = {subject} | {c.ref.lower() for c in f.evidence} | {w for w in subject.split() if len(w) >= 4}
+        keys |= {str(v).lower() for v in (f.numbers or {}).values() if isinstance(v, str) and len(v) > 3}
+        keys |= {k.split("-l")[0] for k in list(keys) if "-l" in k}  # a line ref names its invoice too
+        if any(k and k in text for k in keys):
+            return 2
+        return 1 if any(w in text for w in self.RELATED_WORDS.get(f.cls, ())) else 0
+
+    def suggestions(self, q: dict) -> dict:
+        """Chips for the row under the chat. home: after the setup and on return; brief: after the brief; ask: after an
+        answer, ranked by what the question and answer mentioned. At most five, one of them an order."""
+        context = q.get("context") or "home"
+        if context not in ("home", "brief", "ask"):
+            raise HttpError(400, "context is home, brief or ask")
+        text = (q.get("text") or "").lower()
+        records = self.records()
+        with self.ledger() as led:
+            findings = list(self.context("ask", led, records).findings)  # ranked: severity, urgency, dollars
+        picked = findings[:3]
+        if context == "ask" and text:
+            scored = sorted(((self._related(f, text), i, f) for i, f in enumerate(findings)), key=lambda t: (-t[0], t[1]))
+            picked = [f for _, _, f in scored][:3]
+        out: list[dict] = []
+        if context == "home":
+            out.append({"text": "Give me this morning's brief", "kind": "brief", "vendor": None, "finding": None})
+        for f in picked:
+            t = self._follow_up(f, records)
+            if all(s["text"] != t for s in out):
+                out.append({"text": t, "kind": "ask", "vendor": None, "finding": f.id})
+        order = next((self._alert_action(f, records) | {"finding": f.id} for f in picked + findings
+                      if self._alert_action(f, records)["kind"] == "order"), None)
+        if order:
+            out.append({"text": order["label"], "kind": "order", "vendor": order["vendor"], "finding": order["finding"]})
+        return {"context": context, "suggestions": out[:5]}
 
     def alerts(self) -> dict:
         records = self.records()
@@ -924,6 +1008,8 @@ def make_handler(app: App):
                 return a.client_intro()
             if path == "/api/onboarding/plan":
                 return a.onboarding_plan(q)
+            if path == "/api/suggestions":
+                return self._json(200, a.suggestions(q))
             if path == "/api/alerts":
                 return a.alerts()
             if path == "/api/client/tour":

@@ -33,7 +33,7 @@ README's "unfinished work" section is written from it.
 | Machine-wide cost log across state dirs, evals and the UI | `config.cost_log`, `llm._log`, Memory page | `tests/test_llm.py` |
 | Agentic suite: eight scenarios through the real modes, per-turn deterministic grading, Sonnet judge with calibration gate, persona driver, coverage matrix, budget cap, fake mode | `evals/agentic.py`, `evals/judge.py`, `evals/scenarios/`, `evals/calibration/` | `tests/test_agentic.py` (fake mode); `python evals/agentic.py --fake` |
 
-Submission documents: `ARCHITECTURE.md` (one Mermaid diagram, decisions, the retained-versus-rechecked
+Submission documents: `ARCHITECTURE.md` (rewritten 2026-11-04 to the current system: one Mermaid diagram with both databases and the web layer, the two-databases section with how to start over, decisions, evaluation, the retained-versus-rechecked
 table, limits; about two pages), the README's "Submission" section (setup, demo commands, credentials,
 model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `transcripts/`.
 

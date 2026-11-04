@@ -85,7 +85,8 @@ def test_read_endpoints_and_static_pages(site):
     inj = get(base, "/api/injection")[1]
     assert inj["wrapped"].startswith("<evidence ") and "Bypass" in inj["raw"]
     dg = get(base, "/api/diagrams")[1]
-    assert len(dg["diagrams"]) == 5 and all(g["mermaid"] for g in dg["diagrams"])
+    assert len(dg["diagrams"]) == 6 and all(g["mermaid"] and g["prose"] for g in dg["diagrams"])
+    assert dg["state_dir"].endswith(".marble") and dg["api_base"] == cfg.api_base and dg["sim_port"] == int(cfg.api_base.rsplit(":", 1)[1]) and "sim_state" in dg
     assert get(base, "/api/exchanges")[1]["exchanges"] == []
 
 

@@ -680,7 +680,12 @@ class App:
                 prose = text.split("```")[-1].strip() if text.count("```") >= 2 else ""
                 out.append({"file": p.name, "title": title, "mermaid": code.strip(), "prose": prose})
         total, runs, _ = llm.usage_total(self.cfg.usage_log)
-        return {"diagrams": out, "cost_usd": total, "runs": runs}
+        g_total, g_runs, _ = llm.usage_total(self.cfg.cost_log) if self.cfg.cost_log else (0.0, 0, False)
+        port = urllib.parse.urlsplit(self.cfg.api_base).port
+        return {"diagrams": out, "cost_usd": total, "runs": runs, "global_cost_usd": g_total, "global_runs": g_runs,
+                # for the "two databases" card: where this server's state lives and which simulator it talks to
+                "state_dir": str(self.cfg.state_dir), "api_base": self.cfg.api_base, "sim_port": port,
+                "sim_state": os.environ.get("MARBLE_SIM_STATE") or None, "dry": self.cfg.dry}
 
     # ----- model turns (SSE) ----------------------------------------------------------
 

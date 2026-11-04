@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 12 and the first frontend phase (2026-11-03 evening). All planned blocks are done; what remains is listed below. This is the honest state of the submission; the
+Updated 2026-11-04 after the client experience, the sessions and the operator helper. All planned blocks are done; what remains is listed below. This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -23,10 +23,16 @@ README's "unfinished work" section is written from it.
 
 ## Not yet verified
 
-- **A live model call.** No `ANTHROPIC_API_KEY` was available while building. The loop is tested
-  against a fake API, and the installed SDK accepts every field the loop sends, but no narrated
-  brief, order explanation or model-worded onboarding question has been produced yet. Measured
-  cost is therefore zero so far.
+- **One human-typed rehearsal of the browser runbook in a single sitting with a key.** Every piece
+  of it has run live (narrated brief, worded questions, approval card, correction brief, order
+  explanation, worded revision, the draft through a lost response) and the records are in
+  `VERIFICATION.md`, but the whole 15 minutes has only been driven by the assistant, in dry mode for
+  the latest flow changes. Live spend so far: $2.81 over 122 model calls (`.marble/costs.jsonl`).
+- **Sessions and the follow-up chips have only run in dry mode.** "New session, next day" and the
+  chips are deterministic (the clock and the chips are code), so a key changes only the narration.
+- **Two judge criteria stayed open** after the last agentic iteration (a "why" answer that did not
+  mention the vendor sheet; see the suite reports); the prompt was tuned, the scenario not re-run.
+- **The design session's hours** on 2026-11-02 are the candidate's to add to `TIME_LOG.md`.
 
 | Web UI (additional): stdlib server, SSE model turns, approval gate cards; **Marbly client experience** (overview with a go button, four-step setup pinned until complete (facts with Memory introduced after the last answer, alerts, capabilities with sample prompts, first order) with dimmed spotlights, onboarding as cards, a visible recheck that reports the effect of the answers, critical alerts, inbox, client memory with in-place edits and add-to-memory on messages, follow-up chips worded from the findings (after the setup, the brief and every answer; the order chip follows the planner), sessions from the sunrise button (fresh brief; "next day" moves a demo clock kept in the ledger and read by every command), a three-step order wizard with editable lines and worded revisions (tested live) that lists every draft with its status, resumes an awaiting draft, nets accepted orders out of the next proposal, and survives closing the panel (the chat link reopens it as left), the operator command with where to run it, a planner of what to order next per vendor, marble avatar that squishes while thinking, settings gear hiding the developer pages; "Forget everything" also resets the supplier through the operator helper `demo/operator_helper.py` when `MARBLE_OPERATOR_URL` names it, called from the browser, never from the assistant process); developer pages (chat with mode switch, memory, alerts with revision diff, what-if order lab, tool matrix with try-it, injection lab, diagrams) | `assistant/web/`, `docs/diagrams/` | `tests/test_web.py` (endpoints incl. onboarding, alerts, chat modes; gate over SSE; boundaries), `test_gate.py`, `test_citations.py`; clicked through in a browser |
 | Evaluators: eight deterministic checks over recorded runs, fixtures from real tool outputs, negatives, `--live` with a budget | `evals/` | `tests/test_evals.py`; `python evals/run.py` |

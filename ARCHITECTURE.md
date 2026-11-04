@@ -125,7 +125,7 @@ persona and a calibrated Sonnet judge. `VERIFICATION.md` records what each live 
 
 ## Limits
 
-- Live model runs are recorded with their cost in `VERIFICATION.md` (about $2.6 over 113 calls by
+- Live model runs are recorded with their cost in `VERIFICATION.md` (about $2.8 over 122 calls by
   Nov 4); two judge criteria stayed open after the last iteration.
 - Sizing uses a seven-day theoretical average for every day in the window plus the brunch uplift on
   weekend days; no per-weekday demand model, no allowance for the item with no recipe. The cutoff

@@ -1,7 +1,7 @@
 # Verification record
 
 What the test suite proves, what it does not, and what failed on the way. Numbers are from the
-run on 2026-11-03 at 22:56 local time, after the client setup flow.
+run on 2026-11-04 at 11:34 local time, after the sessions and the operator helper.
 
 ## How to run
 
@@ -14,7 +14,7 @@ throwaway state file. Operator actions (`approve`, `scenario`) run through `simu
 subprocess, exactly as a person would in the second terminal; the assistant code under test never
 receives the operator credential. Model calls are faked in tests; no test needs a network or a key.
 
-Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite time about 8 s.
+Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite time about 18 s.
 
 ## Result
 

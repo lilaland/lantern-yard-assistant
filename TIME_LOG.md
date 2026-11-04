@@ -53,7 +53,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Sessions: sunrise button with "New session" and "New session, next day" (fresh brief, chips from the current state); a demo clock in the ledger that every command and page reads; return visits no longer repeat the setup; the order chip follows the planner | 11:16 | 11:24 | ~0.13 | no model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~3.18 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Pre-demo pass: STATUS, README, VERIFICATION and ARCHITECTURE brought to the current truth (live runs and spend, time, unfinished list); `demo/CHECKLIST.md` | 11:31 | 11:34 | ~0.05 | no model spend |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~3.23 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

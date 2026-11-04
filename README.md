@@ -161,22 +161,25 @@ Default model `claude-opus-5-5` ($4 / $20 per million input / output tokens), ov
 `.marble/usage.jsonl` and the machine-wide `.marble/costs.jsonl`; `python -m assistant memory` and the
 UI's Memory page print the totals. Measured on 2026-11-03 through the agentic eval suite: a narrated
 brief costs about $0.04, an `ask` turn about $0.016, an order explanation about $0.04, a Sonnet judge
-verdict about $0.02; one full suite iteration of eight scenarios about $0.60. Spend across every live run on 2026-11-03 (three suite iterations, two client-sample runs, their
-calibration and one full client-flow pass in the browser): $2.42 (106 calls). The deterministic path (`--dry`) is what every test
-and the smoke demo exercise.
+verdict about $0.02; one full suite iteration of eight scenarios about $0.60. Spend across every live run through 2026-11-04 (three suite iterations, two client-sample runs, their
+calibration, one full client-flow pass in the browser, the worded-revision test and the candidate's own
+rehearsals): $2.81 (122 calls). The deterministic path (`--dry`) is what every test and the smoke
+demo exercise.
 
 ## Actual time spent
 
-Logged per block from the clock in [`TIME_LOG.md`](TIME_LOG.md): about 1.7 hours of build time
-across blocks 0–11 on 2026-11-03, plus the design and planning session on the evening of 2026-11-02
-whose hours the candidate fills in from their own record. The candidate chose to exceed the 4–6 hour
-timebox and says so there.
+Logged per row from the clock in [`TIME_LOG.md`](TIME_LOG.md): about 1.85 hours of build time across
+blocks 0–12 on 2026-11-03, about 3.2 hours of frontend, evaluators, live tuning and the client
+experience through 2026-11-04, and a short wrap-up, plus the design and planning session on the evening
+of 2026-11-02 whose hours the candidate fills in from their own record. The candidate chose to exceed
+the 4–6 hour timebox and says so there.
 
 ## Unfinished work
 
-- A live model run: narrated brief, order explanation, model-worded onboarding and `ask` in plain
-  words are built and tested against a fake API but have not been exercised with a real key.
-- A rehearsal of the runbook with a person typing in terminal A (two scripted rehearsals are in `demo/REHEARSAL.md`).
+- One human-typed rehearsal of the browser runbook in a single sitting with a key; every piece has run
+  live (see `VERIFICATION.md`), the latest flow changes (sessions, follow-up chips) only in dry mode.
+- Two judge criteria stayed open after the last agentic iteration; the design-session hours in `TIME_LOG.md`.
+- `demo/CHECKLIST.md` is the pre-demo list.
 - Known limitations of the sizing and recheck logic are listed in `STATUS.md` and `ARCHITECTURE.md`.
 
 ## AI use

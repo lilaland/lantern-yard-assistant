@@ -35,7 +35,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-03 | Live tuning of the client sample flows (additional): two live scenario runs, grader history fix, word budgets, model label | 22:56 | 23:03 | ~0.1 | $0.58 model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.65 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Session overview, transcript re-export and render, time-log cross-check, repo cleanup, GitHub push, private review | 08:42 | 08:47 | ~0.2 | |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.65 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 
@@ -45,7 +47,7 @@ From the Claude Code export's message timestamps, local time, gaps longer than 2
 |---|---|---|
 | 2026-11-02 | 17:03–17:12, 21:25–21:53 | 0.62 |
 | 2026-11-03 | 00:13–00:16, 09:29–09:47, 16:15–16:28, 16:58–17:07, 17:33–17:42, 20:35–23:03 | 3.33 |
-| 2026-11-04 | 08:42– (this overview and the push) | logged below |
+| 2026-11-04 | 08:42–08:47 (overview, transcript re-export, cleanup, push) | see row above |
 | Total | | 3.95 + Nov 4 |
 
 The per-block rows above sum to about 1.85 h for blocks 0–12 plus 1.65 h for the frontend, evaluators,

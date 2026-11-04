@@ -1,0 +1,20 @@
+{
+ "name": "preference_then_order",
+ "flows": [
+  "ask",
+  "memory",
+  "gate",
+  "order",
+  "tools"
+ ],
+ "turns": [],
+ "reference": "Scenario goal: The manager states a preference in conversation; it is recorded through the gate; the next question about the order shows it applied; the order explanation stays within the computed proposal.",
+ "judge": null,
+ "judge_trusted": false,
+ "cost_usd": 0.0,
+ "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Schemas contains too many parameters with union types (22 parameters with type arrays or anyOf). This causes exponential compilation cost. Reduce the number of nullable or union-typed parameters (limit: 16 parameters with unions).'}, 'request_id': 'req_011Cgh8fekVDRYAzjx8K34qb'}",
+ "skipped": false,
+ "ok": false,
+ "deterministic_ok": true,
+ "judge_ok": null
+}

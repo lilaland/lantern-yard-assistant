@@ -32,7 +32,7 @@ from assistant.api_client import ApiClient  # noqa: E402
 from assistant.config import Config, load, load_dotenv  # noqa: E402
 from assistant.ledger import Ledger  # noqa: E402
 from assistant.modes.brief import narration_request  # noqa: E402
-from assistant.modes.onboard import WORDING_SCHEMA  # noqa: E402
+from assistant.modes.onboard import wording_schema  # noqa: E402
 from assistant.orderflow import OrderFlow  # noqa: E402
 from assistant.records import load_all  # noqa: E402
 from evals import evaluators as E  # noqa: E402
@@ -141,7 +141,7 @@ class FakeAssistant:
         if "sup-v1-01" in u:
             return "list_supplier_documents", {}
         if "egg" in u:
-            return "weekend_forecast", {"pos_item_id": "M05", "uplift": None}
+            return "weekend_forecast", {"pos_item_id": "M05"}
         if "go through" in u or ("did the" in u and "order" in u):
             return "fulfilment_status", {}
         if "order look like" in u or "alder order" in u:
@@ -384,7 +384,7 @@ class Runner:
             reference.append("Onboarding questions (data given to the model):\n" + json.dumps(payload, indent=1)[:6000])
             content = "Questions:\n" + json.dumps(payload, indent=1) + "\n\nReturn the JSON object."
             r = self._run_model(cfg, "onboard", content, ctx, fake_call=fake_call,
-                                output_format={"type": "json_schema", "schema": WORDING_SCHEMA}, effort="low")
+                                output_format={"type": "json_schema", "schema": wording_schema([q.id for q in plan])}, effort="low")
             yield self._turn_from(label, "onboard", r, cfg, content, records.revision)
         elif "onboard_answers" in step:
             records, ctx = self._ctx(ledger, "onboard")

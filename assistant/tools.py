@@ -102,7 +102,7 @@ def execute(ctx: ToolContext, name: str, args: dict) -> dict:
     unknown = set(args) - set(t.properties)
     if unknown:
         raise ToolError(f"{name}: unexpected argument(s) {sorted(unknown)}")
-    kwargs = {k: args.get(k) for k in t.properties}
+    kwargs = {k: (None if args.get(k) in NONE_VALUES or (k == "offset" and args.get(k) == 0) else args.get(k)) for k in t.properties}
     result = plain(t.fn(ctx, **kwargs))
     text = json.dumps(result, sort_keys=False)
     if len(text) > MAX_RESULT_CHARS:
@@ -114,9 +114,19 @@ def execute(ctx: ToolContext, name: str, args: dict) -> dict:
 # ----- schema fragments ---------------------------------------------------------------
 
 def S(desc: str, typ: str = "string", nullable: bool = True, **extra) -> dict:
-    out = {"type": [typ, "null"] if nullable else typ, "description": desc}
+    """A strict-schema parameter. The API allows at most 16 union-typed parameters per request, so optional
+    parameters are plain scalars with an explicit 'none' value (empty string, or 0 for a page offset) instead
+    of nullable unions; ``execute`` maps those back to None before the tool runs."""
+    if nullable and typ == "string":
+        desc = desc.rstrip(".") + ". Pass an empty string for none."
+    elif nullable and typ == "integer":
+        desc = desc.rstrip(".") + ". Pass 0 for the first page."
+    out = {"type": typ, "description": desc}
     out.update(extra)
     return out
+
+
+NONE_VALUES = (None, "")
 
 
 # ----- serialisation -------------------------------------------------------------------
@@ -343,11 +353,11 @@ def stock_runway(ctx, ingredient):
     return {"revision": r.revision, "burn_window": [window[0], window[1]], "rows": rows}
 
 
-@tool("ANALYSIS", "Ingredient need for the next weekend from a weekend item's prior weekend sales and its recipe.",
-      pos_item_id=S("Weekend menu item id such as M05.", nullable=False),
-      uplift=S("Fractional uplift such as 0.25, or null to use the manager's preference.", "number"))
-def weekend_forecast(ctx, pos_item_id, uplift):
-    u = float(uplift) if uplift is not None else ctx.params.brunch_uplift
+@tool("ANALYSIS", "Ingredient need for the next weekend from a weekend item's prior weekend sales and its recipe, "
+      "with the manager's brunch uplift preference applied (the uplift used is reported).",
+      pos_item_id=S("Weekend menu item id such as M05.", nullable=False))
+def weekend_forecast(ctx, pos_item_id):
+    u = ctx.params.brunch_uplift
     f = an.weekend_forecast(ctx.records, pos_item_id, u)
     if not f.prior_days:
         raise ToolError(f"no prior weekend sales for {pos_item_id}")

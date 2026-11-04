@@ -61,8 +61,7 @@
      "id": "t1",
      "name": "weekend_forecast",
      "input": {
-      "pos_item_id": "M05",
-      "uplift": null
+      "pos_item_id": "M05"
      }
     }
    ]

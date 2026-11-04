@@ -1,0 +1,19 @@
+{
+ "name": "eggs_question",
+ "flows": [
+  "ask",
+  "tools",
+  "grounding",
+  "citations"
+ ],
+ "turns": [],
+ "reference": "Scenario goal: A follow-up question that needs the forecast and the count.",
+ "judge": null,
+ "judge_trusted": false,
+ "cost_usd": 0.0,
+ "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Schemas contains too many parameters with union types (22 parameters with type arrays or anyOf). This causes exponential compilation cost. Reduce the number of nullable or union-typed parameters (limit: 16 parameters with unions).'}, 'request_id': 'req_011Cgh8fjMocfXu6L9DyLBBx'}",
+ "skipped": false,
+ "ok": false,
+ "deterministic_ok": true,
+ "judge_ok": null
+}

@@ -43,9 +43,29 @@ def test_allowlists_by_mode():
         assert "site_id" not in schema["properties"]
 
 
+def test_schemas_respect_the_api_limits():
+    """The API allows at most 16 union-typed parameters per request and no anyOf; we use none at all."""
+    for mode in tools.MODE_SETS:
+        unions = [(d["name"], k) for d in tools.definitions(mode) for k, v in d["input_schema"]["properties"].items()
+                  if isinstance(v.get("type"), list) or "anyOf" in v or "oneOf" in v]
+        assert unions == [], (mode, unions)
+    out = tools.execute.__wrapped__ if hasattr(tools.execute, "__wrapped__") else None  # noqa: F841
+    from assistant.modes.onboard import wording_schema
+    w = wording_schema(["inbound", "route"])
+    assert w["additionalProperties"] is False and set(w["properties"]) == {"inbound", "route"} and w["required"] == ["inbound", "route"]
+
+
+def test_empty_string_and_zero_mean_none(ctx):
+    a = tools.execute(ctx, "list_notes", {"contains": "", "date_from": "", "date_to": ""})
+    b = tools.execute(ctx, "list_notes", {"contains": None, "date_from": None, "date_to": None})
+    assert a["count"] == b["count"] == 15
+    page = tools.execute(ctx, "list_sales", {"pos_item_id": "", "date_from": "", "date_to": "", "offset": 0})
+    assert page["offset"] == 0 and page["total"] == 92
+
+
 def test_every_read_and_analysis_tool_runs_with_null_arguments(ctx):
     skip = {"reconcile_ingredient": {"ingredient": "Large shell eggs"}, "price_history": {"ingredient": "chicken"},
-            "weekend_forecast": {"pos_item_id": "M05", "uplift": None}, "explain": {"subject": "order.buffer_days"},
+            "weekend_forecast": {"pos_item_id": "M05"}, "explain": {"subject": "order.buffer_days"},
             "record_belief": None}
     for name, t in tools.REGISTRY.items():
         if skip.get(name, {}) is None:
@@ -100,7 +120,7 @@ def test_analysis_tools_match_the_detectors_and_policies(ctx):
     assert run["rows"][0]["ingredient"] == "6 inch flour tortilla" and run["rows"][0]["runway_days"] == pytest.approx(1.587, abs=0.01)
     chicken = next(r for r in run["rows"] if r["ingredient"].startswith("Chicken"))
     assert chicken["planning_delivery_days"] == ["Monday", "Wednesday"]
-    wk = tools.execute(ctx, "weekend_forecast", {"pos_item_id": "M05", "uplift": None})
+    wk = tools.execute(ctx, "weekend_forecast", {"pos_item_id": "M05"})
     assert wk["uplift"] == 0.25 and wk["needs"]["Large shell eggs"] == pytest.approx(330.0)
     beliefs = tools.execute(ctx, "get_beliefs", {"kind": "preference", "subject": "order.buffer_days"})
     assert beliefs["beliefs"][0]["value"] == {"days": 1} and beliefs["conflicts"] == []

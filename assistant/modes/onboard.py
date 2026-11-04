@@ -17,7 +17,11 @@ from ..config import Config
 from ..ledger import Ledger
 from ..records import load_all
 
-WORDING_SCHEMA = {"type": "object", "additionalProperties": {"type": "string"}}
+def wording_schema(ids: list[str]) -> dict:
+    """Structured-output schema for the question lead-ins: one string per question id, nothing else.
+    (The API rejects additionalProperties given as a schema, so the ids are listed explicitly.)"""
+    return {"type": "object", "properties": {i: {"type": "string"} for i in ids}, "required": list(ids),
+            "additionalProperties": False}
 
 
 def _stamp() -> str:
@@ -61,7 +65,7 @@ def wording(cfg: Config, plan: list[onboarding.Question], ctx: tools.ToolContext
                 "options": [o.label for o in q.options]} for q in plan]
     try:
         res = llm.run(cfg, "onboard", "Questions:\n" + json.dumps(payload, indent=1) + "\n\nReturn the JSON object.",
-                      ctx, output_format={"type": "json_schema", "schema": WORDING_SCHEMA}, effort="low")
+                      ctx, output_format={"type": "json_schema", "schema": wording_schema([q.id for q in plan])}, effort="low")
         llm.report(cfg, res)
         data = json.loads(res.text)
         return {k: v for k, v in data.items() if isinstance(v, str) and k in {q.id for q in plan}}

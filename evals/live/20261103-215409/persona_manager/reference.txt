@@ -1,0 +1,1 @@
+Scenario goal: A simulated manager asks about chicken, decides to raise the brunch uplift to 50%, then asks why the vendor sheet still says Thursday.

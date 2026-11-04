@@ -1,0 +1,1 @@
+Scenario goal: The manager states a preference in conversation; it is recorded through the gate; the next question about the order shows it applied; the order explanation stays within the computed proposal.

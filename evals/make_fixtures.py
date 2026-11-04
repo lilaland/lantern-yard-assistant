@@ -75,12 +75,12 @@ def main() -> int:
 
         # 3. ask about eggs
         q = "how are we on eggs for Saturday?"
-        res = tools.execute(ctx, "weekend_forecast", {"pos_item_id": "M05", "uplift": None})
+        res = tools.execute(ctx, "weekend_forecast", {"pos_item_id": "M05"})
         count_cite = next(c for c in res["cites"] if "inventory_counts" in c) if any("inventory_counts" in c for c in res["cites"]) else None
         eggs_count = tools.execute(ctx, "list_counts", {"ingredient": "Large shell eggs"})
         close = [c for c in eggs_count["counts"] if c["row_id"].startswith("COUNT-CLOSE")][0]
         catalog = tools.execute(ctx, "list_catalog", {"vendor_id": "V1"})
-        use1, r1 = tool_round("t1", "weekend_forecast", {"pos_item_id": "M05", "uplift": None}, json.dumps(res))
+        use1, r1 = tool_round("t1", "weekend_forecast", {"pos_item_id": "M05"}, json.dumps(res))
         use2, r2 = tool_round("t2", "list_counts", {"ingredient": "Large shell eggs"}, json.dumps(eggs_count))
         use3, r3 = tool_round("t3", "list_catalog", {"vendor_id": "V1"}, json.dumps(catalog))
         text3 = (f"Breakfast tacos averaged {res['portions_per_day']:.0f} portions per weekend day, so Saturday and Sunday "

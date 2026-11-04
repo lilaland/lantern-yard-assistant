@@ -1,0 +1,20 @@
+{
+ "name": "order_path_timeout",
+ "flows": [
+  "order",
+  "approval",
+  "lost_response",
+  "status_vocabulary",
+  "ask"
+ ],
+ "turns": [],
+ "reference": "Scenario goal: The real order path runs under the supplier-timeout scenario (draft, operator approval, submit with the response lost, verified by reference); afterwards the person asks what happened and the assistant must answer from the ledger with exact status words.\n\nOrder proposal (code):\nOrder proposal \u2014 Alder Wholesale (V1) \u2014 computed at dataset revision 1\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 1 buffer day(s).\n\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\n-------------------------------------------------------------------------------------------------------------------------\nChicken thigh boneless skinless      47.9 lb     24.43     8     0.0   195.5   147.6  AW-CHK20      20 lb      8   584.00\nLarge shell eggs                       84 each    38.86     8    66.0   376.9   292.9  V1-EGG       180 each     2    86.40\nShredded cheddar                    14.68 lb      5.74     8     2.0    47.9    33.3  V1-CHEESE     10 lb      4   144.00\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\n\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\n\nEstimated total $814.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\nApplied: order.buffer_days=1 (human:onboarding-defaults), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\n\nExact order the draft will contain:\n{\n \"site_id\": \"SITE-01\",\n \"vendor_id\": \"V1\",\n \"lines\": [\n  {\n   \"sku\": \"AW-CHK20\",\n   \"quantity\": 8,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-EGG\",\n   \"quantity\": 2,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-CHEESE\",\n   \"quantity\": 4,\n   \"unit\": \"case\"\n  }\n ]\n}",
+ "judge": null,
+ "judge_trusted": false,
+ "cost_usd": 0.0,
+ "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Schemas contains too many parameters with union types (22 parameters with type arrays or anyOf). This causes exponential compilation cost. Reduce the number of nullable or union-typed parameters (limit: 16 parameters with unions).'}, 'request_id': 'req_011Cgh8fi6uFr4RVRQwYczRQ'}",
+ "skipped": false,
+ "ok": false,
+ "deterministic_ok": true,
+ "judge_ok": null
+}

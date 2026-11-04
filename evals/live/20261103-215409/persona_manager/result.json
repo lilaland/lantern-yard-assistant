@@ -1,0 +1,20 @@
+{
+ "name": "persona_manager",
+ "flows": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "turns": [],
+ "reference": "Scenario goal: A simulated manager asks about chicken, decides to raise the brunch uplift to 50%, then asks why the vendor sheet still says Thursday.",
+ "judge": null,
+ "judge_trusted": false,
+ "cost_usd": 0.0,
+ "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Schemas contains too many parameters with union types (22 parameters with type arrays or anyOf). This causes exponential compilation cost. Reduce the number of nullable or union-typed parameters (limit: 16 parameters with unions).'}, 'request_id': 'req_011Cgh8fuJbtkK6GbRS2ZVKM'}",
+ "skipped": false,
+ "ok": false,
+ "deterministic_ok": true,
+ "judge_ok": null
+}

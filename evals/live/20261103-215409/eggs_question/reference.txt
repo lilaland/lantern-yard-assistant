@@ -1,0 +1,1 @@
+Scenario goal: A follow-up question that needs the forecast and the count.

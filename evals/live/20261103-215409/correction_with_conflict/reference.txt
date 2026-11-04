@@ -1,0 +1,1 @@
+Scenario goal: The manager asserts a delivery date in conversation; a brief runs; the office corrects the invoice to a different date; the next brief must open with what changed, cite N16, and surface the conflict with the manager's statement without overwriting it.

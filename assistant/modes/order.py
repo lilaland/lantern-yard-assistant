@@ -38,6 +38,10 @@ def run(cfg: Config, vendor: str = "V1", propose_only: bool = False, yes: bool =
                 say(o)
             print()
         if resume:
+            if not settled:
+                done = [d for d in ledger.drafts() if d.status == "accepted"]
+                print("No open drafts." + (f" Last accepted: {done[-1].draft_id} as order {done[-1].order_id} "
+                                           f"({done[-1].updated_at[:16]})." if done else ""))
             return 0 if all(o.state in ("accepted", "cancelled") for o in settled) else EXIT_AWAITING
         blocked = flow.blocked_vendors()
         if vendor in blocked:

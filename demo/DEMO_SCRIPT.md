@@ -10,7 +10,8 @@ interviewer sees who types what.
 ## Before the interview
 
 ```bash
-.venv/bin/python -m pytest -q          # 83 tests against a throwaway simulator
+source .venv/bin/activate              # `python -m assistant` below means this interpreter
+python -m pytest -q                    # 117 tests against a throwaway simulator
 cp .env.example .env                   # add ANTHROPIC_API_KEY; without it, every command still works with --dry
 rm -rf .marble/live .state/live.sqlite # fresh state for this run
 ```
@@ -29,7 +30,8 @@ Later, when asked: `scenario --name delivery-correction`, `scenario --name suppl
 
 ## Terminal B (assistant)
 
-Set `export MARBLE_STATE_DIR=.marble/live` once. Add `--dry` to any command to skip the model.
+Set `export MARBLE_STATE_DIR=.marble/live` once. Add `--dry` anywhere on the command line to skip
+the model; without a key the commands fall back to the same output on their own and say so on stderr.
 
 | Min | Command | What to point at |
 |---|---|---|
@@ -38,11 +40,14 @@ Set `export MARBLE_STATE_DIR=.marble/live` once. Add `--dry` to any command to s
 | 5–6 | `python -m assistant why invoice.INV-099.delivery_date` | One record, source `invoice:INV-099@rev1`, recheck on revision change. |
 | 6–8 | A: `scenario --name delivery-correction`; B: `python -m assistant brief` | Footer: revision 1 → 2; `phantom_receipt:INV-099` cleared with the reason; two assertions superseded by `invoice:INV-099@rev2`; policies and preferences untouched. Headline is now the INV-010 10x pepper line. `why invoice.INV-099.delivery_date` now shows the chain. |
 | 8–9 | `python -m assistant ask` then `why order.buffer_days`, `set preference order.buffer_days {"days": 2}`, `quit`; `python -m assistant memory` | The REPL: a belief changed by the manager, source `human:ask`, superseding the onboarding default; `memory` shows counts by kind and status and the cost so far. In live mode say it in words instead. |
-| 9–11 | `python -m assistant order --propose-only` | Wednesday delivery because Monday's noon-the-day-before cutoff passed; covers through Sunday plus one buffer day; INV-099 not counted (names the note); 8 × AW-CHK20, 2 × eggs, 4 × cheddar; estimate vs the unflagged limit; warning that chicken runs out before Wednesday. Say: the model may explain this table; it cannot change a number in it. |
+| 9–11 | `python -m assistant order --propose-only` | Wednesday delivery because Monday's noon-the-day-before cutoff passed; covers through Sunday plus the buffer; INV-099 not counted (names the note) and, at revision 2, a warning that it is scheduled inside the window; 8 × AW-CHK20 with the default one-day buffer, 9 after the two-day buffer set in `ask` a minute ago (point at `Applied: order.buffer_days=2 (human:ask)`); 2 × eggs, 4 × cheddar; estimate vs the unflagged limit; warning that chicken runs out before Wednesday. Say: the model may explain this table; it cannot change a number in it. |
 | 11–15 | B: `python -m assistant order`, answer `y`; A: `scenario --name supplier-timeout`; A: `approve --draft-id D-…` (copy from B) | B prints the exact draft JSON the supplier holds and the approve command, then polls. After approval: submit, connection lost, lookup by `client_reference` finds the order, `[accepted] … Verified by lookup … Accepted means the supplier recorded it, not that it has shipped.` Then `order --resume` shows nothing pending. |
 
-If time allows: Ctrl-C during polling shows `[cancelled] … never submitted`; `order` again refuses
-to stack a draft until the open one is settled.
+If time allows: Ctrl-C during polling shows `[cancelled] … never submitted`, and approving that
+draft afterwards changes nothing (`order --resume` reports no open drafts). While a draft is open and
+unapproved, plain `order` refuses to stack another and points at `--resume`.
+
+Rehearsal notes with timings: `demo/REHEARSAL.md`.
 
 ## Talking points, one line each
 

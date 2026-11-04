@@ -18,5 +18,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 9: "what changed" block (headline, cleared, new notes, corrected records, conflicts), order warning for inbound inside the window, 4 tests | 20:55 | 20:57 | ~0.05 | |
 | 2026-11-03 | Block 10: test_injection.py (7), test_scope.py (7), VERIFICATION.md | 20:59 | 21:03 | ~0.07 | 116 tests |
 | 2026-11-03 | Block 11: ARCHITECTURE.md (diagram, decisions, retained vs rechecked, limits), README submission section | 21:02 | 21:05 | ~0.05 | |
+| 2026-11-03 | Block 12: two scripted rehearsals, three fixes (--dry position, resume message, runbook), REHEARSAL.md | 21:06 | 21:12 | ~0.1 | human rehearsal with a key still to do |
 
-Running total: ~1.75 h of build time (blocks 0–11, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

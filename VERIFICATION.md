@@ -1,7 +1,7 @@
 # Verification record
 
 What the test suite proves, what it does not, and what failed on the way. Numbers are from the
-run on 2026-11-03 at 21:00 local time, commit after block 10.
+run on 2026-11-03 at 21:10 local time, commit after block 12.
 
 ## How to run
 
@@ -18,11 +18,11 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 
 ## Result
 
-116 passed, 0 failed, 0 skipped.
+117 passed, 0 failed, 0 skipped.
 
 | File | Tests | What it proves |
 |---|---|---|
-| `test_config.py` | 4 | Environment and `.env` loading; the fixed "now" per dataset revision; only the agent token is configurable |
+| `test_config.py` | 5 | Environment and `.env` loading; the fixed "now" per dataset revision; only the agent token is configurable; global flags accepted before or after the subcommand |
 | `test_api_client.py` | 15 | Pagination to `next_offset: null`, filters, typed errors, SITE-01 pinned in the client and refused by the fixture, draft validation codes, draft → 409 → approve → submit → verify, idempotent resubmission, a lost response recovered by `client_reference`, revision bump under `delivery-correction` |
 | `test_records.py` | 6 | Row counts per resource, parsing, citations, `<evidence>` wrapping with escaping, revision dedupe (higher wins, equal-but-different is a conflict), revision-2 records |
 | `test_analysis.py` | 11 | Pinned fixture numbers: theoretical use, purchases from captured pack sizes, reconciliation gaps (eggs exact, tortillas −48, chicken −5/−45), invoice checks (INV-009 +$47.50, INV-010 10x), price history, runway, weekend forecast |
@@ -57,6 +57,9 @@ revision 1, `why`, delivery correction and brief at revision 2, order proposal, 
 | Block 8 | Fake API saw requests grow after the call | The loop handed the fake its live message list | Loop passes a snapshot per request | `test_llm.py`, `test_ask.py` |
 | Block 8 | Runbook claimed the office-status policy alone flips INV-099 | A recorded receipt fact outranks the policy by design | Runbook corrected to the fact | `test_policies.py::test_a_policy_changes_how_inv099_is_treated` |
 | Block 10 | "All orders" assertion failed only in the full suite | Shared simulator across test files | Assertion narrowed to the draft's own reference | `test_injection.py` |
+| Block 12 | Runbook command `brief --dry` rejected | `--dry` was only a global flag before the subcommand | Accepted in both positions | `test_config.py::test_global_flags_are_accepted_before_or_after_the_subcommand` |
+| Block 12 | Runbook promised 8 cases where the demo order shows 9 | The `ask` step a minute earlier sets a two-day buffer | Runbook corrected; the difference is the point | `test_order_flow.py::test_preferences_and_policies_change_the_order` |
+| Block 12 | Ctrl-C during polling appeared not to cancel | Background job of a non-interactive shell ignores SIGINT (test artefact) | Re-run with SIGINT delivered properly: cancels, nothing submitted | `test_order_flow.py::test_cancel_never_submits_even_after_approval`; `demo/REHEARSAL.md` |
 
 ## Not verified
 
@@ -65,8 +68,8 @@ revision 1, `why`, delivery correction and brief at revision 2, order proposal, 
   installed SDK accepts every field the loop sends (checked by signature). No narrated brief,
   order explanation, model-worded onboarding question or `ask` conversation has been produced by
   a real model. Measured cost: $0.
-- **Two-terminal rehearsal by hand.** The smoke script plays both roles; the runbook has not yet
-  been rehearsed with a person typing in terminal A (block 12).
+- **Two-terminal rehearsal by hand.** Two scripted rehearsals are recorded in `demo/REHEARSAL.md`;
+  the runbook has not yet been rehearsed with a person typing in terminal A.
 - **Scale dataset.** Only the small dataset is exercised; the scale file was never loaded.
 
 ## Limits of what the tests can say

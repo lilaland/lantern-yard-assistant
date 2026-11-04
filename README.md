@@ -35,7 +35,7 @@ state and unfinished work: [`STATUS.md`](STATUS.md). AI transcripts: [`transcrip
 ```bash
 python3 -m venv .venv && .venv/bin/pip install anthropic pytest
 cp .env.example .env            # add ANTHROPIC_API_KEY for model narration; everything runs without it with --dry
-.venv/bin/python -m pytest -q   # 116 tests against a throwaway simulator
+.venv/bin/python -m pytest -q   # 117 tests against a throwaway simulator
 ```
 
 Python 3.10+ (built on 3.10.16, macOS). Dependencies: `anthropic` (model) and `pytest` (tests);
@@ -92,7 +92,7 @@ timebox and says so there.
 
 - A live model run: narrated brief, order explanation, model-worded onboarding and `ask` in plain
   words are built and tested against a fake API but have not been exercised with a real key.
-- Two dress rehearsals of the runbook with a person in terminal A (block 12).
+- A rehearsal of the runbook with a person typing in terminal A (two scripted rehearsals are in `demo/REHEARSAL.md`).
 - Known limitations of the sizing and recheck logic are listed in `STATUS.md` and `ARCHITECTURE.md`.
 
 ## AI use

@@ -29,3 +29,13 @@ def test_now_is_fixed_by_revision():
 
 def test_site_is_pinned():
     assert config.SITE_ID == "SITE-01"
+
+
+def test_global_flags_are_accepted_before_or_after_the_subcommand():
+    from assistant.cli import build_parser
+    parser = build_parser()
+    assert parser.parse_args(["--dry", "brief"]).dry is True
+    assert parser.parse_args(["brief", "--dry"]).dry is True
+    assert parser.parse_args(["brief"]).dry is False
+    assert parser.parse_args(["order", "--propose-only", "--dry", "--state-dir", "x"]).state_dir == "x"
+    assert parser.parse_args(["--state-dir", "y", "why", "s"]).state_dir == "y"

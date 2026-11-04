@@ -31,6 +31,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     for name, help_text in COMMANDS.items():
         sp = sub.add_parser(name, help=help_text)
+        # Accept the global flags after the subcommand too (`brief --dry`), without clobbering the global value.
+        sp.add_argument("--dry", action="store_true", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
+        sp.add_argument("--state-dir", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
         if name == "onboard":
             sp.add_argument("--defaults", action="store_true", help="Record default policies without asking.")
             sp.add_argument("--answers", help="Non-interactive answers: JSON object or id=key,... (e.g. inbound=not_seen).")

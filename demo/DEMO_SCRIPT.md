@@ -1,4 +1,29 @@
-# Demo script (15 minutes, two terminals)
+# Demo script (15 minutes)
+
+Two ways to run it: the client experience in the browser (below, recommended) or the CLI runbook
+further down. Both drive the same code; the operator's approval is typed in terminal A either way.
+
+## Client experience (browser)
+
+Terminal A: `python3 simulator.py serve --mode agent --state .state/live.sqlite`
+Terminal B: `export MARBLE_STATE_DIR=.marble/live && python -m assistant web` then open http://127.0.0.1:8780
+
+| Min | Do | Say |
+|---|---|---|
+| 0–1 | Fresh state: gear → "Start over (wipe memory)" if needed. Reload. | Marbly greets and says the records disagree in a few places. |
+| 1–5 | Answer the six cards. Pick "Nobody has seen the cases" on the first; "unknown, keep checking" on the route to show the difference; a custom number on the price threshold; "Set each one" on ordering with buffer 2. | Each answer echoes exactly what was recorded and what changes. "Unknown" records the default rule under your name but leaves the fact at evidence level. |
+| 5–6 | Watch the recheck. | "2 alerts need a decision today." The critical cards appear with a next step and an action button. The bell shows 2; the book shows what was recorded. |
+| 6–7 | Open the bell, then the book. | Alerts grouped critical / watch / info with "Ask Marbly", "Plan the next Alder order", "Evidence". Memory grouped as rules, preferences, facts; "you said so" vs "from note:N15". |
+| 7–9 | Chip "Give me this morning's brief". | Narrated brief with citations that open the evidence drawer; the footer with retained vs rechecked. |
+| 9–10 | Type "use two days of buffer from now on". | The approval card: approve, edit the value, or reject. Then the book shows the new preference with "you said so". |
+| 10–11 | A: `scenario --name delivery-correction`. Chip "Give me this morning's brief" again. | Opens with what changed: INV-099 now scheduled, note N16, records corrected, your rules retained. |
+| 11–15 | Chip "Help me with the next Alder order" → "Create the draft". A: `scenario --name supplier-timeout`, then `approve --draft-id D-…` (copy from the screen). | Step 2 shows the exact order and the operator command; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". "Ask Marbly to confirm" answers from the ledger with the same words. |
+
+Fallbacks: without a key every step except narration still works (cards, inbox, memory, wizard);
+the brief falls back to the deterministic text. Gear → "Show developer pages" for the tool matrix,
+the injection lab and the revision diff if asked.
+
+## CLI runbook (two terminals)
 
 Everything below runs against the supplied local simulator. The assistant holds only the agent
 token `demo-agent-site-01`. Approval and scenario changes are typed by the operator in terminal A;

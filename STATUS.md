@@ -28,7 +28,7 @@ README's "unfinished work" section is written from it.
   brief, order explanation or model-worded onboarding question has been produced yet. Measured
   cost is therefore zero so far.
 
-| Observability UI (additional): stdlib web server, SSE model turns, approval gate cards, seven pages, what-if order lab, tool matrix with try-it, injection lab, diagrams | `assistant/web/`, `docs/diagrams/` | `tests/test_web.py` (endpoints, gate over SSE, boundaries), `test_gate.py`, `test_citations.py`; viewed in a browser |
+| Web UI (additional): stdlib server, SSE model turns, approval gate cards; **Marbly client experience** (onboarding as cards, recheck, critical alerts, inbox, client memory, three-step order wizard, settings gear hiding the developer pages); developer pages (chat with mode switch, memory, alerts with revision diff, what-if order lab, tool matrix with try-it, injection lab, diagrams) | `assistant/web/`, `docs/diagrams/` | `tests/test_web.py` (endpoints incl. onboarding, alerts, chat modes; gate over SSE; boundaries), `test_gate.py`, `test_citations.py`; clicked through in a browser |
 | Evaluators: eight deterministic checks over recorded runs, fixtures from real tool outputs, negatives, `--live` with a budget | `evals/` | `tests/test_evals.py`; `python evals/run.py` |
 | Machine-wide cost log across state dirs, evals and the UI | `config.cost_log`, `llm._log`, Memory page | `tests/test_llm.py` |
 | Agentic suite: eight scenarios through the real modes, per-turn deterministic grading, Sonnet judge with calibration gate, persona driver, coverage matrix, budget cap, fake mode | `evals/agentic.py`, `evals/judge.py`, `evals/scenarios/`, `evals/calibration/` | `tests/test_agentic.py` (fake mode); `python evals/agentic.py --fake` |
@@ -50,8 +50,9 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 - The agentic suite has run live three times (3/8, 6/8, 6/8); the per-step cost table in `--list` is
   measured. Each run surfaced a different defect; the fixes from the third (onboarded sentence in the
   brief, tool-side rounding of runway days, hard length rule in `ask`) have not been re-run.
-- No person has yet driven the narrated `brief`, `ask` or the web chat live; the UI's gate card and
-  timeline have been exercised by tests and by the suite's API-level turns only.
+- The client experience has been clicked through in dry mode (onboarding, recheck, inbox, memory,
+  wizard step 1); no person has yet driven it with a key, so the model-worded question lead-ins and
+  the approval card in Marbly's chat are unexercised live.
 - The Memory page's usage table links each row to a run transcript by timestamp prefix; two calls in
   the same second could link to the wrong file.
 

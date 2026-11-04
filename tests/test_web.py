@@ -209,3 +209,56 @@ def test_reset_deletes_only_the_state_dir(site, sim):
     assert Path(sim.state).exists()
     code, r = post(base, "/api/onboard/defaults")
     assert code == 200 and len(r["recorded"]) == 14
+
+
+def test_client_intro_onboarding_and_alerts_endpoints(sim, tmp_path):
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="m", effort="low", state_dir=tmp_path / ".marble", dry=True)
+    httpd, app, base = web.start_in_thread(cfg)
+    try:
+        intro = get(base, "/api/client/intro")[1]
+        assert intro["name"] == "Marbly" and intro["onboarded_at"] is None and len(intro["capabilities"]) == 3
+        plan = get(base, "/api/onboarding/plan")[1]
+        ids = [q["id"] for q in plan["questions"]]
+        assert ids == ["inbound", "route", "sku", "missing_recipe", "price", "ordering"] and plan["wording"] is False
+        assert plan["questions"][-1]["fields"][0]["key"] == "buffer_days" and plan["questions"][4]["custom"]["prompt"]
+        code, r = post(base, "/api/onboarding/answer", {"id": "inbound", "answer": "unknown"})
+        assert code == 200 and r["option"]["key"] == "unknown" and [b["kind"] for b in r["recorded"]] == ["policy", "assertion"]
+        assert r["recorded"][1]["source"] == "note:N15" and "inbound" not in r["remaining"] and len(r["remaining"]) == 5
+        code, r = post(base, "/api/onboarding/answer", {"id": "price", "answer": 7})
+        assert code == 200 and r["option"]["key"] == "custom" and r["recorded"][0]["value"] == {"ratio": 7.0}
+        code, r = post(base, "/api/onboarding/answer", {"id": "ordering", "answer": {"buffer_days": 2}})
+        assert code == 200 and any(b["subject"] == "order.buffer_days" and b["value"] == {"days": 2} for b in r["recorded"])
+        code, r = post(base, "/api/onboarding/answer", {"id": "route", "answer": "nonsense"})
+        assert code == 400
+        code, r = post(base, "/api/onboarding/answer", {"id": "nope", "answer": "x"})
+        assert code == 404
+        for qid in ("route", "sku", "missing_recipe"):
+            assert post(base, "/api/onboarding/answer", {"id": qid, "answer": get(base, "/api/onboarding/plan")[1]["questions"][0]["default"]})[0] == 200
+        assert get(base, "/api/onboarding/plan")[1]["questions"] == []
+        code, r = post(base, "/api/onboarding/complete")
+        assert code == 200 and r["onboarded_at"] and get(base, "/api/client/intro")[1]["onboarded_at"]
+        a = get(base, "/api/alerts")[1]
+        assert a["alerts"][0]["id"] == "phantom_receipt:INV-099" and a["alerts"][0]["severity"] == "HIGH"
+        assert a["alerts"][0]["action"] == {"kind": "order", "vendor": "V1", "label": "Plan the next Alder order"}
+        assert a["unseen_critical"] == a["counts"]["HIGH"] >= 1 and all(not x["seen"] for x in a["alerts"])
+        code, r = post(base, "/api/alerts/seen", {"ids": [a["alerts"][0]["id"]]})
+        assert code == 200 and get(base, "/api/alerts")[1]["unseen_critical"] == a["counts"]["HIGH"] - 1
+        price = next(x for x in a["alerts"] if x["id"].startswith("unit_price_outlier"))
+        assert price["action"]["kind"] == "ask" and "INV-010" in price["action"]["prompt"]
+        code, r = post(base, "/api/onboarding/restart")
+        assert code == 200 and len(get(base, "/api/onboarding/plan")[1]["questions"]) == 6 and get(base, "/api/client/intro")[1]["onboarded_at"] is None
+        with Ledger(cfg.db_path) as l:
+            assert l.value("preference", "order.buffer_days") == {"days": 2}  # restart forgets the answers, not the beliefs
+    finally:
+        httpd.shutdown()
+
+
+def test_chat_mode_parameter_picks_prompt_and_allowlist(site):
+    cfg, app, base = site
+    events = sse(base, "/api/chat", {"text": "hello", "mode": "brief"})
+    assert events[0]["mode"] == "brief" and "record_belief" not in events[0]["allowed"]
+    req = urllib.request.Request(base + "/api/chat", data=json.dumps({"text": "x", "mode": "admin"}).encode(), method="POST",
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        body = r.read().decode()
+    assert "unknown mode" in body

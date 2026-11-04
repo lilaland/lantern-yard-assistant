@@ -66,17 +66,23 @@ Operator steps during the demo, in terminal A with the same `--state`:
 `approve --draft-id D-…`. The full 15-minute runbook is [`demo/DEMO_SCRIPT.md`](demo/DEMO_SCRIPT.md);
 `demo/demo.sh --no-pause` plays both terminals as a smoke test.
 
-## Observability UI (additional, beyond the brief's deliverables)
+## Web UI (additional, beyond the brief's deliverables)
 
 ```bash
 python -m assistant web            # http://127.0.0.1:8780 ; needs the simulator; --dry disables model turns
 ```
 
-Seven pages over the same code the CLI runs: Chat (ask mode with approval cards for anything the
+The default page is **Marbly**, the client experience: a chat that opens with onboarding (each
+question is a card whose options and ledger effects are fixed in code; the model may only word the
+lead-in), then rechecks the findings against the answers, raises the critical alerts, introduces the
+alerts inbox (bell) and Memory (book), and offers the three capabilities with sample prompts. The
+"next order" runs as a three-step wizard: review every line and why, create the draft and show the
+operator's approve command (never a button), then the verified outcome. The gear reveals the
+developer pages: Chat (ask mode with approval cards for anything the
 model wants to remember), Memory (beliefs, chains, conflicts, drafts, usage), Findings (ranked cards
 with citation links, the revision diff, runway and reconciliation), Order lab (what-if sliders that
 never touch the ledger, the real draft path with the approve command displayed, never executed),
-Tools (the tool × mode matrix with a "try it" form), Injection lab, About (diagrams from
+Alerts (ranked findings with the revision diff, runway and reconciliation), Tools (the tool × mode matrix with a "try it" form), Injection lab, About (diagrams from
 `docs/diagrams/`). Standard library only; Mermaid comes from a pinned CDN. Design notes in
 `HANDOFF_FRONTEND.md`; its hours are logged separately in `TIME_LOG.md`.
 

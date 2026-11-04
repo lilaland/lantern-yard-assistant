@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .. import analysis, detectors, llm, onboarding, ordering, policies, render, tools
+from ..modes import onboard as onboard_mode
 from ..api_client import ApiClient, ApiError, ServerUnavailable
 from ..config import Config, ROOT
 from ..ledger import Ledger
@@ -287,6 +288,137 @@ class App:
                     "what_if": bool(overrides or pk), "vendor": vendor, "revision": records.revision,
                     "prefs": tools.plain(prefs.__dict__)}
 
+    # ----- client experience -----------------------------------------------------------
+
+    CAPABILITIES = [
+        {"id": "brief", "title": "Morning brief", "blurb": "One issue that matters today, with the evidence, what is uncertain and the next step.",
+         "samples": ["Give me this morning's brief"]},
+        {"id": "ask", "title": "Ask anything about the numbers", "blurb": "Every answer comes from your records with a citation you can open. Tell me a rule and I remember it.",
+         "samples": ["How many days of chicken do we have?", "Why do you think Alder delivers on Wednesday?", "Use two days of buffer from now on"]},
+        {"id": "order", "title": "Your next order", "blurb": "I size it from counts, recipes and your rules, show every line and why, and wait for your approval before anything is sent.",
+         "samples": ["Help me with the next Alder order"]},
+    ]
+
+    def client_intro(self) -> dict:
+        records = self.records()
+        with self.ledger() as led:
+            onboarded = led.meta("onboarded_at")
+            counts = led.counts()
+        return {"name": "Marbly", "site": records.site, "revision": records.revision, "now": records.now.isoformat(),
+                "onboarded_at": onboarded, "model": self.cfg.model, "key_present": self.key_present(), "dry": self.cfg.dry,
+                "beliefs": {k: counts[k]["active"] for k in ("policy", "preference", "assertion")},
+                "greeting": ("Hi, I'm Marbly. I help run Lantern Yard Kitchen from the numbers you already keep: sales, counts, "
+                             "invoices, recipes and the shift notebook. I've read everything and found a few places where the "
+                             "records disagree. Before I plan anything, let's straighten those out together; your answers "
+                             "become rules I keep in Memory and apply every time."),
+                "welcome_back": "Welcome back. I've rechecked everything against your rules; here is where things stand.",
+                "capabilities": self.CAPABILITIES}
+
+    def _question_dict(self, q, leads: dict) -> dict:
+        d = {"id": q.id, "title": q.title, "why": q.why, "lead": leads.get(q.id), "evidence": q.evidence,
+             "evidence_links": [render.citation_links(e) for e in q.evidence], "default": q.default,
+             "options": [{"key": o.key, "label": o.label, "consequence": o.consequence} for o in q.options],
+             "custom": {"prompt": q.custom["prompt"]} if q.custom else None, "fields": None}
+        if q.id == "ordering":
+            d["fields"] = [{"key": k, "subject": subj, "value_key": vk, "prompt": desc,
+                            "default": next(v for _, s2, _, v in policies.DEFAULTS if s2 == subj)[vk]}
+                           for k, subj, vk, _, desc in onboarding.ORDERING_FIELDS]
+        return d
+
+    def onboarding_plan(self, q: dict) -> dict:
+        records = self.records()
+        with self.ledger() as led:
+            ctx = self.context("onboard", led, records)
+            again = q.get("again") in ("1", "true")
+            plan = onboarding.question_plan(records, ctx.findings, led, again)
+            leads = {}
+            if q.get("wording") in ("1", "true") and plan and not self.cfg.dry and self.key_present():
+                leads = onboard_mode.wording(self.cfg, plan, ctx)
+            return {"revision": records.revision, "onboarded_at": led.meta("onboarded_at"), "answered": onboarding.answers(led),
+                    "questions": [self._question_dict(x, leads) for x in plan], "wording": bool(leads)}
+
+    def onboarding_answer(self, body: dict) -> dict:
+        qid, answer = body.get("id"), body.get("answer")
+        if not qid or answer is None:
+            raise HttpError(400, "id and answer are required")
+        records = self.records()
+        with self.ledger() as led:
+            ctx = self.context("onboard", led, records)
+            plan = onboarding.question_plan(records, ctx.findings, led, again=True)
+            qobj = next((x for x in plan if x.id == qid), None)
+            if qobj is None:
+                raise HttpError(404, f"no question {qid} for the current findings")
+            try:
+                opt, outs = onboarding.apply_answer(led, qobj, answer, records.revision)
+            except ValueError as e:
+                raise HttpError(400, str(e))
+            remaining = [x.id for x in onboarding.question_plan(records, ctx.findings, led)]
+            return {"option": {"key": opt.key, "label": opt.label, "consequence": opt.consequence},
+                    "recorded": [{"action": o.action, **o.belief.__dict__} for o in outs], "remaining": remaining}
+
+    def onboarding_complete(self) -> dict:
+        records = self.records()
+        with self.ledger() as led:
+            already = led.meta("onboarded_at")
+            stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+            led.set_meta("onboarded_at", already or stamp)
+            led.set_meta("onboarded_with", "client")
+            led.set_meta("onboarded_at_revision", str(records.revision))
+            return {"onboarded_at": led.meta("onboarded_at"), "counts": led.counts()}
+
+    def onboarding_restart(self) -> dict:
+        """Forget which questions were answered so they are asked again; beliefs stay (a new answer supersedes)."""
+        with self.ledger() as led:
+            led.set_meta(onboarding.ANSWERS_KEY, "{}")
+            led.db.execute("DELETE FROM meta WHERE key IN ('onboarded_at', 'onboarded_with')")
+            led.db.commit()
+            return {"ok": True}
+
+    ACTION_CLASSES = {"runway_risk", "status_inconsistent_with_evidence", "weekend_readiness", "sku_substitution", "count_variance"}
+
+    def _alert_action(self, f, records) -> dict | None:
+        vendor_id = None
+        for c in f.evidence:
+            if c.source == "invoice_headers.csv":
+                h = records.header(c.ref)
+                v = records.vendor_by_account(h.vendor_account) if h else None
+                vendor_id = v.vendor_id if v else None
+                break
+        if vendor_id is None and f.numbers.get("vendor"):
+            v = next((x for x in records.vendors if x.vendor_name == f.numbers["vendor"]), None)
+            vendor_id = v.vendor_id if v else None
+        if vendor_id is None and f.cls in ("weekend_readiness", "sku_substitution"):
+            vendor_id = "V1"
+        if f.cls in self.ACTION_CLASSES and vendor_id:
+            name = next((x.vendor_name for x in records.vendors if x.vendor_id == vendor_id), vendor_id)
+            return {"kind": "order", "vendor": vendor_id, "label": f"Plan the next {name.split(',')[0].split()[0]} order"}
+        return {"kind": "ask", "label": "Ask Marbly what to do", "prompt": f"What should I do about this: {f.title}?"}
+
+    def alerts(self) -> dict:
+        records = self.records()
+        with self.ledger() as led:
+            ctx = self.context("ask", led, records)
+            seen = set(json.loads(led.meta("alerts.seen") or "[]"))
+            out = []
+            for f in ctx.findings:
+                block = render.finding_block(f)
+                out.append({"id": f.id, "cls": f.cls, "severity": detectors.SEVERITY_LABEL[f.severity], "title": f.title,
+                            "summary": f.summary, "next_step": f.next_step, "uncertainty": f.uncertainty,
+                            "evidence": [str(c) for c in f.evidence], "block": block, "citations": render.citation_links(block),
+                            "applied": f.applied_policies, "numbers": tools.plain(f.numbers), "seen": f.id in seen,
+                            "action": self._alert_action(f, records)})
+            counts = {k: sum(1 for a in out if a["severity"] == k) for k in ("HIGH", "MED", "LOW")}
+            return {"revision": records.revision, "alerts": out, "counts": counts,
+                    "unseen_critical": sum(1 for a in out if a["severity"] == "HIGH" and not a["seen"]),
+                    "unseen": sum(1 for a in out if not a["seen"])}
+
+    def alerts_seen(self, body: dict) -> dict:
+        ids = body.get("ids") or []
+        with self.ledger() as led:
+            seen = set(json.loads(led.meta("alerts.seen") or "[]")) | set(ids)
+            led.set_meta("alerts.seen", json.dumps(sorted(seen)))
+        return {"seen": sorted(seen)}
+
     # ----- order path -------------------------------------------------------------
 
     def create_draft(self, body: dict) -> dict:
@@ -431,11 +563,14 @@ class App:
         text = (body.get("text") or "").strip()
         if not text:
             raise HttpError(400, "text is required")
+        mode = body.get("mode") or "ask"
+        if mode not in tools.MODE_SETS:
+            raise HttpError(400, f"unknown mode {mode!r}")
         records = self.records()
         with self.ledger() as led:
-            ctx = self.context("ask", led, records)
-            history = [m for ex in led.exchanges("ask", last=6) for m in ex.messages]
-            emit({"type": "start", "mode": "ask", "allowed": tools.allowed("ask"), "history_exchanges": len(history) // 2})
+            ctx = self.context(mode, led, records)
+            history = [m for ex in led.exchanges("ask", last=6) for m in ex.messages] if mode == "ask" else []
+            emit({"type": "start", "mode": mode, "allowed": tools.allowed(mode), "history_exchanges": len(history) // 2})
             if self.cfg.dry or not self.key_present():
                 emit({"type": "error", "message": "no model: the server runs with --dry or without ANTHROPIC_API_KEY; "
                                                   "use the Tools page or the CLI's `set` command"})
@@ -466,11 +601,11 @@ class App:
                 return decision, None, reason
 
             try:
-                result = llm.run(self.cfg, "ask", text, ctx, history=history, gate=gate, on_event=emit)
+                result = llm.run(self.cfg, mode, text, ctx, history=history, gate=gate, on_event=emit)
             except llm.ModelUnavailable as e:
                 emit({"type": "error", "message": str(e)})
                 return
-            led.save_exchange("ask", text, result.text, result.messages[len(history):], records.revision)
+            led.save_exchange(mode, text, result.text, result.messages[len(history):], records.revision)
             recorded = [c.result for c in result.tool_calls if c.name == "record_belief" and c.ok and isinstance(c.result, dict)]
             emit({"type": "done", "text": result.text, "citations": render.citation_links(result.text),
                   "recorded": recorded, "note": result.note, "usage": {**result.usage.__dict__, "usd": result.usage.usd(self.cfg.model)},
@@ -643,6 +778,12 @@ def make_handler(app: App):
                 return a.beliefs(q)
             if path == "/api/exchanges":
                 return a.exchanges()
+            if path == "/api/client/intro":
+                return a.client_intro()
+            if path == "/api/onboarding/plan":
+                return a.onboarding_plan(q)
+            if path == "/api/alerts":
+                return a.alerts()
             if path == "/api/beliefs/why":
                 if not q.get("subject"):
                     raise HttpError(400, "subject is required")
@@ -693,6 +834,14 @@ def make_handler(app: App):
                 return self._json(200 if ok else 404, {"ok": ok})
             if path == "/api/reset":
                 return self._json(200, a.reset(body))
+            if path == "/api/onboarding/answer":
+                return self._json(200, a.onboarding_answer(body))
+            if path == "/api/onboarding/complete":
+                return self._json(200, a.onboarding_complete())
+            if path == "/api/onboarding/restart":
+                return self._json(200, a.onboarding_restart())
+            if path == "/api/alerts/seen":
+                return self._json(200, a.alerts_seen(body))
             if path == "/api/onboard/defaults":
                 return self._json(200, a.onboard_defaults())
             raise HttpError(404, f"no such endpoint {path}")

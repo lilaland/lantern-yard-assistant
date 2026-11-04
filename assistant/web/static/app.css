@@ -47,3 +47,41 @@ textarea { width:100%; min-height:70px; font-family:var(--mono); font-size:12.5p
 .small { font-size:12.5px; }
 .matrix td.yes { color:var(--ok); font-weight:700; } .matrix td.no { color:#b0b0aa; }
 .diagram { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; }
+
+/* ---- alerts page ---- */
+.grid.alerts { grid-template-columns: minmax(300px, .9fr) 1.6fr; }
+.alert-row { display:flex; gap:8px; align-items:center; padding:7px 6px; border-bottom:1px solid var(--line); cursor:pointer; font-size:13.5px; }
+.alert-row:hover, .alert-row.on { background:#f3efe6; }
+.alert-row .muted { margin-left:auto; font-size:11px; }
+.card.detail { min-height: 300px; }
+button.on { background:var(--accent); color:#fff; }
+/* ---- dev nav hidden in client mode ---- */
+body.dev-hidden #nav a:not(.client-link), body.dev-hidden #status { display:none; }
+body.client-mode .top { border-bottom-color: transparent; background: transparent; }
+/* ---- client experience ---- */
+.client { max-width: 860px; margin: 0 auto; }
+.client-head { display:flex; align-items:center; gap:14px; margin: 6px 0 14px; }
+.client-head .logo { width:40px; height:40px; border-radius:12px; background: linear-gradient(135deg, #c98a4b, #8a4b1f); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; }
+.client-head h1 { margin:0; font-size:22px; } .client-head .sub { font-size:13px; color:var(--muted); }
+.client-head .spacer { flex:1; }
+.iconbtn { position:relative; border:1px solid var(--line); background:#fff; color:var(--fg); border-radius:10px; width:40px; height:40px; font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.iconbtn .count { position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; border-radius:10px; font-size:11px; padding:0 6px; line-height:18px; }
+.feed { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; min-height: 55vh; max-height: 66vh; overflow:auto; }
+.bubble { max-width: 92%; margin: 10px 0; padding: 12px 14px; border-radius: 14px; line-height:1.5; white-space: pre-wrap; }
+.bubble.m { background:#faf6ee; border:1px solid #efe4d2; border-top-left-radius:4px; }
+.bubble.u { background:#eef1f5; margin-left:auto; border-top-right-radius:4px; }
+.bubble .who { font-size:11px; color:var(--muted); margin-bottom:4px; }
+.qcard { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:10px 0; }
+.qcard .opts button { display:block; width:100%; text-align:left; margin:6px 0; background:#fff; color:var(--fg); border:1px solid var(--line); padding:9px 12px; border-radius:10px; }
+.qcard .opts button:hover { border-color: var(--accent); background:#fbf6ee; }
+.qcard .opts button.def { border-color:#c9a27a; }
+.qcard .ev { font-size:12px; color:var(--muted); margin-top:6px; }
+.composer { display:flex; gap:8px; margin-top:10px; } .composer textarea { flex:1; min-height:52px; font-family:inherit; font-size:15px; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; } .chips button { background:#fff; color:var(--accent); border:1px solid #d9c6ad; border-radius:16px; padding:5px 12px; font-size:13px; }
+.capcard { border:1px solid var(--line); border-radius:12px; padding:12px; background:#fff; } .capcard h4 { margin:0 0 4px; }
+.sidepanel { position:fixed; right:0; top:0; height:100vh; width:min(520px, 95vw); background:var(--card); border-left:1px solid var(--line); padding:16px; overflow:auto; z-index:12; box-shadow:-4px 0 18px rgba(0,0,0,.08); }
+.alertcard { border:1px solid var(--line); border-left-width:4px; border-radius:10px; padding:10px 12px; margin:8px 0; background:#fff; }
+.alertcard.HIGH { border-left-color: var(--bad); } .alertcard.MED { border-left-color: var(--warn); } .alertcard.LOW { border-left-color:#c8c8c2; }
+.alertcard.seen { opacity:.75; }
+.step { display:flex; gap:10px; align-items:center; margin:8px 0; } .step .n { width:26px; height:26px; border-radius:13px; background:var(--chip); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; } .step.on .n { background:var(--accent); color:#fff; } .step.done .n { background:var(--ok); color:#fff; }
+.memgroup h4 { margin:12px 0 4px; } .memrow { padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px; } .memrow .st { line-height:1.4; } .memrow .meta { display:flex; gap:10px; align-items:baseline; margin-top:3px; } .memrow .v { font-family:var(--mono); font-size:12px; color:#4a3a25; } .memrow .src { margin-left:auto; font-size:11px; color:var(--muted); white-space:nowrap; }

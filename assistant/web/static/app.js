@@ -88,7 +88,16 @@
     container.append(card);
     return card;
   }
-  window.LY = { api, stream, el, esc, linkify, openEvidence, toast, usd, fmt, gateCard, refreshStatus: () => refreshStatus() };
+  // "Forget everything" on either page: the assistant wiped itself; the browser asks the operator's helper for a fresh supplier.
+  async function resetSupplier(operatorUrl) {
+    if (!operatorUrl) return { reset: false, note: 'The supplier keeps its drafts and orders (operator helper not configured: start demo/operator_helper.py and set MARBLE_OPERATOR_URL).' };
+    try {
+      const r = await fetch(operatorUrl + '/reset', { method: 'POST' });
+      const j = await r.json();
+      return j.reset ? { reset: true, note: `The supplier was reset too: ${j.note}.` } : { reset: false, note: `The supplier was not reset: ${j.error || 'unknown error'}.` };
+    } catch (e) { return { reset: false, note: `The supplier was not reset (operator helper at ${operatorUrl} did not answer: ${e.message}).` }; }
+  }
+  window.LY = { api, stream, el, esc, linkify, openEvidence, toast, usd, fmt, gateCard, resetSupplier, refreshStatus: () => refreshStatus() };
   const devEnabled = () => { try { return localStorage.getItem('ly_dev') === '1'; } catch { return false; } };
   window.LY.setDev = (on) => { try { localStorage.setItem('ly_dev', on ? '1' : '0'); } catch {} document.body.classList.toggle('dev-hidden', !on); };
 
@@ -216,7 +225,7 @@
       el('input', { placeholder: 'search subject or statement', oninput: (e) => { filters.q = e.target.value; clearTimeout(filterRow._t); filterRow._t = setTimeout(load, 250); } }));
     const wipe = el('div', { class: 'card', style: 'margin-top:12px' }, el('h3', {}, 'Wipe and recover'),
       el('p', { class: 'small muted' }, `Deletes ${state.info ? state.info.state_dir : 'the state dir'} (beliefs, drafts, conversation, usage log). The simulator's own state and its orders are untouched.`),
-      el('div', { class: 'row' }, el('input', { id: 'wipe-confirm', placeholder: 'type the state dir name' }), el('button', { class: 'danger', onclick: async () => { try { const r = await api('/api/reset', { method: 'POST', body: { confirm: $('#wipe-confirm').value } }); toast(`deleted ${r.deleted}`); await refreshStatus(); load(); } catch (e) { toast(e.message); } } }, 'Wipe'),
+      el('div', { class: 'row' }, el('input', { id: 'wipe-confirm', placeholder: 'type the state dir name' }), el('button', { class: 'danger', onclick: async () => { try { const r = await api('/api/reset', { method: 'POST', body: { confirm: $('#wipe-confirm').value } }); const sup = await resetSupplier(r.operator_url); toast(`deleted ${r.deleted}. ${sup.note}`); await refreshStatus(); load(); } catch (e) { toast(e.message); } } }, 'Wipe'),
         el('button', { class: 'ghost', onclick: async () => { const r = await api('/api/onboard/defaults', { method: 'POST' }); toast(`${r.recorded.length} rows`); await refreshStatus(); load(); } }, 'Re-onboard with defaults')));
     main.replaceChildren(el('h1', {}, 'Memory'), conflicts, filterRow, el('div', { class: 'grid two' }, el('div', { class: 'card' }, table), chain), extras, usageBox, wipe);
     load();
@@ -357,25 +366,28 @@
     const boxes = d.diagrams.map((g, i) => el('div', { class: 'card', style: 'margin:10px 0' }, el('h2', {}, g.title), el('div', { class: 'diagram', id: `dg${i}` }, el('pre', { class: 'mono small' }, g.mermaid)), el('p', { class: 'small' }, g.prose)));
     // the two databases this server touches, and the exact commands that wipe each
     const simState = d.sim_state || '.state/<name>.sqlite', simPort = d.sim_port || 8765, dirName = d.state_dir.split('/').pop();
+    const opUrl = d.operator_url || 'http://127.0.0.1:8766', opPort = opUrl.split(':').pop();
     const wipe = [
-      '# 1. assistant only: Marbly forgets everything and re-onboards on the next reload (the supplier keeps its drafts and orders)',
-      `#    gear → "Forget everything and start over" (type ${dirName}), or with the web server stopped:`,
-      `rm -rf ${d.state_dir}`,
+      '# Start fresh from the shell (terminal A = operator, terminal B = assistant):',
+      `python3 demo/operator_helper.py serve --port ${simPort} --state ${simState} --control-port ${opPort} --fresh   # A: runs simulator.py serve from a new file`,
+      `MARBLE_API_BASE=${d.api_base} MARBLE_SIM_STATE=${simState} MARBLE_OPERATOR_URL=${opUrl} python -m assistant${d.dry ? ' --dry' : ''} --state-dir ${d.state_dir} web --port ${location.port || 8780} --fresh   # B (--fresh: a new state directory, the old one is kept)`,
       '',
-      '# 2. simulator too: terminal A, stop simulator.py serve, then',
+      '# While both run: gear → "Forget everything and start over" wipes the assistant and, through the helper, the supplier.',
+      `#   the same from the shell:  python3 demo/operator_helper.py reset --control-port ${opPort}   # supplier only`,
+      `#                             rm -rf ${d.state_dir}   (web server stopped)   # assistant only`,
+      '',
+      '# Without the helper (plain simulator.py serve): stop it, then',
       `rm -f ${simState}`,
       `python3 simulator.py serve --mode agent --port ${simPort} --state ${simState}`,
-      '',
-      '# 3. start the assistant again against it and reload Marbly',
-      `MARBLE_API_BASE=${d.api_base} MARBLE_SIM_STATE=${simState} python -m assistant${d.dry ? ' --dry' : ''} --state-dir ${d.state_dir} web --port ${location.port || 8780}`,
     ].join('\n');
     const states = el('div', { class: 'card', style: 'margin:10px 0' }, el('h2', {}, 'This server: two databases'),
       el('table', {}, el('tbody', {},
         el('tr', {}, el('td', {}, el('strong', {}, 'Simulator state')), el('td', {}, el('code', {}, simState), d.sim_state ? '' : ' (MARBLE_SIM_STATE not set; use the --state the simulator was started with)'), el('td', { class: 'small' }, `drafts, orders, operator token, scenario and dataset revision; served on ${d.api_base}; owned by the operator in terminal A`)),
         el('tr', {}, el('td', {}, el('strong', {}, 'Assistant state')), el('td', {}, el('code', {}, d.state_dir)), el('td', { class: 'small' }, 'state.sqlite (beliefs, drafts as drafted, conversations, setup progress), usage.jsonl, runs/; the only thing Marbly remembers')),
-        el('tr', {}, el('td', {}, el('strong', {}, 'Re-ask the questions')), el('td', {}, 'gear → "Ask me the questions again"'), el('td', { class: 'small' }, 'clears onboarded_at, the answers and the setup progress; every belief stays and a changed answer supersedes the old one')))),
+        el('tr', {}, el('td', {}, el('strong', {}, 'Re-ask the questions')), el('td', {}, 'gear → "Ask me the questions again"'), el('td', { class: 'small' }, 'clears onboarded_at, the answers and the setup progress; every belief stays and a changed answer supersedes the old one')),
+        el('tr', {}, el('td', {}, el('strong', {}, 'Operator helper')), el('td', {}, d.operator_url ? el('code', {}, d.operator_url) : 'not configured'), el('td', { class: 'small' }, d.operator_url ? 'demo/operator_helper.py runs the simulator and resets it to a fresh file when "Forget everything" is clicked; the browser calls it, this process never does' : 'start `python3 demo/operator_helper.py serve` in terminal A and set MARBLE_OPERATOR_URL so "Forget everything" also resets the supplier')))),
       el('h3', {}, 'Start over on a fresh database'), el('pre', { class: 'block small' }, wipe),
-      el('p', { class: 'small muted' }, 'Wiping only the assistant leaves the supplier holding the earlier drafts and orders, so the wizard list and planner start empty while GET /api/orders does not; wipe both for a clean first-order path. Neither process ever opens the other\'s file.'));
+      el('p', { class: 'small muted' }, 'Wiping only the assistant leaves the supplier holding the earlier drafts and orders, so the wizard list and planner start empty while GET /api/orders does not; wipe both for a clean first-order path. Neither process ever opens the other\'s file: the reset of the supplier is the operator helper\'s, asked for by the browser.'));
     main.replaceChildren(el('h1', {}, 'About'), el('p', {}, 'The model decides wording and which allowed tools to call. It does not decide numbers, state transitions, or beliefs without a person. ', el('strong', {}, `Measured model cost: ${usd(d.cost_usd)} over ${d.runs} run(s) in this state directory, ${usd(d.global_cost_usd)} over ${d.global_runs} on this machine.`)), states, ...boxes, el('p', { class: 'small muted' }, 'Diagram sources live in docs/diagrams/*.md; ARCHITECTURE.md embeds the first one.'));
     if (window.mermaid) {
       try { mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral' });

@@ -5,8 +5,9 @@ further down. Both drive the same code; the operator's approval is typed in term
 
 ## Client experience (browser)
 
-Terminal A: `python3 simulator.py serve --mode agent --state .state/live.sqlite`
-Terminal B: `export MARBLE_STATE_DIR=.marble/live MARBLE_SIM_STATE=.state/live.sqlite && python -m assistant web` then open http://127.0.0.1:8780 (`MARBLE_SIM_STATE` only makes the printed approve command complete; the assistant never reads that file)
+Terminal A: `python3 demo/operator_helper.py serve --port 8765 --state .state/live.sqlite --fresh` (runs `simulator.py serve` from a fresh file and answers "Forget everything" with a reset; approve and scenario are still typed here with the same `--state`)
+Terminal B: `export MARBLE_STATE_DIR=.marble/live MARBLE_SIM_STATE=.state/live.sqlite MARBLE_OPERATOR_URL=http://127.0.0.1:8766 && python -m assistant web --fresh` then open http://127.0.0.1:8780 (`MARBLE_SIM_STATE` only makes the printed approve command complete and `MARBLE_OPERATOR_URL` is only handed to the browser; the assistant never reads that file or calls the helper)
+Start over at any point: gear → "Forget everything and start over" wipes Marbly's memory and, through the helper, the supplier. From the shell: `python3 demo/operator_helper.py reset` (supplier) and `python -m assistant web --fresh` (assistant: a new state directory next to the old one, nothing deleted).
 
 | Min | Do | Say |
 |---|---|---|

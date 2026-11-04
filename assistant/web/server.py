@@ -307,13 +307,19 @@ class App:
          "samples": ["Help me with the next Alder order"]},
     ]
 
+    @staticmethod
+    def operator_url() -> str | None:
+        """Where the operator's helper (demo/operator_helper.py) listens, if the person told us. The browser calls it on
+        "Forget everything"; this process never does, and never opens the simulator's file."""
+        return (os.environ.get("MARBLE_OPERATOR_URL") or "").rstrip("/") or None
+
     def client_intro(self) -> dict:
         records = self.records()
         with self.ledger() as led:
             onboarded = led.meta("onboarded_at")
             counts = led.counts()
         return {"name": "Marbly", "site": records.site, "revision": records.revision, "now": records.now.isoformat(),
-                "api_base": self.cfg.api_base,
+                "api_base": self.cfg.api_base, "operator_url": self.operator_url(),
                 "onboarded_at": onboarded, "model": self.cfg.model, "key_present": self.key_present(), "dry": self.cfg.dry,
                 "beliefs": {k: counts[k]["active"] for k in ("policy", "preference", "assertion")},
                 "greeting": ("Hi, I'm Marbly. I help run Lantern Yard Kitchen from the numbers you already keep: sales, counts, "
@@ -648,7 +654,11 @@ class App:
         if self.cfg.state_dir.exists():
             shutil.rmtree(self.cfg.state_dir)
         self._records = None
-        return {"deleted": str(self.cfg.state_dir), "note": "the simulator's own state and orders are untouched"}
+        return {"deleted": str(self.cfg.state_dir), "operator_url": self.operator_url(),
+                "note": ("this process does not touch the simulator's own state and orders; the browser asks the operator "
+                         "helper to reset it" if self.operator_url() else
+                         "the simulator's own state and orders are untouched (no operator helper: start demo/operator_helper.py "
+                         "and set MARBLE_OPERATOR_URL to reset it from here)")}
 
     def onboard_defaults(self) -> dict:
         records = self.records()
@@ -685,7 +695,8 @@ class App:
         return {"diagrams": out, "cost_usd": total, "runs": runs, "global_cost_usd": g_total, "global_runs": g_runs,
                 # for the "two databases" card: where this server's state lives and which simulator it talks to
                 "state_dir": str(self.cfg.state_dir), "api_base": self.cfg.api_base, "sim_port": port,
-                "sim_state": os.environ.get("MARBLE_SIM_STATE") or None, "dry": self.cfg.dry}
+                "sim_state": os.environ.get("MARBLE_SIM_STATE") or None, "dry": self.cfg.dry,
+                "operator_url": self.operator_url()}
 
     # ----- model turns (SSE) ----------------------------------------------------------
 

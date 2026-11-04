@@ -51,31 +51,28 @@ flowchart LR
 
 Every run fetches all twelve resources at one `dataset_revision`, parses them into typed rows (higher
 `source_revision` replaces, equal-but-different is a conflict) and runs the detectors. Each Finding
-carries citations (file, restaurant, row or note id, revision), an uncertainty list, a next step and
-its numbers. `policies.py` turns active beliefs into detector parameters before the run and afterwards
-re-records observations, clears stale ones, rechecks evidence assertions and reports what moved. In
-live mode the deterministic text goes to the model as data with READ and ANALYSIS tools; the output
-is narration, and the retained/rechecked footer is always appended from code. The web server exposes
-the same functions as JSON, streams model turns over SSE, and holds a memory write until the browser
-answers the approval card. Marbly's setup is four steps pinned until each is true in the ledger:
-facts (onboarding stamped), alerts and memory (opened once), first order (a draft `accepted`).
+carries citations (file, restaurant, row or note id, revision), uncertainties, a next step and its
+numbers. `policies.py` turns active beliefs into detector parameters before the run and afterwards
+re-records observations, rechecks evidence assertions and reports what moved. In live mode the
+deterministic text goes to the model as data with READ and ANALYSIS tools; the output is narration,
+and the retained/rechecked footer always comes from code. The web server exposes the same functions as
+JSON, streams model turns over SSE, and holds a memory write until the browser answers the approval
+card. Marbly's four setup steps stay pinned until each is true in the ledger.
 
 ## Two databases
 
-The **simulator's** SQLite (`.state/NAME.sqlite`, chosen by the operator's `--state`) holds the
-supplier's drafts and orders, the operator token, the scenario flag and the dataset revision. The
-**assistant's** directory (`.marble/DIR/`, chosen by `--state-dir` or `MARBLE_STATE_DIR`) holds
-`state.sqlite` with `beliefs` (kind, subject, value, source, status, recheck rule, revision,
-supersedes/conflicts links), `drafts` (the order as drafted, state, order id, note), `exchanges` (each
-`ask` question with everything up to its answer) and `meta` (onboarding stamp and answers, setup
-progress, last revision and headline); next to it `usage.jsonl` and `runs/` record every model call.
-Neither process opens the other's file (a test asserts the assistant never reads `.state/` or the
-CSVs); the only link is the draft id, which the assistant uses to verify an order after a lost
-response. To start over: "Ask me the questions again" clears only the onboarding meta and every belief
-stays; "Forget everything and start over" (`POST /api/reset`, or `rm -rf .marble/DIR`) makes Marbly
-re-onboard on the next reload while the supplier still holds yesterday's orders; for a clean first-order
-path also stop the simulator, delete its file and serve it again with the same `--port` and `--state`.
-The About page prints these commands with the running server's paths.
+The **simulator's** SQLite (`.state/NAME.sqlite`, the operator's `--state`) holds the supplier's
+drafts and orders, the operator token, the scenario flag and the dataset revision. The **assistant's**
+directory (`.marble/DIR/`) holds `state.sqlite` with `beliefs` (kind, subject, value, source, status,
+recheck rule, revision, supersedes/conflicts links), `drafts` (the order as drafted, state, order id,
+note), `exchanges` and `meta` (onboarding stamp and answers, setup progress, last run), plus
+`usage.jsonl` and `runs/`. Neither process opens the other's file (a test asserts it); the only link is
+the draft id, used to verify an order after a lost response. Starting over: "Ask me the questions
+again" clears only the onboarding meta; "Forget everything" (`POST /api/reset`) wipes `.marble/DIR` and
+Marbly re-onboards on the next reload. The supplier's reset is the operator's move: `demo/operator_helper.py
+serve` runs the simulator and, on `POST /reset` from the browser (the same button, when
+`MARBLE_OPERATOR_URL` is set) or from the shell, stops it, deletes its file and starts it again. The
+assistant process never calls it. The About page prints the commands with the running server's paths.
 
 ## External calls
 
@@ -87,8 +84,7 @@ the official SDK with streaming, strict tool schemas, prompt caching and `output
 ## Main decisions
 
 - **Code computes, the model narrates.** Detectors, reconciliation, sizing, ranking and the netting of
-  accepted orders are deterministic and pinned by tests on the fixture's numbers. `--dry` runs every
-  flow without the model, which is also the fallback when the key or network is missing.
+  accepted orders are deterministic and pinned by tests; `--dry` runs every flow without the model.
 - **Beliefs have kinds and authority.** `policy` and `preference` are human-only and never rechecked
   against data. `observation` is detector-only and rechecked every run. `assertion` is a fact from a
   person or a record: a newer statement of equal or higher authority supersedes, a lower one (a
@@ -101,11 +97,10 @@ the official SDK with streaming, strict tool schemas, prompt caching and `output
   what keeps the brief correct when `dataset_revision` flips to 2: the phantom receipt clears, two
   invoice records are superseded, the ten human beliefs are untouched, and the brief opens with that.
 - **The order is a state machine under the operator's keyboard.** The model has no draft, submit or
-  approval tools in any mode; a worded revision only proposes lines that code validates against the
-  catalog. A lost response is verified by `client_reference`, retried once for the same draft, else
-  kept `unknown` and blocks new drafts for that vendor. "Accepted" is only said after a lookup agrees,
-  and means recorded, not delivered. The wizard reads its state from the ledger, so it lists every
-  draft with its status, resumes one awaiting approval, and proposes only what accepted orders leave.
+  approval tools in any mode; a worded revision only proposes lines that code validates. A lost
+  response is verified by `client_reference`, retried once for the same draft, else kept `unknown`.
+  "Accepted" is only said after a lookup agrees, and means recorded, not delivered. The wizard reads
+  the ledger: every draft with its status, resume one awaiting approval, propose only what is left.
 - **Free text is evidence.** Notes and supplier documents reach the model only inside escaped
   `<evidence>` tags; instruction-like text is flagged as a finding. SUP-V1-01's three instructions
   each have a test showing there is no code path to obey them.
@@ -125,9 +120,8 @@ the official SDK with streaming, strict tool schemas, prompt caching and `output
 
 Eight deterministic evaluators (numbers grounded in tool output, citations resolvable, allowlist
 respected, memory only from a person, injection quoted not followed, brief shape, cost bound) run over
-recorded model runs and over fixtures. An agentic suite drives nine scenarios through the real server
-with a persona and a Sonnet judge calibrated on four transcripts; every call lands in a machine-wide
-cost log. See `VERIFICATION.md` for what each live run found and fixed.
+recorded runs and fixtures; an agentic suite drives nine scenarios through the real server with a
+persona and a calibrated Sonnet judge. `VERIFICATION.md` records what each live run found and fixed.
 
 ## Limits
 

@@ -58,6 +58,7 @@
 
   // ---------- the pinned setup (tour) ----------
   const TOUR = { facts: 'Straighten out the facts', alerts: "Look at today's critical alerts", memory: 'See what I remember about your kitchen', order: 'Place your first order and see it through' };
+  const TOUR_SHORT = { facts: 'Straighten the facts', alerts: "Today's alerts", memory: 'Your memory', order: 'First order' };  // pill labels; the long text is the pill's title
   let tour = null;
   function spotlight() {
     for (const b of [bell, book]) b && b.classList.remove('spot');
@@ -73,8 +74,10 @@
     tourBox.classList.remove('hidden');
     const action = { facts: ['Answer the questions', () => { const q = [...document.querySelectorAll('.qcard')].pop(); q ? q.scrollIntoView({ block: 'start', behavior: 'smooth' }) : runOnboarding(); }],
       alerts: ['Open the alerts', openInbox], memory: ['Open memory', openMemory], order: ['Start the order', () => openWizard('V1')] };
-    tourBox.replaceChildren(el('div', { class: 'tour-head' }, avatar(28), el('strong', {}, 'Getting set up'), el('span', { class: 'small muted' }, `${Object.values(tour.done).filter(Boolean).length} of 4 done`)),
-      ...tour.steps.map((s, i) => { const done = tour.done[s], cur = tour.current === s; return el('div', { class: `tstep ${done ? 'done' : cur ? 'on' : ''}` }, el('span', { class: 'n' }, done ? '✓' : String(i + 1)), el('span', { class: 'label' }, TOUR[s]), cur ? el('button', { onclick: action[s][1] }, action[s][0]) : null); }));
+    // one row: lead, four numbered pills (the current one carries its action button), count at the end
+    tourBox.replaceChildren(el('div', { class: 'tour-head' }, avatar(24), el('strong', {}, 'Getting set up')),
+      ...tour.steps.map((s, i) => { const done = tour.done[s], cur = tour.current === s; return el('div', { class: `tstep ${done ? 'done' : cur ? 'on' : ''}`, title: TOUR[s] }, el('span', { class: 'n' }, done ? '✓' : String(i + 1)), el('span', { class: 'label' }, TOUR_SHORT[s] || TOUR[s]), cur ? el('button', { onclick: action[s][1] }, action[s][0]) : null); }),
+      el('span', { class: 'small muted count' }, `${Object.values(tour.done).filter(Boolean).length} of 4 done`));
     spotlight();
   }
   async function refreshTour() { try { tour = await api('/api/client/tour'); } catch { tour = null; } renderTour(); return tour; }
@@ -367,7 +370,7 @@
       el('p', { class: 'small muted' }, 'Memory lives in the ledger on disk and survives every restart. Only the second button below removes it.'),
       el('div', { class: 'chips' },
         el('button', { title: 'Re-ask the six questions. Your rules stay; a changed answer replaces the old one and the history is kept.', onclick: async () => { await api('/api/onboarding/restart', { method: 'POST' }); closePanels(); location.reload(); } }, 'Ask me the questions again'),
-        el('button', { class: 'danger', title: 'Delete the ledger, conversation, usage log and setup progress for this state directory.', onclick: async () => { const name = prompt(`Type the state directory name to make Marbly forget everything (${intro.state_dir_name}). The supplier's own records are untouched.`); if (!name) return; try { await api('/api/reset', { method: 'POST', body: { confirm: name } }); location.reload(); } catch (e) { toast(e.message); } } }, 'Forget everything and start over')),
+        el('button', { class: 'danger', title: 'Delete the ledger, conversation, usage log and setup progress for this state directory.', onclick: async () => { const name = prompt(`Type the state directory name to make Marbly forget everything (${intro.state_dir_name}).${intro.operator_url ? " The supplier's records are reset too, through the operator helper." : " The supplier's own records are untouched (no operator helper configured)."}`); if (!name) return; try { const r = await api('/api/reset', { method: 'POST', body: { confirm: name } }); const sup = await L.resetSupplier(r.operator_url); try { sessionStorage.setItem('ly_reset_note', `Fresh start: I have forgotten everything I knew. ${sup.note}`); } catch {} location.reload(); } catch (e) { toast(e.message); } } }, 'Forget everything and start over')),
       el('p', { class: 'small muted' }, 'The supplier side (drafts, orders, scenario flags) belongs to the operator; Marbly never holds that credential. To reset it, in the operator terminal:'),
       el('pre', { class: 'block small' }, `python3 simulator.py scenario --name normal --state <your --state file>   # clears scenario flags, keeps orders\npython3 simulator.py serve --mode agent --state .state/<new-name>.sqlite   # a clean supplier: restart with a new file`),
       el('p', { class: 'small muted' }, `This page talks to ${intro.api_base || 'the simulator'}; the assistant's state directory is ${intro.state_dir_name}.`));
@@ -497,9 +500,11 @@
     main.replaceChildren(el('div', { class: 'client' },
       el('div', { class: 'client-head' }, headAvatar, el('div', {}, el('h1', {}, 'Marbly'), el('div', { class: 'sub' }, `Lantern Yard Kitchen · ${intro.now.slice(0, 10)}`)), el('div', { class: 'spacer' }),
         bell, book, plannerBtn, el('button', { class: 'iconbtn', 'aria-label': 'settings', title: 'settings', onclick: openSettings }, '⚙')),
-      tourBox, feed, chips, el('div', { class: 'composer' }, input, send)));
+      tourBox, el('div', { class: 'pane' }, feed, chips, el('div', { class: 'composer' }, input, send))));  // one pane: the feed scrolls, chips and composer stay at its foot
     tour = intro.tour; renderTour();
     refreshBell();
+    let resetNote = null; try { resetNote = sessionStorage.getItem('ly_reset_note'); sessionStorage.removeItem('ly_reset_note'); } catch {}
+    if (resetNote) say(resetNote);
     if (!intro.onboarded_at) return runOnboarding();
     say(intro.welcome_back);
     const a = await api('/api/alerts');

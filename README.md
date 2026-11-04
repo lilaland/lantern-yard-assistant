@@ -43,16 +43,20 @@ everything else is the standard library.
 
 ## Demo commands
 
-Terminal A (operator):
+Terminal A (operator): the plain simulator, or the helper that runs it and can put it back to a fresh
+file (what Marbly's "Forget everything and start over" asks for; approve and scenario stay typed here):
 
 ```bash
 python3 simulator.py serve --mode agent --state .state/live.sqlite
+# or
+python3 demo/operator_helper.py serve --port 8765 --state .state/live.sqlite --fresh
 ```
 
-Terminal B (assistant); add `--dry` to any command to skip the model:
+Terminal B (assistant); add `--dry` to any command to skip the model (`MARBLE_OPERATOR_URL` is only
+handed to the browser; the assistant never calls the helper or opens the simulator's file):
 
 ```bash
-export MARBLE_STATE_DIR=.marble/live
+export MARBLE_STATE_DIR=.marble/live MARBLE_SIM_STATE=.state/live.sqlite MARBLE_OPERATOR_URL=http://127.0.0.1:8766
 python -m assistant onboard                    # six questions from the findings (or: onboard --defaults)
 python -m assistant brief                      # headline, evidence, uncertainty, next step, runway, retained/rechecked
 python -m assistant ask                        # follow-ups; `set preference order.buffer_days {"days": 2}`; `why <subject>`

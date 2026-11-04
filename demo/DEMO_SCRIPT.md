@@ -10,14 +10,14 @@ Terminal B: `export MARBLE_STATE_DIR=.marble/live && python -m assistant web` th
 
 | Min | Do | Say |
 |---|---|---|
-| 0–1 | Fresh state: gear → "Start over (wipe memory)" if needed. Reload. | Marbly greets and says the records disagree in a few places. |
+| 0–1 | Fresh state: gear → "Start over (wipe memory)" if needed. Reload. | Marbly greets with the four-step overview; the setup card pins to the top with step 1 active. The marble squishes while the model words the questions. |
 | 1–5 | Answer the six cards. Pick "Nobody has seen the cases" on the first; "unknown, keep checking" on the route to show the difference; a custom number on the price threshold; "Set each one" on ordering with buffer 2. | Each answer echoes exactly what was recorded and what changes. "Unknown" records the default rule under your name but leaves the fact at evidence level. |
-| 5–6 | Watch the recheck. | "2 alerts need a decision today." The critical cards appear with a next step and an action button. The bell shows 2; the book shows what was recorded. |
-| 6–7 | Open the bell, then the book. | Alerts grouped critical / watch / info with "Ask Marbly", "Plan the next Alder order", "Evidence". Memory grouped as rules, preferences, facts; "you said so" vs "from note:N15". |
+| 5–6 | Watch the recheck. | Step 1 ticks off. "Step 2: 2 alerts need a decision today." The critical cards appear with a next step and an action button; the bell pulses. |
+| 6–7 | Open the bell (step 2 ticks), then the book (step 3 ticks). | Alerts grouped critical / watch / info with "Ask Marbly", "Plan the next Alder order", "Evidence". Marbly introduces Memory and the three capabilities; the book pulses, then the order chip pulses for step 4. |
 | 7–9 | Chip "Give me this morning's brief". | Narrated brief with citations that open the evidence drawer; the footer with retained vs rechecked. |
 | 9–10 | Type "use two days of buffer from now on". | The approval card: approve, edit the value, or reject. Then the book shows the new preference with "you said so". |
 | 10–11 | A: `scenario --name delivery-correction`. Chip "Give me this morning's brief" again. | Opens with what changed: INV-099 now scheduled, note N16, records corrected, your rules retained. |
-| 11–15 | Chip "Help me with the next Alder order" → "Create the draft". A: `scenario --name supplier-timeout`, then `approve --draft-id D-…` (copy from the screen). | Step 2 shows the exact order and the operator command; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". "Ask Marbly to confirm" answers from the ledger with the same words. |
+| 11–15 | "Start the order" on the setup card (or the pulsing chip) → "Create the draft". A: `scenario --name supplier-timeout`, then `approve --draft-id D-…` (copy from the screen). | Step 2 shows the exact order and the operator command; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". Step 4 ticks, the setup card disappears, Marbly says the setup is done. "Ask Marbly to confirm" answers from the ledger with the same words. |
 
 Fallbacks: without a key every step except narration still works (cards, inbox, memory, wizard);
 the brief falls back to the deterministic text. Gear → "Show developer pages" for the tool matrix,

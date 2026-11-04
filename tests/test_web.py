@@ -262,3 +262,68 @@ def test_chat_mode_parameter_picks_prompt_and_allowlist(site):
     with urllib.request.urlopen(req, timeout=20) as r:
         body = r.read().decode()
     assert "unknown mode" in body
+
+
+def test_tour_steps_are_derived_or_clicked(sim, tmp_path):
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="m", effort="low", state_dir=tmp_path / ".marble", dry=True)
+    httpd, app, base = web.start_in_thread(cfg)
+    try:
+        t = get(base, "/api/client/tour")[1]
+        assert t["steps"] == ["facts", "alerts", "memory", "order"] and t["current"] == "facts" and not t["complete"]
+        assert get(base, "/api/client/intro")[1]["tour"]["current"] == "facts"
+        code, r = post(base, "/api/client/tour", {"step": "facts"})
+        assert code == 400  # facts come from the ledger, not a click
+        for q in get(base, "/api/onboarding/plan")[1]["questions"]:
+            assert post(base, "/api/onboarding/answer", {"id": q["id"], "answer": q["default"]})[0] == 200
+        post(base, "/api/onboarding/complete")
+        t = get(base, "/api/client/tour")[1]
+        assert t["done"]["facts"] and t["current"] == "alerts"
+        t = post(base, "/api/client/tour", {"step": "alerts"})[1]
+        assert t["current"] == "memory"
+        t = post(base, "/api/client/tour", {"step": "memory"})[1]
+        assert t["current"] == "order" and not t["complete"]
+        post(base, "/api/onboarding/restart")
+        assert get(base, "/api/client/tour")[1]["current"] == "facts"  # restart clears the click-throughs too
+    finally:
+        httpd.shutdown()
+
+
+def test_client_wizard_and_sample_prompt_flows_in_api_order(sim, tmp_path):
+    """The exact call sequence the Marbly page makes for each chip and for the order wizard, in dry mode."""
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="m", effort="low", state_dir=tmp_path / ".marble", dry=True)
+    httpd, app, base = web.start_in_thread(cfg)
+    try:
+        for q in get(base, "/api/onboarding/plan")[1]["questions"]:
+            post(base, "/api/onboarding/answer", {"id": q["id"], "answer": q["default"]})
+        post(base, "/api/onboarding/complete")
+        assert get(base, "/api/brief/dry?kind=onboarding")[1]["report"]["first_run"]
+        # chip: "Give me this morning's brief" -> /api/brief (SSE); dry mode returns the deterministic text and no "no changes" line
+        ev = sse(base, "/api/brief", {})
+        assert ev[0]["type"] == "start" and "What changed" not in ev[0]["deterministic"] and "No changes since" not in ev[0]["deterministic"]
+        # chips that go to /api/chat (ask mode): without a model the page shows the explanation, nothing else happens
+        for text in ("How many days of chicken do we have?", "Why do you think Alder delivers on Wednesday?", "use two days of buffer from now on"):
+            ev = sse(base, "/api/chat", {"text": text, "mode": "ask"})
+            assert ev[0]["mode"] == "ask" and ev[1]["type"] == "error" and "no model" in ev[1]["message"]
+        with Ledger(cfg.db_path) as l:
+            assert l.value("preference", "order.buffer_days") == {"days": 1}
+        # chip: "Help me with the next Alder order" -> wizard: proposal, draft, poll, (operator approves), submit, outcome, confirm
+        p = get(base, "/api/order/proposal?vendor=V1")[1]
+        assert p["what_if"] is False and p["lines"] and p["calendar"]["delivery_date"] == "2026-10-07"
+        code, d = post(base, "/api/order/draft", {"vendor": "V1"})
+        assert code == 201 and d["draft"]["order"] == p["order"] and "approve --draft-id" in d["approve_command"]
+        did = d["draft"]["draft_id"]
+        assert get(base, f"/api/order/{did}")[1]["server_status"] == "awaiting_approval"
+        assert get(base, "/api/client/tour")[1]["current"] == "alerts" and get(base, "/api/client/tour")[1]["done"]["order"] is False
+        sim.approve(did)
+        assert get(base, f"/api/order/{did}")[1]["server_status"] == "approved"
+        with sim.under_scenario("supplier-timeout"):
+            o = post(base, f"/api/order/{did}/submit")[1]
+        assert o["state"] == "accepted" and o["verified"] and "response to our submission was lost" in o["message"]
+        assert get(base, "/api/client/tour")[1]["done"]["order"] is True
+        # "Ask Marbly to confirm" answers from fulfilment_status; its note carries the outcome message
+        r = post(base, "/api/tools/execute", {"mode": "ask", "name": "fulfilment_status", "args": {}})[1]
+        assert r["ok"] and r["result"]["drafts"][-1]["status"] == "accepted" and "Verified by lookup" in r["result"]["drafts"][-1]["note"]
+        a = get(base, "/api/alerts")[1]
+        assert a["counts"]["HIGH"] >= 1 and all(x["action"] for x in a["alerts"])
+    finally:
+        httpd.shutdown()

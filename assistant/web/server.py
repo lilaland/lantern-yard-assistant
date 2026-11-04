@@ -312,7 +312,7 @@ class App:
                              "records disagree. Before I plan anything, let's straighten those out together; your answers "
                              "become rules I keep in Memory and apply every time."),
                 "welcome_back": "Welcome back. I've rechecked everything against your rules; here is where things stand.",
-                "capabilities": self.CAPABILITIES}
+                "capabilities": self.CAPABILITIES, "tour": self.tour()}
 
     def _question_dict(self, q, leads: dict) -> dict:
         d = {"id": q.id, "title": q.title, "why": q.why, "lead": leads.get(q.id), "evidence": q.evidence,
@@ -370,9 +370,30 @@ class App:
         """Forget which questions were answered so they are asked again; beliefs stay (a new answer supersedes)."""
         with self.ledger() as led:
             led.set_meta(onboarding.ANSWERS_KEY, "{}")
-            led.db.execute("DELETE FROM meta WHERE key IN ('onboarded_at', 'onboarded_with')")
+            led.db.execute("DELETE FROM meta WHERE key IN ('onboarded_at', 'onboarded_with', 'client.tour')")
             led.db.commit()
             return {"ok": True}
+
+    TOUR_STEPS = ("facts", "alerts", "memory", "order")
+
+    def tour(self) -> dict:
+        """The client's four setup steps. 'facts' and 'order' are derived from the ledger; the two click-throughs are flags."""
+        with self.ledger() as led:
+            flags = json.loads(led.meta("client.tour") or "{}")
+            done = {"facts": bool(led.meta("onboarded_at")), "alerts": bool(flags.get("alerts")), "memory": bool(flags.get("memory")),
+                    "order": any(d.status == "accepted" for d in led.drafts())}
+            current = next((s for s in self.TOUR_STEPS if not done[s]), None)
+            return {"steps": list(self.TOUR_STEPS), "done": done, "current": current, "complete": current is None}
+
+    def tour_mark(self, body: dict) -> dict:
+        step = body.get("step")
+        if step not in ("alerts", "memory"):
+            raise HttpError(400, "only the alerts and memory steps are marked by a click; facts and order come from the ledger")
+        with self.ledger() as led:
+            flags = json.loads(led.meta("client.tour") or "{}")
+            flags[step] = True
+            led.set_meta("client.tour", json.dumps(flags))
+        return self.tour()
 
     ACTION_CLASSES = {"runway_risk", "status_inconsistent_with_evidence", "weekend_readiness", "sku_substitution", "count_variance"}
 
@@ -784,6 +805,8 @@ def make_handler(app: App):
                 return a.onboarding_plan(q)
             if path == "/api/alerts":
                 return a.alerts()
+            if path == "/api/client/tour":
+                return a.tour()
             if path == "/api/beliefs/why":
                 if not q.get("subject"):
                     raise HttpError(400, "subject is required")
@@ -842,6 +865,8 @@ def make_handler(app: App):
                 return self._json(200, a.onboarding_restart())
             if path == "/api/alerts/seen":
                 return self._json(200, a.alerts_seen(body))
+            if path == "/api/client/tour":
+                return self._json(200, a.tour_mark(body))
             if path == "/api/onboard/defaults":
                 return self._json(200, a.onboard_defaults())
             raise HttpError(404, f"no such endpoint {path}")

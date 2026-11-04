@@ -30,4 +30,6 @@ Adjust the estimates marked `~` to what actually happened.
 
 | 2026-11-03 | Live client pass (additional): full Marbly flow in the browser with the model; two fixes (recheck kind, null bubble) | 22:27 | 22:32 | ~0.1 | $0.1720 model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.25 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-03 | Client setup flow (additional): overview + pinned four-step tour with spotlights, marble avatar + theme, null fixes, tour endpoint, 2 tests + 1 scenario, browser run | 22:50 | 22:56 | ~0.3 | dry-mode browser run; live sample flows via the agentic scenario not yet run |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.55 h frontend/evals/agentic suite/live tuning/client experience plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

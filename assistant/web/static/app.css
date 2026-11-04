@@ -85,3 +85,40 @@ body.client-mode .top { border-bottom-color: transparent; background: transparen
 .alertcard.seen { opacity:.75; }
 .step { display:flex; gap:10px; align-items:center; margin:8px 0; } .step .n { width:26px; height:26px; border-radius:13px; background:var(--chip); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; } .step.on .n { background:var(--accent); color:#fff; } .step.done .n { background:var(--ok); color:#fff; }
 .memgroup h4 { margin:12px 0 4px; } .memrow { padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px; } .memrow .st { line-height:1.4; } .memrow .meta { display:flex; gap:10px; align-items:baseline; margin-top:3px; } .memrow .v { font-family:var(--mono); font-size:12px; color:#4a3a25; } .memrow .src { margin-left:auto; font-size:11px; color:var(--muted); white-space:nowrap; }
+
+/* ---- Marbly theme (client mode only): marble white, blue, gold ---- */
+body.client-mode { --accent:#3b6ea5; --chip:#eef3fa; --gold:#c9a227; --bg:#f5f7fb; background: radial-gradient(1200px 600px at 10% -10%, #ffffff 0%, #f5f7fb 60%); }
+body.client-mode button { background:var(--accent); border-color:var(--accent); }
+body.client-mode button.ghost { background:transparent; color:var(--accent); }
+body.client-mode .chips button { background:#fff; color:#2d5587; border:1px solid #c5d4e8; }
+body.client-mode .chips button:hover { border-color:var(--gold); background:#fffaf0; }
+body.client-mode .bubble.m { background:#f3f7fc; border-color:#d9e4f2; }
+body.client-mode .bubble.u { background:#fbf7ea; border-color:#eadfbf; }
+body.client-mode .qcard .opts button.def { border-color:var(--gold); background:#fffdf7; }
+body.client-mode .qcard .opts button:hover { border-color:var(--accent); background:#f3f7fc; }
+body.client-mode .badge.gate, body.client-mode .card.gate { border-color:var(--gold); } body.client-mode .badge.gate { background:var(--gold); }
+body.client-mode .card.gate { background:#fffaf0; }
+body.client-mode .iconbtn { border-color:#d3dcea; }
+body.client-mode .feed { border-color:#dbe3ee; border-radius:18px; }
+body.client-mode .cite { color:#2d5587; }
+body.client-mode .capcard { border-color:#dbe3ee; } body.client-mode .capcard h4 { color:#2d5587; }
+body.client-mode .step.on .n { background:var(--accent); } body.client-mode .tstep.on .n { background:var(--accent); color:#fff; }
+.overview { padding-left:20px; margin:6px 0 0; } .overview li { margin:3px 0; }
+.bubble .who { display:flex; align-items:center; gap:4px; }
+/* avatar */
+.marbly-avatar { display:inline-flex; line-height:0; transform-origin: 50% 100%; animation: float 4s ease-in-out infinite; }
+.marbly-avatar svg .eyes { transform-origin: 50px 54px; animation: blink 4.6s infinite; }
+.marbly-avatar.thinking { animation: squish .85s cubic-bezier(.45,.05,.55,.95) infinite; }
+.marbly-avatar.thinking svg .eyes { animation: lookaround 1.7s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.08); } }
+@keyframes squish { 0%,100% { transform: scale(1,1) translateY(0); } 30% { transform: scale(1.12,.86) translateY(4%); } 60% { transform: scale(.94,1.1) translateY(-14%); } 80% { transform: scale(1.04,.96) translateY(0); } }
+@keyframes lookaround { 0%,100% { transform: translateX(0); } 35% { transform: translateX(3px); } 70% { transform: translateX(-3px); } }
+/* spotlight: the thing to click next */
+.spot { animation: pulse 1.4s ease-in-out infinite; box-shadow: 0 0 0 0 rgba(201,162,39,.7); border-color: var(--gold) !important; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(201,162,39,.65); } 70% { box-shadow: 0 0 0 12px rgba(201,162,39,0); } 100% { box-shadow: 0 0 0 0 rgba(201,162,39,0); } }
+/* pinned setup */
+.tour { position: sticky; top: 52px; z-index: 4; background:#fff; border:1px solid #dbe3ee; border-radius:14px; padding:10px 14px; margin-bottom:10px; box-shadow: 0 6px 18px rgba(40,60,90,.08); }
+.tour-head { display:flex; align-items:center; gap:8px; margin-bottom:4px; } .tour-head .muted { margin-left:auto; }
+.tstep { display:flex; align-items:center; gap:10px; padding:4px 0; font-size:14px; } .tstep .n { width:22px; height:22px; border-radius:11px; background:var(--chip); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+.tstep.done .n { background:var(--ok); color:#fff; } .tstep.done .label { color:var(--muted); text-decoration: line-through; } .tstep .label { flex:1; } .tstep button { padding:4px 10px; font-size:13px; }

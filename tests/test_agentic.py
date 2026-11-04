@@ -36,7 +36,7 @@ def load(name):
 
 def test_list_and_estimates():
     scs = agentic.load_scenarios(SCENARIOS, None)
-    assert [s["name"] for s in scs][:2] == ["brief_rev1", "onboarding_mixed"] and len(scs) == 8
+    assert [s["name"] for s in scs][:2] == ["brief_rev1", "onboarding_mixed"] and len(scs) == 9
     flows, cov = agentic.coverage(scs)
     assert not [f for f in flows if not cov[f]], "every declared flow has at least one scenario"
     assert 0 < agentic.estimate(scs[0]) < 1 and agentic.estimate(scs[0], 3) == pytest.approx(3 * agentic.estimate(scs[0]))

@@ -72,13 +72,15 @@ Operator steps during the demo, in terminal A with the same `--state`:
 python -m assistant web            # http://127.0.0.1:8780 ; needs the simulator; --dry disables model turns
 ```
 
-The default page is **Marbly**, the client experience (driven live end to end on 2026-11-03 for $0.1720 with Sonnet 5.5): a chat that opens with onboarding (each
-question is a card whose options and ledger effects are fixed in code; the model may only word the
-lead-in), then rechecks the findings against the answers, raises the critical alerts, introduces the
-alerts inbox (bell) and Memory (book), and offers the three capabilities with sample prompts. The
-"next order" runs as a three-step wizard: review every line and why, create the draft and show the
-operator's approve command (never a button), then the verified outcome. The gear reveals the
-developer pages: Chat (ask mode with approval cards for anything the
+The default page is **Marbly**, the client experience (driven live end to end on 2026-11-03 for $0.1720 with Sonnet 5.5). It opens with an
+overview and a four-step setup pinned to the top until it is complete: (1) straighten out the facts
+(each question is a card whose options and ledger effects are fixed in code; the model may only word
+the lead-in), (2) look at today's critical alerts (the bell pulses until opened), (3) see what Marbly
+remembers (the book pulses) with the three capabilities and sample prompts, (4) place the first order
+and see it through. The order is a three-step wizard: review every line and why, create the draft and
+show the operator's approve command (never a button), then the verified outcome. Marbly's avatar is a
+marble of white and blue with gold streaks and big eyes; it squishes and bounces while the model is
+thinking. The gear reveals the developer pages: Chat (ask mode with approval cards for anything the
 model wants to remember), Memory (beliefs, chains, conflicts, drafts, usage), Findings (ranked cards
 with citation links, the revision diff, runway and reconciliation), Order lab (what-if sliders that
 never touch the ledger, the real draft path with the approve command displayed, never executed),

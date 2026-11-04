@@ -270,7 +270,7 @@ def test_tour_steps_are_derived_or_clicked(sim, tmp_path):
     httpd, app, base = web.start_in_thread(cfg)
     try:
         t = get(base, "/api/client/tour")[1]
-        assert t["steps"] == ["facts", "alerts", "memory", "order"] and t["current"] == "facts" and not t["complete"]
+        assert t["steps"] == ["facts", "alerts", "capabilities", "order"] and t["current"] == "facts" and not t["complete"]
         assert get(base, "/api/client/intro")[1]["tour"]["current"] == "facts"
         code, r = post(base, "/api/client/tour", {"step": "facts"})
         assert code == 400  # facts come from the ledger, not a click
@@ -280,8 +280,9 @@ def test_tour_steps_are_derived_or_clicked(sim, tmp_path):
         t = get(base, "/api/client/tour")[1]
         assert t["done"]["facts"] and t["current"] == "alerts"
         t = post(base, "/api/client/tour", {"step": "alerts"})[1]
-        assert t["current"] == "memory"
-        t = post(base, "/api/client/tour", {"step": "memory"})[1]
+        assert t["current"] == "capabilities"
+        assert post(base, "/api/client/tour", {"step": "memory"})[0] == 400  # memory is part of step 1 now, not a step
+        t = post(base, "/api/client/tour", {"step": "capabilities"})[1]
         assert t["current"] == "order" and not t["complete"]
         post(base, "/api/onboarding/restart")
         assert get(base, "/api/client/tour")[1]["current"] == "facts"  # restart clears the click-throughs too

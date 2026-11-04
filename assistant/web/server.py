@@ -400,21 +400,22 @@ class App:
             led.db.commit()
             return {"ok": True}
 
-    TOUR_STEPS = ("facts", "alerts", "memory", "order")
+    TOUR_STEPS = ("facts", "alerts", "capabilities", "order")
 
     def tour(self) -> dict:
-        """The client's four setup steps. 'facts' and 'order' are derived from the ledger; the two click-throughs are flags."""
+        """The client's four setup steps. 'facts' (the questions answered, then Memory introduced) and 'order' (a draft
+        accepted) are derived from the ledger; 'alerts' (inbox opened) and 'capabilities' (a sample prompt tried) are flags."""
         with self.ledger() as led:
             flags = json.loads(led.meta("client.tour") or "{}")
-            done = {"facts": bool(led.meta("onboarded_at")), "alerts": bool(flags.get("alerts")), "memory": bool(flags.get("memory")),
-                    "order": any(d.status == "accepted" for d in led.drafts())}
+            done = {"facts": bool(led.meta("onboarded_at")), "alerts": bool(flags.get("alerts")),
+                    "capabilities": bool(flags.get("capabilities")), "order": any(d.status == "accepted" for d in led.drafts())}
             current = next((s for s in self.TOUR_STEPS if not done[s]), None)
             return {"steps": list(self.TOUR_STEPS), "done": done, "current": current, "complete": current is None}
 
     def tour_mark(self, body: dict) -> dict:
         step = body.get("step")
-        if step not in ("alerts", "memory"):
-            raise HttpError(400, "only the alerts and memory steps are marked by a click; facts and order come from the ledger")
+        if step not in ("alerts", "capabilities"):
+            raise HttpError(400, "only the alerts and capabilities steps are marked by a click; facts and order come from the ledger")
         with self.ledger() as led:
             flags = json.loads(led.meta("client.tour") or "{}")
             flags[step] = True

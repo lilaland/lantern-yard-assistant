@@ -47,7 +47,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Operator helper (demo/operator_helper.py) that runs the simulator and resets it to a fresh file; "Forget everything" asks it from the browser; --fresh start commands in the runbook, README and About card; Marbly layout (one header, composer in the chat pane, one-line setup bar) by a subagent; 167 tests | 10:11 | 10:22 | ~0.18 | no model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.83 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Setup steps restructured: facts (questions, then Memory introduced after the last answer) · alerts · what I can do (sample prompts, chip row lit) · first order; fix for the order chip that never appeared or pulsed; runbook and diagram | 10:47 | 10:53 | ~0.10 | no model spend |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.93 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

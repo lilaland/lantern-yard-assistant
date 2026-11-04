@@ -36,12 +36,13 @@
   }
   const think = (on) => { pending += on ? 1 : -1; if (headAvatar) headAvatar.classList.toggle('thinking', pending > 0); };
   // Dim everything except one element and pulse it; any click clears it.
-  function dimSpot(target, text) {
+  function dimSpot(target, text, onClear = null) {
     document.querySelector('.dim')?.remove();
-    if (!target) return;
+    if (!target) { onClear && onClear(); return; }
     const ov = el('div', { class: 'dim' }, el('div', { class: 'dim-text' }, text || ''));
     target.classList.add('spot', 'spot-lit');
-    const clear = () => { ov.remove(); target.classList.remove('spot-lit'); target.removeEventListener('click', clear); };
+    let cleared = false;
+    const clear = () => { if (cleared) return; cleared = true; ov.remove(); target.classList.remove('spot-lit'); target.removeEventListener('click', clear); onClear && onClear(); };
     ov.onclick = clear; target.addEventListener('click', clear);
     document.body.append(ov);
   }
@@ -57,23 +58,25 @@
   const panel = (title, ...children) => { closePanels(); const p = el('div', { class: 'sidepanel' }, el('div', { class: 'drawer-head' }, el('strong', {}, title), el('button', { class: 'ghost', onclick: closePanels }, 'close')), ...kids(children)); document.body.append(p); return p; };
 
   // ---------- the pinned setup (tour) ----------
-  const TOUR = { facts: 'Straighten out the facts', alerts: "Look at today's critical alerts", memory: 'See what I remember about your kitchen', order: 'Place your first order and see it through' };
-  const TOUR_SHORT = { facts: 'Straighten the facts', alerts: "Today's alerts", memory: 'Your memory', order: 'First order' };  // pill labels; the long text is the pill's title
+  const TOUR = { facts: 'Straighten out the facts (your answers become the rules in Memory)', alerts: "Look at today's critical alerts", capabilities: 'See what I can do and try a prompt', order: 'Place your first order and see it through' };
+  const TOUR_SHORT = { facts: 'Straighten the facts', alerts: "Today's alerts", capabilities: 'What I can do', order: 'First order' };  // pill labels; the long text is the pill's title
+  const orderChip = () => [...chips.querySelectorAll('button')].find(b => /next Alder order/i.test(b.textContent));
   let tour = null;
   function spotlight() {
     for (const b of [bell, book]) b && b.classList.remove('spot');
     for (const c of chips.querySelectorAll('button')) c.classList.remove('spot');
     if (!tour || tour.complete) return;
     if (tour.current === 'alerts' && bell) bell.classList.add('spot');
-    if (tour.current === 'memory' && book) book.classList.add('spot');
-    if (tour.current === 'order') { const c = [...chips.querySelectorAll('button')].find(b => /next Alder order/i.test(b.textContent)); c && c.classList.add('spot'); }
+    if (tour.current === 'capabilities') for (const c of chips.querySelectorAll('button')) c.classList.add('spot');
+    if (tour.current === 'order') { const c = orderChip(); c && c.classList.add('spot'); }
   }
   function renderTour() {
     if (!tourBox) return;
     if (!tour || tour.complete) { tourBox.classList.add('hidden'); spotlight(); return; }
     tourBox.classList.remove('hidden');
     const action = { facts: ['Answer the questions', () => { const q = [...document.querySelectorAll('.qcard')].pop(); q ? q.scrollIntoView({ block: 'start', behavior: 'smooth' }) : runOnboarding(); }],
-      alerts: ['Open the alerts', openInbox], memory: ['Open memory', openMemory], order: ['Start the order', () => openWizard('V1')] };
+      alerts: ['Open the alerts', openInbox], capabilities: ['Try a prompt', () => { if (!chips.children.length) introduceCapabilities(); dimSpot(chips, 'Try any of these; each one is a real question for Marbly.'); }],
+      order: ['Start the order', () => openWizard('V1')] };
     // one row: lead, four numbered pills (the current one carries its action button), count at the end
     tourBox.replaceChildren(el('div', { class: 'tour-head' }, avatar(24), el('strong', {}, 'Getting set up')),
       ...tour.steps.map((s, i) => { const done = tour.done[s], cur = tour.current === s; return el('div', { class: `tstep ${done ? 'done' : cur ? 'on' : ''}`, title: TOUR[s] }, el('span', { class: 'n' }, done ? '✓' : String(i + 1)), el('span', { class: 'label' }, TOUR_SHORT[s] || TOUR[s]), cur ? el('button', { onclick: action[s][1] }, action[s][0]) : null); }),
@@ -81,12 +84,27 @@
     spotlight();
   }
   async function refreshTour() { try { tour = await api('/api/client/tour'); } catch { tour = null; } renderTour(); return tour; }
-  async function markTour(step) { const before = tour && tour.current; tour = await api('/api/client/tour', { method: 'POST', body: { step } }); renderTour(); if (before === step) nextStepMessage(); }
+  // quiet: the step was completed by an action that already opened the next thing (the order chip opens the wizard)
+  async function markTour(step, quiet = false) { const before = tour && tour.current; tour = await api('/api/client/tour', { method: 'POST', body: { step } }); renderTour(); if (before === step && !quiet) nextStepMessage(); }
   function nextStepMessage() {
     if (!tour) return;
-    if (tour.complete) { say("That's the setup done. The bell, the book and the order steps are always here, and the chips below are good places to start. Ask me anything about the numbers."); return; }
-    if (tour.current === 'memory') { say("Step 3. Everything you just told me is in Memory: your rules, your preferences, and the facts I am tracking with where each one came from. Open the book to see it."); introduceCapabilities(); }
-    if (tour.current === 'order') { say("Step 4, the big one. Let's place your first order together: I size it from your counts, recipes and rules, show every line and why, and nothing is sent until your operator approves it. Click the pulsing chip or the button above."); const chip = [...chips.querySelectorAll('button')].find(b => /next Alder order/i.test(b.textContent)); dimSpot(chip, 'Your first order starts here.'); }
+    if (tour.complete) { say("That's the setup done. The bell, the book, the calendar and the chips below are always here. Ask me anything about the numbers, or tell me a rule to remember."); return; }
+    if (tour.current === 'alerts') alertsStep();
+    if (tour.current === 'capabilities') introduceCapabilities(true);
+    if (tour.current === 'order') {
+      if (!chips.children.length) introduceCapabilities();  // the chip to click must exist before it can pulse
+      say("Step 4, the big one. Let's place your first order together: I size it from your counts, recipes and rules, show every line and why, and nothing is sent until your operator approves it. Click the pulsing chip below or the button at the top.");
+      dimSpot(orderChip(), 'Your first order starts here.');
+    }
+  }
+  // Step 2: the critical alerts in the chat, then the bell
+  async function alertsStep(a = null) {
+    a = a || await api('/api/alerts');
+    const crit = a.alerts.filter(x => x.severity === 'HIGH');
+    say(`Step 2: ${crit.length} alert${crit.length === 1 ? '' : 's'} need${crit.length === 1 ? 's' : ''} a decision today, ${a.counts.MED} to watch and ${a.counts.LOW} for the record. The critical ones:`);
+    for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true));
+    say('Open the bell (pulsing, top right) to see all of them with their evidence; that is where new alerts land from now on.');
+    dimSpot(bell, 'Alerts live here. Click to open.');
   }
 
   // ---------- alerts inbox ----------
@@ -153,7 +171,6 @@
       el('div', { class: 'chips' }, el('button', { onclick: (e) => e.target.parentNode.after(memoryForm('', openMemory)) }, 'Add something to memory')),
       el('p', { class: 'small muted' }, `${active.filter(x => x.kind === 'observation' && !(x.value || {}).cleared).length} current observations from the detectors are rechecked every run.`),
       el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); L.setDev(true); location.hash = '#/memory'; } }, 'Full memory (developer view)')));
-    if (tour && !tour.done.memory) markTour('memory');
   }
 
   // ---------- order wizard ----------
@@ -379,10 +396,9 @@
   // ---------- onboarding in chat ----------
   async function runOnboarding() {
     say('', 'Marbly', el('div', {}, el('p', {}, intro.greeting), el('p', {}, "Here is how we'll get set up, in four steps you can follow at the top:"),
-      el('ol', { class: 'overview' }, el('li', {}, el('strong', {}, 'The big questions.'), ' A few places where your records disagree; your answers become rules I keep.'), el('li', {}, el('strong', {}, "Today's big alerts."), ' What needs a decision, with the evidence behind it.'), el('li', {}, el('strong', {}, 'What I remember, and what I can do.'), ' Your memory, the brief, questions, and the chips to try.'), el('li', {}, el('strong', {}, 'Your first order.'), ' Sized from your numbers and rules, approved by you, verified with the supplier.'))));
+      el('ol', { class: 'overview' }, el('li', {}, el('strong', {}, 'Straighten out the facts.'), ' A few places where your records disagree; your answers become the rules I keep in Memory.'), el('li', {}, el('strong', {}, "Today's critical alerts."), ' What needs a decision, with the evidence behind it.'), el('li', {}, el('strong', {}, 'What I can do.'), ' The morning brief, questions about the numbers, your next order; with prompts to try.'), el('li', {}, el('strong', {}, 'Your first order.'), ' Sized from your numbers and rules, approved by you, verified with the supplier.'))));
     const go = el('div', { class: 'chips' }, el('button', { onclick: () => { go.replaceChildren(el('span', { class: 'chip on' }, "Let's go")); start(); } }, "Let's go"), el('button', { class: 'ghost', onclick: () => { go.replaceChildren(el('span', { class: 'chip' }, 'later')); say('No problem. The setup card at the top will wait; click "Answer the questions" when you are ready.'); } }, 'Later'));
     say('', 'Marbly', el('div', {}, el('p', {}, 'Ready to start with the questions?'), go));
-    let firstAnswer = true;
     async function start() {
       const t = thinkingBubble('reading your records and wording the questions…'); think(true);
       const plan = await api('/api/onboarding/plan?wording=1');
@@ -391,11 +407,6 @@
       say(`Step 1. ${plan.questions.length} things to settle. Pick the answer that is true for you; "unknown, keep checking" is always fine and I will keep watching.`);
       let i = 0;
       const next = () => {
-        if (firstAnswer && i === 1) {
-          firstAnswer = false;
-          say("Thanks. I'll save that in Memory. You can see my memories in the book (top right), split between your rules, your preferences and the facts I track, and change them whenever they change. From now on I ask permission before storing anything: you get a card to approve, edit or reject.");
-          dimSpot(book, 'Your memory lives here. Click to look, or anywhere to continue.');
-        }
         if (i >= plan.questions.length) return finishOnboarding();
         askQuestion(plan.questions[i++], next, i, plan.questions.length);
       };
@@ -439,16 +450,16 @@
     const fx = done.effect || {};
     const changes = [...(fx.removed || []).map(r => `cleared "${r.title}"`), ...(fx.added || []).map(r => `raised "${r.title}"`), ...(fx.severity_changed || []).map(r => `"${r.title}" moved from ${r.from} to ${r.to}`)];
     say(`Thank you. I re-ran the ${fx.before ?? ''} checks with your answers applied (${(fx.applied || []).length} rules and preferences in play). ${changes.length ? 'Because of what you told me: ' + changes.join('; ') + '.' : 'Your answers confirmed the defaults, so the picture is the same as before but now it rests on your rules.'}`);
-    const crit = a.alerts.filter(x => x.severity === 'HIGH');
-    say(`Step 2: ${crit.length} alert${crit.length === 1 ? '' : 's'} need${crit.length === 1 ? 's' : ''} a decision today, ${a.counts.MED} to watch and ${a.counts.LOW} for the record. The critical ones:`);
-    for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true));
-    say('Open the bell (pulsing, top right) to see all of them with their evidence; that is where new alerts land from now on.');
-    dimSpot(bell, 'Alerts live here. Click to open.');
+    // the end of step 1: everything just said lives in Memory; the alerts follow once the person has looked
+    say("Everything you just told me is in Memory, the book at the top right: your rules, your preferences and the facts I track, each with where it came from. Change any of them whenever they change. From now on I ask permission before storing anything new: you get a card to approve, edit or reject.");
+    dimSpot(book, 'Your memory lives here. Click to look, or anywhere to continue.', () => alertsStep(a));
   }
-  function introduceCapabilities() {
-    say('', 'Marbly', el('div', {}, el('p', {}, 'Three things I can do for you:'), el('div', { class: 'grid three' }, ...intro.capabilities.map(c => el('div', { class: 'capcard' }, el('h4', {}, c.title), el('p', { class: 'small' }, c.blurb), el('div', { class: 'chips' }, ...c.samples.map(s => el('button', { onclick: () => sendText(s) }, s))))))));
+  // Step 3 when `step` is set: the three capabilities with sample prompts, and the chip row to try them from
+  function introduceCapabilities(step = false) {
+    say('', 'Marbly', el('div', {}, el('p', {}, step ? 'Step 3. Three things I can do for you. Try any sample prompt; each one is a real question for me, and the chips stay below the chat:' : 'Three things I can do for you:'), el('div', { class: 'grid three' }, ...intro.capabilities.map(c => el('div', { class: 'capcard' }, el('h4', {}, c.title), el('p', { class: 'small' }, c.blurb), el('div', { class: 'chips' }, ...c.samples.map(s => el('button', { onclick: () => sendText(s) }, s))))))));
     chips.replaceChildren(...intro.capabilities.flatMap(c => c.samples).map(s => el('button', { onclick: () => sendText(s) }, s)));
     spotlight();
+    if (step) dimSpot(chips, 'Try any of these to tick step 3. The order one starts step 4 straight away.');
   }
 
   // ---------- chat ----------
@@ -456,8 +467,13 @@
     if (pending) return;
     say(text, 'You', null, true);
     const low = text.toLowerCase();
-    if (/\bbrief\b/.test(low) && /morning|give me|today|run/.test(low)) return runBrief();
-    if (/order/.test(low) && /help|next|make|place|plan/.test(low) && !/did|went|go through|status/.test(low)) {
+    const isOrder = /order/.test(low) && /help|next|make|place|plan/.test(low) && !/did|went|go through|status/.test(low);
+    // a sample prompt (or any message) completes step 3 once its answer is in; the order prompt ticks it quietly, the wizard is opening
+    const stepWas = tour && !tour.complete && tour.current === 'capabilities';
+    const tick = async () => { if (stepWas) await markTour('capabilities', isOrder); };
+    if (/\bbrief\b/.test(low) && /morning|give me|today|run/.test(low)) { await runBrief(); return tick(); }
+    if (isOrder) {
+      tick();
       const w = wizards.V1;
       say('', 'Marbly', el('div', {}, el('p', {}, w && !w.finished ? `Your ${w.name} order is still open where you left it; here it is again.` : 'Opening your next order. I will show every line and why before anything is drafted. Close the panel any time; this link brings it back as you left it.'), el('div', { class: 'chips' }, orderLink('V1'))));
       return openWizard('V1');
@@ -472,6 +488,7 @@
       feed.scrollTop = feed.scrollHeight;
     });
     think(false); refreshBell(); L.refreshStatus();
+    await tick();
   }
   const gateIntro = (out) => { if (!out.dataset.gi) { out.dataset.gi = '1'; out.append(el('p', { class: 'small muted' }, 'I would like to remember this. Approve, change the value, or reject:')); } };
   async function runBrief() {
@@ -510,7 +527,7 @@
     const a = await api('/api/alerts');
     const crit = a.alerts.filter(x => x.severity === 'HIGH');
     if (crit.length) { say(`${crit.length} critical alert${crit.length === 1 ? '' : 's'} today:`); for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true)); }
-    introduceCapabilities();
+    if (!(tour && !tour.complete && tour.current === 'capabilities')) introduceCapabilities();  // otherwise step 3 introduces them
     if (tour && !tour.complete) nextStepMessage();
   };
 })();

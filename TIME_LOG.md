@@ -22,4 +22,6 @@ Adjust the estimates marked `~` to what actually happened.
 
 | 2026-11-03 | Frontend phase 1 (additional, beyond the brief): gate + event hooks, stdlib web server with all endpoints, seven pages, machine-wide cost log, evaluator suite with fixtures, 20 tests | 21:15 | 21:45 | ~0.5 | logged separately from the brief's deliverables; see HANDOFF_FRONTEND.md |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~0.5 h frontend/evals plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-03 | Agentic suite (additional): judge with calibration, scenario runner with persona and budget, eight scenarios, fake mode, 10 tests | 21:46 | 21:51 | ~0.1 | not yet run live |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~0.6 h frontend/evals/agentic suite plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

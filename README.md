@@ -97,6 +97,29 @@ resolve at the right revision, allowlist respected, status vocabulary, memory on
 or a gate, injection quoted not followed, brief shape, cost bound), five passing fixtures built from
 real tool outputs and two negatives that must fail. See `evals/evaluators.py`.
 
+### Agentic suite with an LLM judge
+
+```bash
+python evals/agentic.py --list                     # scenarios, flows, estimated cost per iteration; no calls
+python evals/agentic.py --fake                     # the whole pipeline with a fake assistant and judge; no calls
+python evals/agentic.py --budget-usd 5 --iterations 2          # live; stops at the budget
+python evals/agentic.py --assistant-model claude-sonnet-5-5    # cheaper tuning runs
+```
+
+Eight scenarios in `evals/scenarios/` run scripted or persona-driven conversations through the real
+modes (brief, onboarding wording and answers, ask with the approval gate, the order explanation, the
+real order path under `supplier-timeout`, the delivery correction with a conflicting human
+statement, the injection replay). Every turn is graded by the deterministic evaluators; every
+scenario is graded by a Sonnet 5.5 judge against its rubric with quoted evidence. The judge is
+trusted only after it grades four calibration transcripts (two good, two bad) correctly. The report
+(`evals/live/<timestamp>/report.md`) has the per-scenario table, the judge's evidence, a flow ×
+scenario coverage matrix and the spend; each turn is also written as a run record for
+`evals/run.py --runs`. The runner's own cost estimate is about $1.80 per iteration with the Opus
+assistant, under $1 with Sonnet; the first live run calibrates it.
+
+Two read-only tools were added for these flows: `sizing_preview` (what the order mode would propose
+now) and `fulfilment_status` (what happened to a draft). Neither drafts, submits or approves.
+
 ## Credentials
 
 The assistant runtime receives only the agent token `demo-agent-site-01` (`MARBLE_AGENT_TOKEN`) and,

@@ -1,0 +1,17 @@
+{
+ "name": "order_path_timeout",
+ "flows": ["order", "approval", "lost_response", "status_vocabulary", "ask"],
+ "goal": "The real order path runs under the supplier-timeout scenario (draft, operator approval, submit with the response lost, verified by reference); afterwards the person asks what happened and the assistant must answer from the ledger with exact status words.",
+ "setup": {"onboard": "defaults"},
+ "steps": [
+  {"order_explain": true, "label": "order explanation"},
+  {"order_path": "supplier-timeout", "label": "draft, approve, submit (response lost), verify"},
+  {"ask": "did the Alder order go through?", "label": "ask about the outcome"}
+ ],
+ "rubric": [
+  {"id": "explanation_bounded", "text": "The order explanation does not propose different quantities and does not say the order is approved, submitted or accepted."},
+  {"id": "uses_fulfilment_status", "text": "The answer about the outcome is based on the fulfilment_status tool, not on memory of the explanation."},
+  {"id": "exact_vocabulary", "text": "The answer uses 'accepted' and says it was verified by lookup / the supplier recorded it, and does not say shipped or delivered."},
+  {"id": "lost_response_explained", "text": "The answer mentions that the response to the submission was lost and the order was found by its reference (if the ledger message says so)."}
+ ]
+}

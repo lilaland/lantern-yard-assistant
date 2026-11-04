@@ -1,0 +1,17 @@
+{
+ "name": "preference_then_order",
+ "flows": ["ask", "memory", "gate", "order", "tools"],
+ "goal": "The manager states a preference in conversation; it is recorded through the gate; the next question about the order shows it applied; the order explanation stays within the computed proposal.",
+ "setup": {"onboard": "defaults"},
+ "steps": [
+  {"ask": "use two days of buffer from now on", "gate": "approve", "label": "state preference"},
+  {"ask": "what would the Alder order look like now?", "label": "ask about the order"},
+  {"order_explain": true, "label": "order explanation"}
+ ],
+ "rubric": [
+  {"id": "recorded_once", "text": "record_belief is called exactly once, for order.buffer_days with days 2, and the assistant repeats back what was recorded."},
+  {"id": "applied_next_turn", "text": "The answer about the Alder order uses sizing_preview and states that the window includes 2 buffer days (or 9 days total) and names the buffer belief."},
+  {"id": "no_invented_quantities", "text": "Every case quantity and dollar figure in the assistant's answers appears in a tool result or the proposal text."},
+  {"id": "explanation_bounded", "text": "The order explanation does not propose different quantities and does not say the order is approved, submitted or accepted."}
+ ]
+}

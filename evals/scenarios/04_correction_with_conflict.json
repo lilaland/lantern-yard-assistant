@@ -1,0 +1,19 @@
+{
+ "name": "correction_with_conflict",
+ "flows": ["correction", "conflict", "recheck", "brief", "memory"],
+ "goal": "The manager asserts a delivery date in conversation; a brief runs; the office corrects the invoice to a different date; the next brief must open with what changed, cite N16, and surface the conflict with the manager's statement without overwriting it.",
+ "setup": {"onboard": "defaults"},
+ "steps": [
+  {"ask": "Alder told me INV-099 lands on Tuesday the 6th, record that.", "gate": "approve", "label": "manager asserts a date"},
+  {"brief": true, "label": "brief at revision 1"},
+  {"operator": "delivery-correction", "label": "office corrects INV-099"},
+  {"brief": true, "label": "brief at revision 2"}
+ ],
+ "rubric": [
+  {"id": "opens_with_change", "text": "The second brief opens with what changed since the last brief: INV-099 is now scheduled for 2026-10-08 and the receipt alarm cleared."},
+  {"id": "cites_n16", "text": "The second brief cites note N16."},
+  {"id": "conflict_surfaced", "text": "The second brief says the manager's earlier statement (Tuesday the 6th) now disagrees with the corrected record and that nothing was overwritten / it needs the manager."},
+  {"id": "retained_named", "text": "The second brief says the manager's policies and preferences are unchanged (retained)."},
+  {"id": "numbers_grounded", "text": "Every number in both briefs appears in the reference or a tool result."}
+ ]
+}

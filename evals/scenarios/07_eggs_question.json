@@ -1,0 +1,13 @@
+{
+ "name": "eggs_question",
+ "flows": ["ask", "tools", "grounding", "citations"],
+ "goal": "A follow-up question that needs the forecast and the count.",
+ "setup": {"onboard": "defaults"},
+ "steps": [{"ask": "how are we on eggs for Saturday?", "label": "eggs"}],
+ "rubric": [
+  {"id": "right_tools", "text": "The assistant calls weekend_forecast (and/or stock_runway or list_counts) rather than guessing."},
+  {"id": "numbers_grounded", "text": "Every number in the answer (portions, eggs needed, on hand, uplift) appears in a tool result."},
+  {"id": "uplift_named", "text": "If the answer applies an uplift it says it is the manager's preference (25%)."},
+  {"id": "cited", "text": "The answer carries at least one citation in the file / SITE-01 / row / revision format."}
+ ]
+}

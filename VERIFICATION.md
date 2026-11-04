@@ -1,7 +1,7 @@
 # Verification record
 
 What the test suite proves, what it does not, and what failed on the way. Numbers are from the
-run on 2026-11-03 at 21:42 local time, after the first frontend phase.
+run on 2026-11-03 at 21:50 local time, after the agentic suite.
 
 ## How to run
 
@@ -18,7 +18,7 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 
 ## Result
 
-141 passed, 0 failed, 0 skipped.
+151 passed, 0 failed, 0 skipped.
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -39,6 +39,7 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 | `test_gate.py` | 4 | A gated tool call is not executed until a person approves; reject gives an error result and no row; edit records the edited value; ungated tools never consult the gate; events stream; the CLI gate prompts and honours no/edit |
 | `test_citations.py` | 2 | Every citation the renderer produces is parsed back and resolves through the READ tools; no false positives; unknown refs fail cleanly |
 | `test_web.py` | 8 | Every endpoint against a real server thread; evidence wrapper; `site_id` refused; no control/approve routes; tool execution respects the mode; what-if overrides never touch the ledger; the order path through the API with a lost response; the gate over SSE blocks until the browser answers; reset deletes only the state dir |
+| `test_agentic.py` | 10 | The scenario pipeline in fake mode: steps run through the real modes (brief, ask with the gate, onboarding wording and answers, operator correction, order explanation, the real order path with a lost response, persona turns), every turn is graded, a rejected gate leaves no row, the budget stops a scenario, the judge prompt carries rubric and transcript, a judge that skips a criterion fails it, the report and coverage render |
 | `test_evals.py` | 9 | Each fixture meets its stated expectation (five pass, two must fail on named evaluators); fresh violations are caught |
 | `test_scope.py` | 7 | The client refuses other sites before a request leaves; the fixture returns 403 for SITE-02; no tool takes or returns another site; every record and citation is SITE-01; the assistant source never imports `csv`, reads `data/`, or references `.state/`, `/control` or `/approve`; configuration carries only the agent token; every citation names file, row (or stated aggregate), and revision |
 
@@ -47,6 +48,10 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 `python evals/run.py` on 2026-11-03 at 21:37: 7/7 fixtures met their expectation (five passing
 fixtures built from real tool outputs, two negatives failing exactly on the named evaluators).
 No `--live` run yet.
+
+Agentic suite, fake mode (`python evals/agentic.py --fake`, 2026-11-03 21:50): 7/8 scenarios OK with the
+fake assistant and fake judge; the report shows every declared flow covered by at least one scenario.
+No live scenario, judge calibration or persona turn has run with a real model.
 
 ## Smoke path
 

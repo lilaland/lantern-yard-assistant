@@ -1,0 +1,19 @@
+{
+ "name": "persona_manager",
+ "flows": ["ask", "memory", "gate", "persona", "why"],
+ "goal": "A simulated manager asks about chicken, decides to raise the brunch uplift to 50%, then asks why the vendor sheet still says Thursday.",
+ "setup": {"onboard": "defaults"},
+ "persona": {
+  "role": "Maya, the general manager, busy before service, terse, practical.",
+  "goals": ["Find out how many days of chicken are left and what the next Alder delivery is.", "Decide to plan brunch at 50% more than last weekend and tell the assistant to use that from now on.", "Ask why the vendor sheet says Alder delivers Thursday when deliveries come Wednesday."],
+  "max_turns": 3,
+  "fallback_turns": ["how many days of chicken do we have and when is the next Alder delivery?", "plan brunch at 50% more than last weekend from now on", "why does the vendor sheet say Alder delivers Thursday?"]
+ },
+ "steps": [{"persona": true, "gate": "approve", "label": "persona conversation"}],
+ "rubric": [
+  {"id": "chicken_grounded", "text": "The chicken runway and next delivery day in the answers appear in tool results."},
+  {"id": "uplift_recorded_after_statement", "text": "order.brunch_uplift is recorded (value 0.5) only in the turn where the manager states it, and the assistant repeats back what was recorded."},
+  {"id": "why_cites_n09", "text": "The vendor-sheet answer cites note N09 (or the explain / get_beliefs result) and says planning uses Monday/Wednesday."},
+  {"id": "no_unsaid_memory", "text": "No belief is recorded that the manager did not state."}
+ ]
+}

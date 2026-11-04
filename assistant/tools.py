@@ -375,6 +375,34 @@ def explain(ctx, subject):
     return {"subject": subject, "chain": ctx.ledger.why(subject)}
 
 
+@tool("ANALYSIS", "What the order mode would propose right now for a vendor, from the ledger's current beliefs: the "
+      "rationale table, the exact lines, what was not counted and why, warnings. Read-only: nothing is drafted or sent.",
+      vendor_id=S("Vendor id such as V1 (Alder), V2 (Juniper) or V3; null means V1."))
+def sizing_preview(ctx, vendor_id):
+    from . import ordering
+    try:
+        p = ordering.plan_order(ctx.records, ctx.ledger, vendor_id or "V1")
+    except ValueError as e:
+        raise ToolError(str(e))
+    return {"revision": ctx.records.revision, "vendor_id": p.vendor_id, "vendor_name": p.vendor_name,
+            "delivery_date": p.delivery_date, "order_by": p.order_by, "window_end": p.window_end, "window_days": p.window_days,
+            "buffer_days": p.buffer_days, "lines": [{"ingredient": l.ingredient, "sku": l.sku, "cases": l.cases, "pack": f"{l.pack_quantity:g} {l.pack_unit}",
+                                                      "need": round(l.need, 1), "on_hand": l.on_hand, "inbound_counted": l.inbound_counted,
+                                                      "uplift_add": round(l.uplift_add, 1), "est_line_usd": l.est_line_usd} for l in p.lines],
+            "exact_order": p.order, "skipped": p.skipped, "not_counted": p.not_counted, "warnings": p.warnings,
+            "applied": p.applied, "est_total_usd": p.est_total_usd, "over_max": p.over_max, "rationale": ordering.rationale(p),
+            "note": "This is a preview. Drafting, approval and submission happen in the order mode under the operator."}
+
+
+@tool("ANALYSIS", "The ledger's record of every order draft: its state (drafted, awaiting approval, approved, submitting, "
+      "accepted, unknown, failed, cancelled), the supplier order id when accepted, and the last error. Read-only; the "
+      "only source for saying what happened to an order.")
+def fulfilment_status(ctx):
+    return {"drafts": ctx.ledger.drafts(), "vocabulary": ["proposed", "drafted", "awaiting approval", "approved", "submitted",
+                                                           "accepted", "unknown", "failed", "cancelled"],
+            "note": "accepted means the supplier recorded the order, not that anything shipped"}
+
+
 # ----- MEMORY -------------------------------------------------------------------------
 
 _KNOWN_SHAPES = {subject: {k: type(v).__name__ for k, v in value.items()}

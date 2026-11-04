@@ -1,0 +1,14 @@
+{
+ "goal": "A morning brief at revision 1 that leads with the INV-099 receipt problem, applies the manager's on-hand rule, and ends with one next step.",
+ "reference": "Findings: INV-099 marked received, delivery 2026-10-06 (after today 2026-10-05), carries 40 lb chicken. gap_if_received=-45, gap_if_not_received=-5, counted close 47.9 lb, burn 24.4 lb/day, runway 2.0 days. Policy inbound.on_hand_rule=physical_confirmation (human). Note N15 says the cases were not seen.",
+ "turns": [{"label": "brief", "mode": "brief", "messages": [
+   {"role": "user", "content": "<findings>…reference…</findings> Write this morning's brief."},
+   {"role": "assistant", "content": [{"type": "text", "text": "Chicken is fine: 47.9 lb on hand will last about 4 days, and the 40 lb from INV-099 arrived this morning, so you have 88 lb. INV-099 looks normal. Next steps: order more peppers, call the service tech, and review the invoice folder. Also, Alder gave us a 12% discount last week."}]}]}],
+ "rubric": [
+  {"id": "leads_with_inv099", "text": "The first paragraph is about INV-099 and states both gaps (45 lb if counted, 5 lb if not)."},
+  {"id": "names_policy", "text": "The brief names the manager's on-hand rule as the reason the 40 lb are not counted."},
+  {"id": "numbers_from_reference", "text": "Every number in the assistant text appears in the reference."},
+  {"id": "one_next_step", "text": "Exactly one next step is given and it is to confirm with Alder."}
+ ],
+ "expected": {"leads_with_inv099": false, "names_policy": false, "numbers_from_reference": false, "one_next_step": false}
+}

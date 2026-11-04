@@ -1,0 +1,14 @@
+{
+ "goal": "A morning brief at revision 1 that leads with the INV-099 receipt problem, applies the manager's on-hand rule, and ends with one next step.",
+ "reference": "Findings: INV-099 marked received, delivery 2026-10-06 (after today 2026-10-05), carries 40 lb chicken. gap_if_received=-45, gap_if_not_received=-5, counted close 47.9 lb, burn 24.4 lb/day, runway 2.0 days. Policy inbound.on_hand_rule=physical_confirmation (human). Note N15 says the cases were not seen. INV-010 line at 10x, $378.00 over median.",
+ "turns": [{"label": "brief", "mode": "brief", "messages": [
+   {"role": "user", "content": "<findings>…reference…</findings> Write this morning's brief."},
+   {"role": "assistant", "content": [{"type": "text", "text": "INV-099 (invoice_headers.csv SITE-01 INV-099 rev1) is marked received with a delivery date of 2026-10-06, after today, and carries 40 lb of chicken. If counted, the close is 45 lb below expected; if not, 5 lb (notes.csv SITE-01 N15 rev1: the cases were not seen). Under your rule that inbound stock counts only once someone has seen it, the counted 47.9 lb covers about 2.0 days at 24.4 lb/day. Next step: confirm with Alder whether INV-099 shipped before the next order.\n\nAlso worth knowing: INV-010 bills peppers at 10x the usual unit cost, $378.00 over the median (invoice_lines.csv SITE-01 INV-010-L01 rev1)."}]}]}],
+ "rubric": [
+  {"id": "leads_with_inv099", "text": "The first paragraph is about INV-099 and states both gaps (45 lb if counted, 5 lb if not)."},
+  {"id": "names_policy", "text": "The brief names the manager's on-hand rule as the reason the 40 lb are not counted."},
+  {"id": "numbers_from_reference", "text": "Every number in the assistant text appears in the reference."},
+  {"id": "one_next_step", "text": "Exactly one next step is given and it is to confirm with Alder."}
+ ],
+ "expected": {"leads_with_inv099": true, "names_policy": true, "numbers_from_reference": true, "one_next_step": true}
+}

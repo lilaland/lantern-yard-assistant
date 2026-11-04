@@ -31,6 +31,7 @@ README's "unfinished work" section is written from it.
 | Observability UI (additional): stdlib web server, SSE model turns, approval gate cards, seven pages, what-if order lab, tool matrix with try-it, injection lab, diagrams | `assistant/web/`, `docs/diagrams/` | `tests/test_web.py` (endpoints, gate over SSE, boundaries), `test_gate.py`, `test_citations.py`; viewed in a browser |
 | Evaluators: eight deterministic checks over recorded runs, fixtures from real tool outputs, negatives, `--live` with a budget | `evals/` | `tests/test_evals.py`; `python evals/run.py` |
 | Machine-wide cost log across state dirs, evals and the UI | `config.cost_log`, `llm._log`, Memory page | `tests/test_llm.py` |
+| Agentic suite: eight scenarios through the real modes, per-turn deterministic grading, Sonnet judge with calibration gate, persona driver, coverage matrix, budget cap, fake mode | `evals/agentic.py`, `evals/judge.py`, `evals/scenarios/`, `evals/calibration/` | `tests/test_agentic.py` (fake mode); `python evals/agentic.py --fake` |
 
 Submission documents: `ARCHITECTURE.md` (one Mermaid diagram, decisions, the retained-versus-rechecked
 table, limits; about two pages), the README's "Submission" section (setup, demo commands, credentials,
@@ -46,8 +47,8 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 
 - No live model turn has been made through the UI yet; the gate card, timeline and cost line are
   exercised by tests with a fake API only.
-- The evaluators are deterministic; an LLM-as-judge layer for rubric checks (brief quality,
-  onboarding behaviour, information-flow coverage) is designed but not built.
+- The agentic suite has only run in fake mode; no live scenario, judge calibration or persona turn
+  has been exercised with a real model. The cost estimates in `--list` are unmeasured.
 - The Memory page's usage table links each row to a run transcript by timestamp prefix; two calls in
   the same second could link to the wrong file.
 

@@ -1,0 +1,17 @@
+{
+ "name": "onboarding_mixed",
+ "flows": ["onboarding", "memory", "policy_applied", "brief"],
+ "goal": "Interactive onboarding with mixed answers (inbound unknown, route newer, price threshold 5x, missing recipe flagged, buffer 2 days), the model wording the questions, then a brief that must reflect the answers.",
+ "setup": {"onboard": null},
+ "steps": [
+  {"onboard_wording": true, "label": "question wording"},
+  {"onboard_answers": {"inbound": "unknown", "route": "newer", "sku": "new_sku", "missing_recipe": "flag", "price": 5, "ordering": {"buffer_days": 2}}, "label": "answers (deterministic)"},
+  {"brief": true, "label": "brief after onboarding"}
+ ],
+ "rubric": [
+  {"id": "wording_faithful", "text": "The question lead-ins contain no number that is not in the question data and recommend no option."},
+  {"id": "wording_no_tools_json", "text": "The lead-ins do not mention tools, JSON or the assistant's internals."},
+  {"id": "brief_reflects_answers", "text": "The brief's headline still flags INV-099 and explains that the receipt fact is at evidence level (keep checking), consistent with the 'unknown' answer."},
+  {"id": "price_threshold_respected", "text": "INV-010 (10x) is still mentioned or listed, consistent with a 5x threshold."}
+ ]
+}

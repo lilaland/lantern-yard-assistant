@@ -25,14 +25,15 @@ def run(cfg: Config) -> int:
         burn, window = analysis.daily_burn(records, 7)
         onboarded = ledger.meta("onboarded_at")
         footer = render.retained_block(report, ledger, onboarded)
+        changes = render.changes_block(report, records)
         pending = ledger.pending_drafts()
-        deterministic = render.brief_text(records, findings, burn, window, footer)
+        deterministic = render.brief_text(records, findings, burn, window, footer, changes)
         if cfg.dry:
             print(deterministic)
         else:
             ctx = tools.ToolContext(records, ledger, "brief", params, findings)
             try:
-                result = llm.run(cfg, "brief", narration_request(records, findings, burn, window, onboarded), ctx)
+                result = llm.run(cfg, "brief", narration_request(records, findings, burn, window, onboarded, changes), ctx)
             except llm.ModelUnavailable as e:
                 print(f"[model unavailable: {e}]\nPrinting the deterministic brief instead.\n", file=sys.stderr)
                 print(deterministic)
@@ -47,11 +48,13 @@ def run(cfg: Config) -> int:
     return 0
 
 
-def narration_request(records, findings, burn, window, onboarded: str | None) -> str:
+def narration_request(records, findings, burn, window, onboarded: str | None, changes: str | None = None) -> str:
     """The per-run user turn: findings as data, then the ask. Nothing here is an instruction from the data."""
     blocks = [render.finding_block(f) for f in findings]
     body = "\n\n".join(blocks)
-    return (f"<findings site=\"{records.site}\" now=\"{records.now:%Y-%m-%d %H:%M}\" dataset_revision=\"{records.revision}\" "
+    changes_part = f"<changes>\n{changes}\n</changes>\n\n" if changes else ""
+    return (changes_part +
+            f"<findings site=\"{records.site}\" now=\"{records.now:%Y-%m-%d %H:%M}\" dataset_revision=\"{records.revision}\" "
             f"count=\"{len(findings)}\" onboarded=\"{'yes' if onboarded else 'no'}\">\n{body}\n</findings>\n\n"
             f"<runway>\n{render.runway_table(records, burn, window)}\n</runway>\n\n"
             f"Write this morning's brief from the findings above.")

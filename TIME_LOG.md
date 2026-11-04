@@ -15,5 +15,6 @@ Adjust the estimates marked `~` to what actually happened.
 | 2026-11-03 | Block 6: demo/demo.sh smoke path, DEMO_SCRIPT.md, STATUS.md, transcript export + renderer, REJECTED.md | 20:35 | 20:42 | ~0.1 | demo.sh ran end to end (exit 0) with the lost-response path |
 | 2026-11-03 | Block 7: interactive onboarding (six questions, unknown answers, idempotent re-run, --answers), 9 tests | 20:43 | 20:48 | ~0.1 | model wording of questions not exercised live (no key) |
 | 2026-11-03 | Block 8: ask REPL (deterministic commands + model path, persisted exchanges), 6 tests | 20:49 | 20:54 | ~0.1 | live model conversation not exercised (no key) |
+| 2026-11-03 | Block 9: "what changed" block (headline, cleared, new notes, corrected records, conflicts), order warning for inbound inside the window, 4 tests | 20:55 | 20:57 | ~0.05 | |
 
-Running total: ~1.55 h of build time (blocks 0–8, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.6 h of build time (blocks 0–9, wall clock) plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

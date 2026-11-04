@@ -178,6 +178,11 @@ def plan_order(records: Records, ledger: Ledger, vendor_id: str = "V1") -> Propo
                 why = params.applied.get(f"received:{h.invoice_id}") or params.applied.get("on_hand_rule", "on-hand rule")
                 not_counted.append(f"{h.invoice_id} ({l.stock_quantity:g} {l.pack_unit} {ing}, status {h.status}, "
                                    f"delivery {h.delivery_date}) is not counted as supply: {why}.")
+                if today <= h.delivery_date <= end:
+                    warnings.append(f"{h.invoice_id} is {h.status} to land {an.weekday_name(h.delivery_date)} "
+                                    f"{h.delivery_date}, inside this window, but is not counted. If it does arrive you "
+                                    f"will carry about {l.stock_quantity:g} {l.pack_unit} of {ing} beyond this order; "
+                                    f"if that is likely, say so in `ask` and the proposal shrinks.")
             else:
                 inbound_counted[ing] = inbound_counted.get(ing, 0.0) + l.stock_quantity
 

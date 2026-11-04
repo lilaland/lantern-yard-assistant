@@ -207,10 +207,24 @@ class RecheckReport:
     assertions_superseded: list[tuple[Belief, Belief]] = field(default_factory=list)
     assertions_conflicted: list[tuple[Belief, Belief]] = field(default_factory=list)
     retained: dict = field(default_factory=dict)  # kind -> count of active human beliefs
+    previous_headline: dict | None = None         # {"id", "title", "severity"} from the last run
+    headline: dict | None = None
+    new_notes: list = field(default_factory=list)  # UntrustedText not seen on the last run
+    previous_run_wall: str | None = None          # wall-clock time of the last run
 
     @property
     def revision_changed(self) -> bool:
         return self.previous_revision is not None and self.previous_revision != self.revision
+
+    @property
+    def headline_changed(self) -> bool:
+        return bool(self.previous_headline and self.headline and self.previous_headline["id"] != self.headline["id"])
+
+    @property
+    def anything_changed(self) -> bool:
+        return bool(self.revision_changed or self.headline_changed or self.observations_new or self.observations_changed
+                    or self.observations_cleared or self.assertions_superseded or self.assertions_conflicted
+                    or self.new_notes)
 
 
 def observation_value(f: Finding) -> dict:
@@ -219,9 +233,20 @@ def observation_value(f: Finding) -> dict:
 
 def recheck(ledger: Ledger, records: Records, findings: list[Finding]) -> RecheckReport:
     """Re-record detector observations, recheck evidence assertions, and report what moved."""
+    import json as _json
+    from datetime import datetime as _dt
     rev = records.revision
     prev = ledger.meta("last_revision")
     report = RecheckReport(rev, int(prev) if prev else None, prev is None)
+    report.previous_run_wall = ledger.meta("last_run_wall")
+    prev_head = ledger.meta("last_headline")
+    report.previous_headline = _json.loads(prev_head) if prev_head else None
+    if findings:
+        report.headline = {"id": findings[0].id, "title": findings[0].title, "severity": findings[0].severity}
+    prev_notes = ledger.meta("last_note_refs")
+    if prev_notes is not None:
+        seen = set(_json.loads(prev_notes))
+        report.new_notes = [n for n in records.notes if n.ref not in seen]
 
     current = {f.id for f in findings}
     for f in findings:
@@ -267,6 +292,9 @@ def recheck(ledger: Ledger, records: Records, findings: list[Finding]) -> Rechec
     report.retained = {k: counts[k]["active"] for k in ("policy", "preference")}
     ledger.set_meta("last_revision", str(rev))
     ledger.set_meta("last_run_at", records.now.isoformat())
+    ledger.set_meta("last_run_wall", _dt.now().astimezone().isoformat(timespec="seconds"))
+    ledger.set_meta("last_headline", _json.dumps(report.headline))
+    ledger.set_meta("last_note_refs", _json.dumps([n.ref for n in records.notes]))
     return report
 
 

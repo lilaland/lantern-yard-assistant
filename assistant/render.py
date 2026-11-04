@@ -65,11 +65,14 @@ def runway_table(records: Records, burn: dict[str, float], window: tuple) -> str
 
 
 def brief_text(records: Records, findings: list[Finding], burn: dict[str, float], window: tuple,
-               retained_block: str | None = None) -> str:
+               retained_block: str | None = None, changes_block: str | None = None) -> str:
     head = (f"Lantern Yard Kitchen ({records.site}) — morning brief\n"
             f"now {records.now:%Y-%m-%d %H:%M} · dataset revision {records.revision} · "
             f"{len(findings)} findings")
     parts = [head, "=" * 72]
+    if changes_block:
+        parts.append(changes_block)
+        parts.append("-" * 72)
     if findings:
         parts.append(finding_block(findings[0]))
         parts.append("")
@@ -188,3 +191,35 @@ def why_text(subject: str, chain: list) -> str:
         out.append(f"               value {fmt(b.value)}; recheck {b.recheck}"
                    + (f"; revision {b.revision}" if b.revision is not None else ""))
     return "\n".join(out)
+
+
+def changes_block(report, records: Records) -> str | None:
+    """Manager-facing 'what changed since the last brief'. None on the first run."""
+    if report.first_run:
+        return None
+    when = f" at {report.previous_run_wall[11:16]} on {report.previous_run_wall[:10]}" if report.previous_run_wall else ""
+    rev = (f"dataset revision {report.previous_revision} -> {report.revision}" if report.revision_changed
+           else f"dataset revision {report.revision}")
+    if not report.anything_changed:
+        return f"No changes since the last brief{when} ({rev}). Same findings, same beliefs."
+    lines = [f"What changed since the last brief{when} ({rev}):"]
+    if report.headline_changed:
+        o, n = report.previous_headline, report.headline
+        lines.append(f"  - Headline: was [{SEVERITY_LABEL[o['severity']]}] {o['title']}; now [{SEVERITY_LABEL[n['severity']]}] {n['title']}.")
+    for old, reason in report.observations_cleared:
+        lines.append(f"  - Cleared: {old.statement.split(' — ')[0]} ({old.subject}); {reason}.")
+    for b in report.observations_new:
+        lines.append(f"  - New: [{SEVERITY_LABEL[b.value.get('severity', 2)]}] {b.statement} ({b.subject}).")
+    for old, new in report.observations_changed:
+        lines.append(f"  - Changed: {new.subject}: {numbers_diff(old.value, new.value)}.")
+    for n in report.new_notes:
+        text = " ".join(n.text.split())
+        lines.append(f"  - New note {n.ref} ({n.recorded_at[:16].replace('T', ' ')}, {n.author}): \"{text[:140]}{'…' if len(text) > 140 else ''}\" [{n.cite}]")
+    for old, new in report.assertions_superseded:
+        lines.append(f"  - Record corrected: {old.subject} {fmt(old.value)} -> {fmt(new.value)} ({new.source}); planning uses the new value.")
+    for old, new in report.assertions_conflicted:
+        lines.append(f"  - Needs you: {old.subject}: {old.source} said {fmt(old.value)} on {old.recorded_at[:10]}, but "
+                     f"{new.source} now says {fmt(new.value)}. Neither was overwritten; planning uses the newer record until you confirm.")
+    lines.append(f"  - Unchanged: {report.observations_unchanged} finding(s); {report.retained.get('policy', 0)} policies and "
+                 f"{report.retained.get('preference', 0)} preferences retained as you set them.")
+    return "\n".join(lines)

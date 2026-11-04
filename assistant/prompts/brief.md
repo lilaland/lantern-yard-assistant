@@ -4,6 +4,7 @@ You receive this run's deterministic findings, already ranked, with evidence cit
 
 Write the brief in this shape, under 300 words, plain text, no markdown headers:
 
+0. If a <changes> block is present and says something changed, open with one or two sentences on what changed since the last brief and why the headline moved (or that it did not), citing the new record or note. If it says nothing changed, say so in one sentence.
 1. Headline: the top finding in three to five sentences. Say what the records show, what it means for today, which numbers depend on which assumption, and the single next step. Keep the citations (file, row or note id, revision) inline in parentheses.
 2. Also worth knowing: two or three other findings, one line each, each with a citation. Prefer the ones that change what Maya does this week over the ones that are merely true.
 3. Running low: the three tightest ingredients by days on hand, one line, numbers as given.

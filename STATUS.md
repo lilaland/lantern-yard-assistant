@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 8 (2026-11-03 evening). This is the honest state of the submission; the
+Updated after block 9 (2026-11-03 evening). This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -12,6 +12,7 @@ README's "unfinished work" section is written from it.
 | Ten detectors, deterministic ranking, citations, revision stamps | `assistant/detectors.py` | `tests/test_detectors.py` incl. revision-2 behaviour |
 | Belief ledger with kinds, sources, supersede/conflict rules, drafts | `assistant/ledger.py` | `tests/test_ledger.py` incl. a four-process restart test |
 | Defaults, ledger → detector params, per-run recheck | `assistant/policies.py` | `tests/test_policies.py` incl. the human-vs-correction conflict |
+| Correction path: "what changed since the last brief" block (headline move, cleared findings, new notes, corrected records, conflicts needing a person), "no changes" line, order warning for inbound scheduled inside the window | `assistant/render.py`, `policies.recheck`, `ordering.py` | `tests/test_correction.py` incl. a CLI brief before/after `delivery-correction` |
 | Model tools with per-mode allowlists; evidence wrapping | `assistant/tools.py` | `tests/test_tools.py` |
 | Tool loop, usage/cost log, keyless fallback | `assistant/llm.py` | `tests/test_llm.py` (fake API) |
 | Order sizing with rationale; state machine; lost-response recovery | `assistant/ordering.py`, `orderflow.py`, `modes/order.py` | `tests/test_order_flow.py` against the real simulator |
@@ -30,7 +31,6 @@ README's "unfinished work" section is written from it.
 
 | Block | Item | Why it matters |
 |---|---|---|
-| 9 | Brief diff before/after `delivery-correction`; sizing change narrated | The footer already shows cleared/superseded rows; the narrated comparison is not written |
 | 10 | `test_injection.py`, `test_scope.py`, `VERIFICATION.md` | Injection and scope are covered indirectly (detector test, tool allowlist test, client site pinning) but not as named tests with a written record |
 | 11 | `ARCHITECTURE.md` (≤ 2 pages, diagram), README submission section, transcripts export and index, cost total | Required deliverables |
 | 12 | Two dress rehearsals of `demo/DEMO_SCRIPT.md` | |

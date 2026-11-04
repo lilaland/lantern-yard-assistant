@@ -104,6 +104,7 @@ class Draft:
     updated_at: str
     order_id: str | None
     last_error: str | None
+    note: str | None = None
 
 
 SCHEMA = """
@@ -131,7 +132,8 @@ CREATE TABLE IF NOT EXISTS drafts (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     order_id TEXT,
-    last_error TEXT
+    last_error TEXT,
+    note TEXT
 );
 CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
@@ -167,6 +169,13 @@ class Ledger:
         self.db = sqlite3.connect(str(self.path))
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(drafts)")}
+        if "note" not in cols:  # ledgers created before the outcome note existed
+            self.db.execute("ALTER TABLE drafts ADD COLUMN note TEXT")
+            self.db.commit()
 
     def close(self) -> None:
         self.db.close()
@@ -331,17 +340,18 @@ class Ledger:
         return self.draft(draft_id)
 
     def update_draft(self, draft_id: str, status: str, order_id: str | None = None,
-                     last_error: str | None = None) -> Draft:
+                     last_error: str | None = None, note: str | None = None) -> Draft:
+        """``note`` is the human-readable outcome that survives a status change (e.g. a lost response recovered)."""
         if status not in DRAFT_STATUSES:
             raise LedgerError(f"unknown draft status {status!r}")
-        self.db.execute("UPDATE drafts SET status=?, updated_at=?, order_id=COALESCE(?, order_id), last_error=? "
-                        "WHERE draft_id=?", (status, _now(), order_id, last_error, draft_id))
+        self.db.execute("UPDATE drafts SET status=?, updated_at=?, order_id=COALESCE(?, order_id), last_error=?, "
+                        "note=COALESCE(?, note) WHERE draft_id=?", (status, _now(), order_id, last_error, note, draft_id))
         self.db.commit()
         return self.draft(draft_id)
 
     def _draft_row(self, r: sqlite3.Row) -> Draft:
         return Draft(r["draft_id"], r["vendor_id"], json.loads(r["order_json"]), r["status"], r["created_at"],
-                     r["updated_at"], r["order_id"], r["last_error"])
+                     r["updated_at"], r["order_id"], r["last_error"], r["note"] if "note" in r.keys() else None)
 
     def draft(self, draft_id: str) -> Draft | None:
         r = self.db.execute("SELECT * FROM drafts WHERE draft_id=?", (draft_id,)).fetchone()

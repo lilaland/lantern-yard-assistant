@@ -1,0 +1,80 @@
+{
+ "name": "persona conversation 2",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 3562,
+  "output_tokens": 315,
+  "cache_read_tokens": 10964,
+  "usd": 0.0124668,
+  "revision": 1,
+  "user_text": "Ok. Plan brunch at 50% more than last weekend, and use that from now on.",
+  "calls": [
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 3
+   }
+  ],
+  "tool_calls": [
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Ok. Plan brunch at 50% more than last weekend, and use that from now on."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01LatRVmxkPi9WYXVLXhPLKW",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.brunch_uplift",
+      "statement": "Plan brunch at 50% more than last weekend, and use that from now on.",
+      "value_json": "{\"uplift\": 0.5}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LatRVmxkPi9WYXVLXhPLKW",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"6b53f4894b92\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan brunch at 50% more than last weekend, and use that from now on.\", \"value\": {\"uplift\": 0.5}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:07:30-05:00\", \"confirmed_at\": \"2026-11-03T22:07:30-05:00\", \"supersedes\": \"6f1fb4525292\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"6f1fb4525292\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan weekend breakfast ingredients at last weekend's pace plus this uplift, since the owner expects a busier brunch and there are no booking numbers.\", \"value\": {\"uplift\": 0.25}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:07:18-05:00\", \"confirmed_at\": \"2026-11-03T22:07:18-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "I recorded a preference on `order.brunch_uplift` with the value `{\"uplift\": 0.5}`. It replaces the earlier 0.25 uplift, which came from the onboarding defaults and wasn't a statement you made in this conversation.\n\nFrom now on, weekend forecasts and order sizing will plan brunch at last weekend's sales plus 50%. Nothing has been re-forecast or drafted yet. If you want, I can run the forecast for a specific brunch item.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

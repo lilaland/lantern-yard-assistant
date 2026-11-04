@@ -1,0 +1,96 @@
+{
+ "name": "ask about the outcome",
+ "tags": [
+  "order",
+  "approval",
+  "lost_response",
+  "status_vocabulary",
+  "ask"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 933,
+  "output_tokens": 326,
+  "cache_read_tokens": 10660,
+  "usd": 0.007258,
+  "revision": 1,
+  "user_text": "did the Alder order go through?",
+  "calls": [
+   {
+    "name": "fulfilment_status",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "list_vendors",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "fulfilment_status",
+   "list_vendors"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "did the Alder order go through?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_018TLXRsz3UTYWanxp9C2a55",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "fulfilment_status",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01Sohy3FzXPdPRNPvSNL7qbN",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "list_vendors",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_018TLXRsz3UTYWanxp9C2a55",
+     "content": "{\"drafts\": [{\"draft_id\": \"D-47751c75237d\", \"vendor_id\": \"V1\", \"order\": {\"lines\": [{\"quantity\": 8, \"sku\": \"AW-CHK20\", \"unit\": \"case\"}, {\"quantity\": 2, \"sku\": \"V1-EGG\", \"unit\": \"case\"}, {\"quantity\": 4, \"sku\": \"V1-CHEESE\", \"unit\": \"case\"}], \"site_id\": \"SITE-01\", \"vendor_id\": \"V1\"}, \"status\": \"accepted\", \"created_at\": \"2026-11-03T21:59:35-05:00\", \"updated_at\": \"2026-11-03T21:59:35-05:00\", \"order_id\": \"O-804065d4ceba\", \"last_error\": null}], \"vocabulary\": [\"proposed\", \"drafted\", \"awaiting approval\", \"approved\", \"submitted\", \"accepted\", \"unknown\", \"failed\", \"cancelled\"], \"note\": \"accepted means the supplier recorded the order, not that anything shipped\"}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Sohy3FzXPdPRNPvSNL7qbN",
+     "content": "{\"revision\": 1, \"vendors\": [{\"cite\": \"vendors.csv SITE-01 V1 rev1\", \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"account_number\": \"AC-417\", \"delivery_days\": [\"Monday\", \"Thursday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V2 rev1\", \"vendor_id\": \"V2\", \"vendor_name\": \"Juniper Produce\", \"account_number\": \"JP-228\", \"delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V3 rev1\", \"vendor_id\": \"V3\", \"vendor_name\": \"Copper Pantry Supply\", \"account_number\": \"CP-609\", \"delivery_days\": [\"Monday\"], \"last_reviewed\": \"2026-09-14\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Yes. The ledger shows the Alder order (V1, Alder Wholesale) as **accepted**. The supplier recorded it as order O-804065d4ceba. It came from draft D-47751c75237d, last updated 2026-11-03 21:59:35 -05:00, with no error (source: fulfilment_status).\n\nThe order lines were:\n- 8 cases of AW-CHK20\n- 2 cases of V1-EGG\n- 4 cases of V1-CHEESE\n\n\"Accepted\" only means the supplier recorded the order. It does not mean anything has shipped. The ledger has no delivery confirmation. The vendor sheet lists Alder delivering Monday and Thursday, but it was last reviewed 2026-09-14 and may be stale (source: vendors.csv SITE-01 V1 rev1).",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

@@ -24,4 +24,6 @@ Adjust the estimates marked `~` to what actually happened.
 
 | 2026-11-03 | Agentic suite (additional): judge with calibration, scenario runner with persona and budget, eight scenarios, fake mode, 10 tests | 21:46 | 21:51 | ~0.1 | not yet run live |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~0.6 h frontend/evals/agentic suite plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-03 | Live tuning (additional): three live suite runs, two API-limit fixes, prompt/ledger/rubric fixes, measured costs | 21:52 | 22:10 | ~0.3 | $1.11 of model spend, all in .marble/costs.jsonl |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~0.9 h frontend/evals/agentic suite/live tuning plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.

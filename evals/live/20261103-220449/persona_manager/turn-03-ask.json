@@ -1,0 +1,84 @@
+{
+ "name": "persona conversation 3",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 5487,
+  "output_tokens": 578,
+  "cache_read_tokens": 10964,
+  "usd": 0.0189468,
+  "revision": 1,
+  "user_text": "Why does the vendor sheet say Alder delivers Thursday when they come Wednesday?",
+  "calls": [
+   {
+    "name": "list_notes",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "list_notes"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Why does the vendor sheet say Alder delivers Thursday when they come Wednesday?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQS2QkKEAgTGAI4AUIIdGhpbmtpbmcSDHe0JbJSO5ZxzRLKTRoMn2jHI8tEmGs6zvnMIjBmYBjPZS6TJuoDfFWtIlnogZrQrejF7/ExtrexAC7MAtPF/8t0HkzUVtkNXY/64Xgq9gjYuO6jdkYff89C3FKKAzD5BaXqJquZC2lqpPBBbinjdxTXtOWZBgN0RFZqrG0rRgPAXo7GIcCg0wnySlanvaTAwZDymMCYrXX8fUADQkvvEQFqJ1H+/tee1h9HopJg08Gt6yu9r4tcMVjZiGzYoAyBZwhyJuj5Pd0GkgmCyBlge2/ur//q/v+N5X3f20ybbK0luTF/cAdCSmSCAlFx2AXjFGqHg6BXfjw2kAw3Cvw0t0jDyj6iH6DMP0Z0LX+IB5Bc3QlleIdN8N1059BSLujjkZAFLruPyHVz1hePQeAGOJVQGpdFhqcLBjTrvkyiBXnBG7hd3poz76mKBfxqXFQ2KglvyQh7p2CelY5rVQsDiWYt6+c+8HW9BCX/rTY6SL5NMitHrmdiU12cZfCb+UyzU3E7ARwztUf8rKlUsSIFsB62GMezgKQdvpNDzbIch/ub7ckhdJCywosh4xt6m5FJgTLTtzSG7PrH5UCYI3oE8vOicjMApuIa0OMQjeUOgu682qGTwoKyY2KzavfZhACRnrLMF8bnIv+hsQfwGDt04w0ygDiDi+plop+Ko2tovQLsyDOtK5oB4NdB9g0Ov77+iPKgRVpudG/9YSCLnCu7plgt21xgljzhVAN5lwxEVMbaerHNR8m+6whffvQhMea6a4IOvtcR1ji7cGX7izkIz6Sb0hkKlft/9fAbov4l9NbIyFuS8mhDqMAdqCE+UPnLSGrpK3LHbrVe7U0sAs6kf4xY0KrD9UIuqwdVcUMkUUeuwNcj087SxucZ+t1eW3497U8Ycuieg2GwRT4fx5DnDada8Rdu7M0PkwPDvp/7KsvKoGFCgcj8tJT7I233AmnTDqWAhFNTdnsQAcT7xyNbJOxL3kFxh3bFaSKWABz2Nm38+GguVJNoadrvBKPWzOpg8WNrMk71XpAfENNPpoQkNoKqYELDXpYlIEN/87+mpDWeokZBM3D8KQy8Qvhx8eED4ZgcqSW17IQFlqWaEYz4DliY/XXMiTd6Lv6YTQ31IJwAabQpfqjK4asmvL5HbGFQKBVi1sXdz5fjpvG0VMRyXjrJrlB2VCfQ+6Luz5QQ2WEzmKX6eo7e8cZfmuHYtVwcXp3IVO2vDnflkflD1TKntJ2Cp8Ea74NzQOL2Rs1PbNNyKg1b2ySaAhO25jCloOOA4hwo5blc9hT/8JXVT/tUCf2eBw9/rFfA01RbvXCab8C6MkXXT82gDFwvMTXb2ciBGoKnYCVuh2VXO6ZDI6aRvUA2gjWBlw1v0W6CyFLna+GJ1bEuK/ZI+MbzHDNm2DHax3qV8fVO8kLGkHarJodW85fPj5oaI1Ns68/sthJZUlU/4+z8x7MzFxVpfurmOJ8j4cifOBTH8mVGasMv58SEPQAONyfA5FRwFwVVAWklahbFZsLhxI3wckEvExNPO1A0+B28RwwER9jiKWhZdDuOw23nJFeXo8vR9cyOTySHu+wSpLkJLtP/N+Cv49Wphu3l2Mg4JxL/fYquqkSUQMY/4V8u1D6BNBgB",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01RmvkLi5MZzW6j3G9oV7HAs",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "contains": "Alder",
+      "date_from": "",
+      "date_to": ""
+     },
+     "name": "list_notes",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01RmvkLi5MZzW6j3G9oV7HAs",
+     "content": "{\"revision\": 1, \"count\": 3, \"notes\": [{\"ref\": \"N03\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-18T12:20:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N03 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N03\\\" author=\\\"Maya\\\" at=\\\"2026-09-18T12:20:00-04:00\\\" revision=\\\"1\\\">\\nAlder says chicken goes from $3.20/lb to $3.65/lb on Sept 28. Same spec. Wrote it on the order clipboard.\\n</evidence>\"}, {\"ref\": \"N09\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-25T16:45:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N09 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N09\\\" author=\\\"Maya\\\" at=\\\"2026-09-25T16:45:00-04:00\\\" revision=\\\"1\\\">\\nAlder rep confirmed the route changes Sept 28: Monday/Wednesday instead of Monday/Thursday. Orders by noon the day before. Wednesday has to get us through the weekend.\\n</evidence>\"}, {\"ref\": \"N12\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-30T13:10:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N12 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N12\\\" author=\\\"Maya\\\" at=\\\"2026-09-30T13:10:00-04:00\\\" revision=\\\"1\\\">\\nAlder delivery landed today. Egg shelf is full again. Need to finish reconciling the invoice folder.\\n</evidence>\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "The vendor sheet most likely just wasn't updated. Maya's note says the Alder rep confirmed the route changes on Sept 28, from Monday/Thursday to Monday/Wednesday (`notes.csv SITE-01 N09 rev1`). The sheet still shows Monday/Thursday and was last reviewed on 2026-09-14, which is before that change (`vendors.csv SITE-01 V1 rev1`).\n\nN12 says an Alder delivery \"landed today\" on 2026-09-30 (`notes.csv SITE-01 N12 rev1`). I didn't check whether that date was a Wednesday, so I'm not treating it as confirmation.\n\nPlanning already uses Monday/Wednesday, from N09. I haven't recorded anything new, because the ledger already holds that fact. Tell me if you want the sheet's Thursday overridden or recorded differently.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

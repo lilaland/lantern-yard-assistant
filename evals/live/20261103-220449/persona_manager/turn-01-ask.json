@@ -1,0 +1,136 @@
+{
+ "name": "persona conversation 1",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 3,
+  "input_tokens": 2035,
+  "output_tokens": 505,
+  "cache_read_tokens": 16446,
+  "usd": 0.0124092,
+  "revision": 1,
+  "user_text": "How many days of chicken do we have left, and when's the next Alder delivery?",
+  "calls": [
+   {
+    "name": "stock_runway",
+    "ok": true,
+    "gate": null,
+    "ms": 1
+   },
+   {
+    "name": "list_vendors",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "stock_runway",
+   "list_vendors",
+   "explain"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "How many days of chicken do we have left, and when's the next Alder delivery?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01AsG5tbpfDTpzcD9s3HL3vJ",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "ingredient": "Chicken thigh boneless skinless"
+     },
+     "name": "stock_runway",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01NeBAY7vkPP3X2RzdNAiaYg",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "list_vendors",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AsG5tbpfDTpzcD9s3HL3vJ",
+     "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.4314, \"runway_days\": 1.9606, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}]}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NeBAY7vkPP3X2RzdNAiaYg",
+     "content": "{\"revision\": 1, \"vendors\": [{\"cite\": \"vendors.csv SITE-01 V1 rev1\", \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"account_number\": \"AC-417\", \"delivery_days\": [\"Monday\", \"Thursday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V2 rev1\", \"vendor_id\": \"V2\", \"vendor_name\": \"Juniper Produce\", \"account_number\": \"JP-228\", \"delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V3 rev1\", \"vendor_id\": \"V3\", \"vendor_name\": \"Copper Pantry Supply\", \"account_number\": \"CP-609\", \"delivery_days\": [\"Monday\"], \"last_reviewed\": \"2026-09-14\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQSywUKEAgTGAI4AUIIdGhpbmtpbmcSDMB2IOu8RNvkDyn1+RoMrZ8+LnGKthnaRz1pIjCJq9J/gyYPKC15HAw6/U6360xh2ikixhs4rqIVOljFJyqACTpwuujXoC90y0j51BIq6AQy7/s74fZV8klE2c4w36G93FHX0XN227rvIA/jJiv/Mdz50Iz79RDeyrAbzeUWmu9sE3WFkRgox2KtS69gjtggo+DJFmptNfgZDG3fYOdUV7LufNeMdyZu+tLZiLPRoEflChwog8ZBiTPjzqZzD1mO9F6fDp8va3xXvfvA8FHEHXiw2sJ9Ub+/Vbq23j2PEpwlaD68REcycnpU6X3iCy/U6YEx9FKMENxeYW3WmdopvB2693yNvoqDCKsDWDLyhGXcz5DFeXqHAwdliA4pLoq27LVQliuC9Xac+NnJDHToqfLpAFGHl1GvzpmXq8eYPlfQ/xNKYzBH5d+zc/MtszGrc0rBtR9+plzrPs32mXa6KLqIZF4T4VMWzUrvbKYISgu2/aNPPBUnt53lT1C22uDmjt1DdYOjfn8IxY1P7VL7eN3sCd6tkpoaStvI3CmT+bQzLu61cSnDH/e4yjZEsuCyAbbDzSKSVLmedeTFX0o02qs86xje+0X009ejNYldg+P41D0gCbYitcNfoSS3sfMHetkDvl5AzCjLcMHePjAYxnmKNoOiWEXzKoh4k/abqUdKWrfTH7vtJt2b/CNRQ8Fqi8Vp8tfZzb5Ih/3NvVGkTDVGqwu4KZFmdwuMKMvCxjirzFTU8chG9InJomutUC+QnPn7KY72j1uDexWDql+YCJ+ZajylXrzQmIgbTQj9ewY8+8VEZbZx+wuIgXfJJpihSjYVd3wd+/XY77szWYOYsI4djIx03WhURyo5FiuP2mvsQWnF/Ddjb0gbCHNGojuSBBfZLSsbQ5QYYcfY4FOm7c2c5kfqS4RrGAE=",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_015KPMuujRCAxUnBapvMPmY1",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015KPMuujRCAxUnBapvMPmY1",
+     "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"059711b9ce16\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:07:18-05:00\", \"confirmed_at\": \"2026-11-03T22:07:18-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Chicken thigh boneless skinless has about 1.96 days left. The count was 47.9 lb (`inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1`). Last week's use was about 24.43 lb a day, from 2026-09-28 to 2026-10-04.\n\nPlanning uses Alder deliveries on Monday and Wednesday, with orders due by noon the day before. That comes from note N09, which is quoted evidence and not a confirmed fact. The vendor sheet lists Monday and Thursday (`vendors.csv SITE-01 V1 rev1`), but it was last reviewed on 2026-09-14, so it may be stale.\n\nThe Monday delivery is the same on both sources. If Wednesday versus Thursday matters for your order, the Alder rep or a recent delivery receipt would settle it. I don't know whether the restaurant records actual delivery days anywhere other than invoices.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

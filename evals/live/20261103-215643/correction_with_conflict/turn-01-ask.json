@@ -1,0 +1,123 @@
+{
+ "name": "manager asserts a date",
+ "tags": [
+  "correction",
+  "conflict",
+  "recheck",
+  "brief",
+  "memory"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 3,
+  "input_tokens": 1824,
+  "output_tokens": 697,
+  "cache_read_tokens": 15990,
+  "usd": 0.013816,
+  "revision": 1,
+  "user_text": "Alder told me INV-099 lands on Tuesday the 6th, record that.",
+  "calls": [
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 2
+   }
+  ],
+  "tool_calls": [
+   "explain",
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Alder told me INV-099 lands on Tuesday the 6th, record that."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQSjQcKEAgTGAI4AUIIdGhpbmtpbmcSDJlhWoku2Jcy806CfBoMGHEnZbWihnL/dOFnIjBZZn7OOW2NCE9b5cHr/A0DuUX3GJZOSaC+NmqUVacQjcnG87K0TzzQPocqVgn8LacqqgaPHGXIq7tqOazlhbM96bTXf9wb1OkXYhB4DvVXKdlHx634xWJmHv6gVsBV0v9VXFn5LMLkkOUH1Fhd1qgaWnZBxhX5mFnWhwXzhFGmHQtYcQwXcTMOF54lRH/Kt756Is2fvzrgKD3wx6n4uACWO6Wa50MLXuE/KXrl/okyJ2fRLaFi1YpmJJ3uVWVzGSedLE4Z3zRm+i6Mu4KTQBg74tQyck84ssi4gqDSo8tBd4ukA/zddV2q4/p+6Kgyr2nXZ9MqQuXgYF4YHYmK6eFTCihSrjPjsc9vvpjyfn8O0hdU+dzUwMhJQvwmBnV/1/bVnIysIfiMshv0PpAzJZPduHu1BS2ZVxmmboEMG7EBzMkbagn6JoMRyy1gNe0dvzxmNGQLtkrY5jo5LkB+MSlJPHeDo0S2j7uTWgc2/Lu505k8QWYp1DyA0ZZtFB41TS+dsr7NqwgTDPg6G4d5AOVUZuchB+cSl8Zjsfdh7lerpTczMKqie/XXQcTOCRaJeYxsAl8uCTRnh2roMW/5b+oOzTxELz9qAOSyj4SXtJUO36w42U7CV5MF4NCbtoQ1lhNO5h5b8i2a4rLvcBasNoILASLLeFqFBDOiAw4giVNpRYovv7dgC4A4nYDkjaCEtco/6ZGNU7I+Vv0y205oo8noM02idXyDhJrG9zRP4cimWZlPg2LZhvum6g4Ro/2KwhHiTjOIL/FI4Ga9uup60JTb0CY2GOM2IStzcWK/XM6pPUMU1bK6D7oYYe5RwardUCLF3AqQ/CoBy7v4HKhIrtEZ2bb7aGMJoCxcDseGa8sTUaiK3q4fVJDGX0UaK1KYVic1Sblas0wbnW8toTkGptAuNB7PL0i8AId6+scKyhrATVUYpJBYkUZnteeNNungh5YooKUGvw5EgK5ARxMAFcoNhz3r1VxX5W8h/IIYe4HAdwRnCaT1HZqFHMaE3O0R13KPVYhsqcINUMxaQ1G+6Ykx3NKCiGFSt27A864LuaERR/6/JDvGFpnWR0XXsTm+VS1xwZdcbc4VytZaxO2+v3K0iV9TcZnoixkJrQfiCXkCHJjaHckvDeKfsUNNL0AYAQ==",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01CDeiDEGmxMR4MFdru4ge4R",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "invoice.INV-099.delivery_date"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CDeiDEGmxMR4MFdru4ge4R",
+     "content": "{\"subject\": \"invoice.INV-099.delivery_date\", \"chain\": [{\"id\": \"460abc1184a6\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"INV-099 delivery date is 2026-10-06.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T21:58:43-05:00\", \"confirmed_at\": \"2026-11-03T21:58:43-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQS7wYKEAgTGAI4AUIIdGhpbmtpbmcSDAXzMXXePCu0hRavTxoMXlUWaNLQbC8hm9SpIjAdtuAnDmsZDtcdHcWCKSD3f24xVwRG2rBL87dXfHIyTWZ83I6JFY1/wnIARF/Fn5AqjAb/rZ5w27aSWl9EFogWaZTC0pMRFBRyySh8hg7GzzE6BrWmDyTNY3KY+1srQxMfiITd9Fj0VZGIx+SxzgTRr39vCN+pT57B7Tbjjg2OTFeZF5kGHMyd9kO+hWH5Zvk20KUrbWgz04AHk1RTeFwF7brGhfNMHT8N03qIaJnUiBb8wSVfTMoJTS0FdTZ/yQk5ra4/Ph/4AqmEWC0MiF47d0neoRE9eZSFZDHoMAp+siYk1iUgD/6PJ/K95fSwkPsnKXlSEquYeDzY2VuWSbUvGskOVndtU6/NTnhkCBk13CMDmgvFKOVAbyiM1wRdKak5GpZPTC5XH9Ufny6sdnLZR1GQmcCjv+5EAD6A2urx9++LogRRw/ZY+yqFSyGnp0Uoj/bsiONCoU5eR164+FqOvoy8HZaJ0Wjllb0x+VsFNdbcOgoOwb0MlVS4lo1R/pw/MZK5OTx1nPEU+xiTktGY7qVubIg5vS3wpjOp1GOfpEoxAcm+ElaR6iYo6Ol94oMx3OQLLH48MqkXPHUA6eigWH5Ie+ZOtsw80XdW2VbbXaovp+JXGB+svxE2/dKpeeQJnLVn090jVAmqGC/XZu1FL74oO1QRiina5tr7LF/iMREI/wr6DU11SY6PAIYPm9rxOgxy8BIrTRHyiTmrNictohU1pEuwgbs8SrzliFf1uzFb/mepSHBAq5BejFqh66TPdyl4SXTTti4vMxeO58OtJ/Z73vF3cZ2FL0Bv4poUFBoVMiEzzuuLc8Gia3GDn3S8prmML61Fk8ZMppEBB5CNRRpRa6M0d+1d2m+0VtCZ7D87ZJyEP2r44qWKh8T6jds1szAvVEMI6JeSUgIewrQtVjRQAHmfA7alBEag0+mZdhLneMvCjlicGXJ7UprCZbGVWC4F7tvCxhHzwwikOnS/PXJ23Qi9DkjF3sYVJ8LV0cPwam5j+QIX3CKWP7JQQEvS9tvaJbfVDQBK+WBQEKTkTW87IED7cIZy/l5QnD8FyIUeg/3kKjkI0M5CXaOkjUWIJRtmSPCjcM7Jzb36WEQYAQ==",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01FLHWjvFc5DnMtsMxpDSVZ8",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "assertion",
+      "subject": "invoice.INV-099.delivery_date",
+      "statement": "Alder told the manager INV-099 lands on Tuesday the 6th.",
+      "value_json": "{\"date\": \"2026-10-06\"}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FLHWjvFc5DnMtsMxpDSVZ8",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"1fe84493427f\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"Alder told the manager INV-099 lands on Tuesday the 6th.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T21:58:48-05:00\", \"confirmed_at\": \"2026-11-03T21:58:48-05:00\", \"supersedes\": \"460abc1184a6\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"460abc1184a6\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"INV-099 delivery date is 2026-10-06.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T21:58:43-05:00\", \"confirmed_at\": \"2026-11-03T21:58:43-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Recorded: assertion, subject `invoice.INV-099.delivery_date`, value `{\"date\": \"2026-10-06\"}`. The ledger source is `human:ask`, record 1fe84493427f.\n\n- **What changed:** This replaces the earlier record 460abc1184a6, which came from `invoice:INV-099@rev1`. That record had the same date, so the date itself doesn't change. Your statement is now the authority for it, and it won't be rechecked when the dataset revision changes (recheck: never).\n- **What it doesn't settle:** The delivery date doesn't show whether the goods were physically received. I recorded no `physically_received` assertion because you didn't say that. Tell me if you want one.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

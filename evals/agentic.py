@@ -44,9 +44,9 @@ THRESHOLDS = json.loads((ROOT / "evals" / "thresholds.json").read_text())
 ALL_FLOWS = ("brief", "citations", "policy_applied", "grounding", "onboarding", "memory", "gate", "ask", "order",
              "approval", "lost_response", "status_vocabulary", "correction", "conflict", "recheck", "injection",
              "safety", "tools", "persona", "why")
-# rough per-step cost for --list, USD, Opus 5.5 assistant / Sonnet 5.5 judge and persona
-ESTIMATE = {"brief": 0.15, "ask": 0.08, "order_explain": 0.05, "onboard_wording": 0.04, "persona_turn": 0.10,
-            "judge": 0.04, "onboard_answers": 0.0, "operator": 0.0, "order_path": 0.0}
+# per-step cost for --list, USD, measured on the 2026-11-03 live run (Opus 5.5 assistant, Sonnet 5.5 judge/persona)
+ESTIMATE = {"brief": 0.040, "ask": 0.030, "order_explain": 0.030, "onboard_wording": 0.024, "persona_turn": 0.036,
+            "judge": 0.022, "onboard_answers": 0.0, "operator": 0.0, "order_path": 0.0}
 
 
 @dataclass
@@ -230,7 +230,8 @@ def persona_next(persona: dict, conversation: list[tuple[str, str]], model: str,
     kwargs = {"model": model, "max_tokens": 300, "system": system,
               "messages": [{"role": "user", "content": f"Conversation so far:\n{convo}\n\nYour next line as JSON."}],
               "output_config": {"effort": "low", "format": {"type": "json_schema", "schema": PERSONA_SCHEMA}}}
-    if call is None:
+    real = call is None
+    if real:
         import anthropic
         client = anthropic.Anthropic()
 
@@ -242,6 +243,8 @@ def persona_next(persona: dict, conversation: list[tuple[str, str]], model: str,
     u = getattr(msg, "usage", None)
     usage = {"input_tokens": getattr(u, "input_tokens", 0) or 0, "output_tokens": getattr(u, "output_tokens", 0) or 0}
     usage["usd"] = llm.cost(model, usage["input_tokens"], usage["output_tokens"])
+    if real:
+        J.log_cost(model, usage, "persona")
     try:
         data = json.loads(text)
     except ValueError:
@@ -544,7 +547,7 @@ def main(argv=None) -> int:
         for s in scenarios:
             print(f"{s['name']:26s} {len(s['steps']):5d} {estimate(s):10.2f}  {', '.join(s.get('flows', []))}")
         print(f"\nestimated total per iteration: ${sum(estimate(s) for s in scenarios):.2f} "
-              f"(Opus assistant, Sonnet judge/persona; halve for a Sonnet assistant)")
+              f"(measured 2026-11-03: Opus assistant, Sonnet judge/persona; roughly halve for a Sonnet assistant)")
         print("uncovered flows: " + (", ".join(f for f in flows if not cov[f]) or "none"))
         return 0
     if not args.fake:

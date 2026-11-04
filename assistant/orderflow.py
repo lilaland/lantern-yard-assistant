@@ -72,7 +72,7 @@ class OrderFlow:
             raise RuntimeError(f"no draft {draft_id} in the ledger")
         if d.status in ("accepted", "submitting", "unknown"):
             raise RuntimeError(f"draft {draft_id} is {d.status}; it cannot be cancelled from here")
-        return self.ledger.update_draft(draft_id, "cancelled")
+        return self.ledger.update_draft(draft_id, "cancelled", note="cancelled by the operator before submission; never submitted")
 
     def submit(self, draft_id: str) -> Outcome:
         d = self.ledger.draft(draft_id)
@@ -82,7 +82,7 @@ class OrderFlow:
             return Outcome("accepted", f"{draft_id} was already accepted as {d.order_id}.", d.order_id, True, d)
         if d.status == "cancelled":
             return Outcome("cancelled", f"{draft_id} was cancelled; nothing submitted.", draft=d)
-        self.ledger.update_draft(draft_id, "submitting")
+        self.ledger.update_draft(draft_id, "submitting", note="submitting to the supplier")
         try:
             resp = self.client.submit_order(draft_id)
         except Conflict as e:
@@ -110,11 +110,13 @@ class OrderFlow:
             found = [o for o in self.client.find_orders(draft_id) if o.get("order_id") == order_id]
         except (ConnectionLost, ServerUnavailable):
             found = []
-        d = self.ledger.update_draft(draft_id, "accepted", order_id=order_id)
         if found:
-            return Outcome("accepted", f"{lead} Verified by lookup: order {order_id} for reference {draft_id}, status "
-                           f"accepted. Accepted means the supplier recorded it, not that it has shipped.", order_id, True, d)
-        return Outcome("accepted", f"{lead} Order {order_id}; the verification lookup did not return it yet.", order_id, False, d)
+            msg = (f"{lead} Verified by lookup: order {order_id} for reference {draft_id}, status accepted. Accepted means "
+                   f"the supplier recorded it, not that it has shipped.")
+        else:
+            msg = f"{lead} Order {order_id}; the verification lookup did not return it yet."
+        d = self.ledger.update_draft(draft_id, "accepted", order_id=order_id, note=msg)
+        return Outcome("accepted", msg, order_id, bool(found), d)
 
     def _recover(self, draft_id: str, cause: str) -> Outcome:
         """The response to a submission was lost. Look up by reference; retry the same draft once; else stay unknown."""

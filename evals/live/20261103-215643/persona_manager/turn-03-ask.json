@@ -1,0 +1,102 @@
+{
+ "name": "persona conversation 3",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 15843,
+  "output_tokens": 497,
+  "cache_read_tokens": 10660,
+  "usd": 0.038788,
+  "revision": 1,
+  "user_text": "Why does the vendor sheet say Alder delivers Thursday when it's always Wednesday?",
+  "calls": [
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 1
+   },
+   {
+    "name": "list_notes",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "explain",
+   "list_notes"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Why does the vendor sheet say Alder delivers Thursday when it's always Wednesday?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_0126aMRq7Q683eU7yKFWhTkz",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01WzM2UcYFAHGBFRdWzaBZwd",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "contains": "Alder",
+      "date_from": "",
+      "date_to": ""
+     },
+     "name": "list_notes",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0126aMRq7Q683eU7yKFWhTkz",
+     "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"448b4f6e13d8\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WzM2UcYFAHGBFRdWzaBZwd",
+     "content": "{\"revision\": 1, \"count\": 3, \"notes\": [{\"ref\": \"N03\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-18T12:20:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N03 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N03\\\" author=\\\"Maya\\\" at=\\\"2026-09-18T12:20:00-04:00\\\" revision=\\\"1\\\">\\nAlder says chicken goes from $3.20/lb to $3.65/lb on Sept 28. Same spec. Wrote it on the order clipboard.\\n</evidence>\"}, {\"ref\": \"N09\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-25T16:45:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N09 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N09\\\" author=\\\"Maya\\\" at=\\\"2026-09-25T16:45:00-04:00\\\" revision=\\\"1\\\">\\nAlder rep confirmed the route changes Sept 28: Monday/Wednesday instead of Monday/Thursday. Orders by noon the day before. Wednesday has to get us through the weekend.\\n</evidence>\"}, {\"ref\": \"N12\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-30T13:10:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N12 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N12\\\" author=\\\"Maya\\\" at=\\\"2026-09-30T13:10:00-04:00\\\" revision=\\\"1\\\">\\nAlder delivery landed today. Egg shelf is full again. Need to finish reconciling the invoice folder.\\n</evidence>\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "The sheet is out of date. It hasn't been updated since the route changed.\n\n- **Vendor sheet:** vendors.csv V1 rev1 lists Monday and Thursday. It was last reviewed 2026-09-14.\n- **Note N09:** Maya wrote this on 2026-09-25 (notes.csv N09 rev1). It says the Alder rep confirmed the route changes on Sept 28 to Monday/Wednesday instead of Monday/Thursday. Orders are due by noon the day before. Wednesday has to get you through the weekend.\n\nThe sheet predates the change by about two weeks. I can't see why nobody updated it, because the restaurant doesn't record that.\n\nUnder the sources.precedence policy, the newer note overrides the reference table. The ledger holds Monday/Wednesday for Alder (assertion vendor.V1.delivery_days, from N09). The sheet stays flagged as stale.\n\nYou said it's \"always Wednesday\". The records only show Monday/Wednesday starting Sept 28, with Thursday before that.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

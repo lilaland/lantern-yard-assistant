@@ -1,0 +1,455 @@
+{
+ "name": "preference_then_order",
+ "flows": [
+  "ask",
+  "memory",
+  "gate",
+  "order",
+  "tools"
+ ],
+ "turns": [
+  {
+   "label": "state preference",
+   "mode": "ask",
+   "messages": [
+    {
+     "role": "user",
+     "content": "use two days of buffer from now on"
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "signature": "CAQStggKEAgTGAI4AUIIdGhpbmtpbmcSDOt2cmpLiJawrBLFUhoMX8fCDTl4WRdp401lIjBB8VTt+npmXCcraXTWuCltOchrN7mLknPGhAzy13ee4T9MZMGPjur8XxtiR2kTwv4q0wdSEKKjcWZrUDU7Mfajc01XfY4LA+V6bfaE7khlmfYBQpXLHmSQTQ4gD232z1jYpLvdPZjkeB36ES59yjB+iPyStL/L854KID81TGZHiRjgjaSdxiHQ3UjuhrF/NPBFh/MdwUs7KuE3ZiIB3JXXOAS332yxMkcCxYQF/aytHIXMRVCFA5h5q5lJVNdiNu0KNQbiz8Qit6H8gimr7nY0KsqW37JIfOWq5qtRdBzZElMHGLcRA+WugjIyFHCdQrLey8pi8ecnQUbXF6Dn4k7SkUx0VKaSRov5EeEIJE5waS+srtkdjYDnUzgbGUcthi4yAdqzeQGZuq08ELO5wxIYPyAFiDAJ7sZVfj/yOVCUeh7IyXTLvplzijRi6whYCc+4oOcQ7Hn3JbAomiA3Ac4dcU+MEo8puWVGfsIAA6ecZxLu0eSFZbjndWs/V7lIbdKb9+W2JEIryC6e35kBj/nFum61q6eHv+J70lerChCWYYsHaQyMcby4CYiSvJ9MA0cBTUMNyeeH/c8SpT5xLvaeQoGe1UMDT5iS73z9a4O2U/mWPyTqoc9fCieqcy2hrS3+aRVLicZZXiOtk8Psi6MrxcQ5kgBp8J/7pZcZ+64MLFzhULY+SzYeKH3vTFy7OIaDa5mspAj3BygeZZ7ttM9hnvXq4PGjsJt46qgceJKU6rDCOx6EbL5m3gKpNVG/REekEdgRgjvHacQi4B1FXuPpvd3PI9tgxXZ+PHhj2ODQrUVtbdi23FnjwfUmezJdR7L8dTkLPvhNMBg1vthqpE0xahEPH8EVoAdlzwuVhkrXy+z+pVPVWFBgs2ulZYl9xKqTcTG7Awxrv3oDa9cK7EcoO0uytgwP0PX5h0cs6R4aYwJ4O74MCgrY7pgqUxCzaKCdZi/l4Vu96cQUXhWRSF+KPNT+oaQ2Q73F1/17Wp55QXjkVPArQuXt/wjW6DSTrQIpV8Iw3dPGqCnbgKqCh7icE5ICQNszBD1eyL4kjZoUlLwnwrqQt9NF3CmjWNxdGsPvYUJkLcGf+zECgF7JbsmKrrAbmpEPUiWloJW6DwdeL81A4oL4LA3DiDiX4NQ86QR2oUlLbrJWZmoyrNpv/EzBK+DDAcGmiYsgeat2ggtb9bZIFl5/5/fH46Tvn0kgJxGpV3rhyeiQyFHTHEBaclEIZxscykdxsijI8Zl8EkI6pWz2PnlHrtS0J98B8EqhsigkBiQtJu0Kft7u5Z4x0+ySahezcnIdUq5jXVJXyVKtC+LryKZ5kfY/pcdhI+l0zZ2zxtYLBESnJXUZu4yyiBhSRy+3AiVjGAE=",
+       "thinking": "",
+       "type": "thinking"
+      },
+      {
+       "id": "toolu_01KCKq3vUM6Xss3xnQtVbPMt",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "kind": "preference",
+        "subject": "order.buffer_days",
+        "statement": "Use two days of buffer from now on.",
+        "value_json": "{\"days\": 2}"
+       },
+       "name": "record_belief",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01KCKq3vUM6Xss3xnQtVbPMt",
+       "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"776da346d683\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Use two days of buffer from now on.\", \"value\": {\"days\": 2}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:05:39-05:00\", \"confirmed_at\": \"2026-11-03T22:05:39-05:00\", \"supersedes\": \"7b3b01787f8c\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"7b3b01787f8c\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:05:36-05:00\", \"confirmed_at\": \"2026-11-03T22:05:36-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "I recorded this as a preference on `order.buffer_days` with the value `{\"days\": 2}`.\n\nIt replaces the onboarding default of 1 day (`human:onboarding-defaults`). That default was a starting setting, not something you told me, so this isn't a contradiction. \u200bThe ledger keeps both records.\n\nFrom now on, order sizing covers the gap to the next delivery plus 2 days of buffer. I haven't run a new `sizing_preview`, so I don't know how the proposed quantities change yet. I can run one for a vendor if you want.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "record_belief",
+     "ok": true,
+     "gate": "approved",
+     "ms": 2
+    }
+   ],
+   "text": "I recorded this as a preference on `order.buffer_days` with the value `{\"days\": 2}`.\n\nIt replaces the onboarding default of 1 day (`human:onboarding-defaults`). That default was a starting setting, not something you told me, so this isn't a contradiction. \u200bThe ledger keeps both records.\n\nFrom now on, order sizing covers the gap to the next delivery plus 2 days of buffer. I haven't run a new `sizing_preview`, so I don't know how the proposed quantities change yet. I can run one for a vendor if you want.",
+   "usage": {
+    "input_tokens": 846,
+    "output_tokens": 477,
+    "cache_write_tokens": 5482,
+    "cache_read_tokens": 5482,
+    "rounds": 2,
+    "usd": 0.021263400000000002,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "0 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "beliefs trace to the person's words or an approval"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "use two days of buffer from now on",
+   "revision": 1
+  },
+  {
+   "label": "ask about the order",
+   "mode": "ask",
+   "messages": [
+    {
+     "role": "user",
+     "content": "what would the Alder order look like now?"
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "id": "toolu_013z1totQwjJBgTQfA4KPgPv",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "vendor_id": "V1"
+       },
+       "name": "sizing_preview",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_013z1totQwjJBgTQfA4KPgPv",
+       "content": "{\"revision\": 1, \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"delivery_date\": \"2026-10-07\", \"order_by\": \"2026-10-06T12:00:00-04:00\", \"window_end\": \"2026-10-11\", \"window_days\": 7, \"buffer_days\": 2, \"lines\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"sku\": \"AW-CHK20\", \"cases\": 9, \"pack\": \"20 lb\", \"need\": 219.9, \"on_hand\": 47.9, \"inbound_counted\": 0.0, \"uplift_add\": 0.0, \"est_line_usd\": \"657.00\"}, {\"ingredient\": \"Large shell eggs\", \"sku\": \"V1-EGG\", \"cases\": 2, \"pack\": \"180 each\", \"need\": 415.7, \"on_hand\": 84.0, \"inbound_counted\": 0.0, \"uplift_add\": 66.0, \"est_line_usd\": \"86.40\"}, {\"ingredient\": \"Shredded cheddar\", \"sku\": \"V1-CHEESE\", \"cases\": 4, \"pack\": \"10 lb\", \"need\": 53.7, \"on_hand\": 14.68, \"inbound_counted\": 0.0, \"uplift_add\": 2.0, \"est_line_usd\": \"144.00\"}], \"exact_order\": {\"site_id\": \"SITE-01\", \"vendor_id\": \"V1\", \"lines\": [{\"sku\": \"AW-CHK20\", \"quantity\": 9, \"unit\": \"case\"}, {\"sku\": \"V1-EGG\", \"quantity\": 2, \"unit\": \"case\"}, {\"sku\": \"V1-CHEESE\", \"quantity\": 4, \"unit\": \"case\"}]}, \"skipped\": [], \"not_counted\": [\"INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\"], \"warnings\": [\"INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\", \"Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\"], \"applied\": [\"order.buffer_days=2 (human:ask)\", \"order.cover_through=Sunday (human:onboarding-defaults)\", \"order.brunch_uplift=0.25 (human:onboarding-defaults)\", \"order.max_unflagged_usd=1000 (human:onboarding-defaults)\", \"order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\", \"ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults)\", \"inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults)\", \"vendor.V1.delivery_days=Monday/Wednesday (note:N09)\"], \"est_total_usd\": \"887.40\", \"over_max\": false, \"rationale\": \"Order proposal \\u2014 Alder Wholesale (V1) \\u2014 computed at dataset revision 1\\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 2 buffer day(s).\\n\\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\\n-------------------------------------------------------------------------------------------------------------------------\\nChicken thigh boneless skinless      47.9 lb     24.43     9     0.0   219.9   172.0  AW-CHK20      20 lb      9   657.00\\nLarge shell eggs                       84 each    38.86     9    66.0   415.7   331.7  V1-EGG       180 each     2    86.40\\nShredded cheddar                    14.68 lb      5.74     9     2.0    53.7    39.0  V1-CHEESE     10 lb      4   144.00\\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\\n\\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\\n\\nEstimated total $887.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\\nApplied: order.buffer_days=2 (human:ask), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\\n\\nExact order the draft will contain:\\n{\\n \\\"site_id\\\": \\\"SITE-01\\\",\\n \\\"vendor_id\\\": \\\"V1\\\",\\n \\\"lines\\\": [\\n  {\\n   \\\"sku\\\": \\\"AW-CHK20\\\",\\n   \\\"quantity\\\": 9,\\n   \\\"unit\\\": \\\"case\\\"\\n  },\\n  {\\n   \\\"sku\\\": \\\"V1-EGG\\\",\\n   \\\"quantity\\\": 2,\\n   \\\"unit\\\": \\\"case\\\"\\n  },\\n  {\\n   \\\"sku\\\": \\\"V1-CHEESE\\\",\\n   \\\"quantity\\\": 4,\\n   \\\"unit\\\": \\\"case\\\"\\n  }\\n ]\\n}\", \"note\": \"This is a preview. Drafting, approval and submission happen in the order mode under the operator.\"}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "The Alder preview is proposed only. Nothing is drafted or sent. It uses your 2-day buffer (`order.buffer_days=2 (human:ask)`). It would be 9 cases of AW-CHK20 (chicken thigh), 2 cases of V1-EGG and 4 cases of V1-CHEESE. The estimated total is $887.40, which is under your $1,000 unflagged limit (`order.max_unflagged_usd=1000`). Delivery would be Wednesday 2026-10-07, with the order due by Tuesday noon.\n\n- **INV-099 chicken:** The 40 lb is not counted as supply, because `invoice.INV-099.physically_received=False (note:N15)`. If it does arrive Tuesday, you'd carry about 40 lb more chicken than needed, and the proposal would shrink. Tell me if it's likely to arrive and I can record that.\n- **Chicken runway:** On-hand chicken is 47.9 lb, which covers about 2.0 days. The first feasible Alder delivery is 2 days away, so there is no slack. The preview suggests asking about an earlier drop or a pickup.\n- **Delivery days:** Monday/Wednesday comes from `note:N09`. I haven't checked it against the vendor sheet.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "sizing_preview",
+     "ok": true,
+     "gate": null,
+     "ms": 3
+    }
+   ],
+   "text": "The Alder preview is proposed only. Nothing is drafted or sent. It uses your 2-day buffer (`order.buffer_days=2 (human:ask)`). It would be 9 cases of AW-CHK20 (chicken thigh), 2 cases of V1-EGG and 4 cases of V1-CHEESE. The estimated total is $887.40, which is under your $1,000 unflagged limit (`order.max_unflagged_usd=1000`). Delivery would be Wednesday 2026-10-07, with the order due by Tuesday noon.\n\n- **INV-099 chicken:** The 40 lb is not counted as supply, because `invoice.INV-099.physically_received=False (note:N15)`. If it does arrive Tuesday, you'd carry about 40 lb more chicken than needed, and the proposal would shrink. Tell me if it's likely to arrive and I can record that.\n- **Chicken runway:** On-hand chicken is 47.9 lb, which covers about 2.0 days. The first feasible Alder delivery is 2 days away, so there is no slack. The preview suggests asking about an earlier drop or a pickup.\n- **Delivery days:** Monday/Wednesday comes from `note:N09`. I haven't checked it against the vendor sheet.",
+   "usage": {
+    "input_tokens": 4445,
+    "output_tokens": 482,
+    "cache_write_tokens": 0,
+    "cache_read_tokens": 10964,
+    "rounds": 2,
+    "usd": 0.015902799999999998,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "0 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "no belief recorded"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "what would the Alder order look like now?",
+   "revision": 1
+  },
+  {
+   "label": "order explanation",
+   "mode": "order",
+   "messages": [
+    {
+     "role": "user",
+     "content": "<proposal>\nOrder proposal \u2014 Alder Wholesale (V1) \u2014 computed at dataset revision 1\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 2 buffer day(s).\n\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\n-------------------------------------------------------------------------------------------------------------------------\nChicken thigh boneless skinless      47.9 lb     24.43     9     0.0   219.9   172.0  AW-CHK20      20 lb      9   657.00\nLarge shell eggs                       84 each    38.86     9    66.0   415.7   331.7  V1-EGG       180 each     2    86.40\nShredded cheddar                    14.68 lb      5.74     9     2.0    53.7    39.0  V1-CHEESE     10 lb      4   144.00\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\n\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\n\nEstimated total $887.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\nApplied: order.buffer_days=2 (human:ask), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\n\nExact order the draft will contain:\n{\n \"site_id\": \"SITE-01\",\n \"vendor_id\": \"V1\",\n \"lines\": [\n  {\n   \"sku\": \"AW-CHK20\",\n   \"quantity\": 9,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-EGG\",\n   \"quantity\": 2,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-CHEESE\",\n   \"quantity\": 4,\n   \"unit\": \"case\"\n  }\n ]\n}\n</proposal>\n\nExplain this proposal to the manager."
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "signature": "CAQS8QYKEAgTGAI4AUIIdGhpbmtpbmcSDMptIkvsVmMZ3riG2RoMogv6gMM4wXO2OadMIjA+aZ/Pn03Pdmk/Tn1hCI5G2qP2l4lEXyyj38KZ789TYjlwBthH95XIlluEaKwyG2QqjgaBIUlkt49xohSB1y1daDZY4Lt7EMnM8qdJOKhTXROcjp/OpPNXA3ZQWAh3aunaDbMtltiaUj9a545zn+Ywicdq44+vN3XnTaPk+FYdfc7MHaup4deOg15RJ/HYF5hyP19cDGz/8SLThAOqGhgV1OxRdrM0fOR1soMwfBsrxYI3rj464w1TlVGSJyp+o86bg8tpw3fEpUw22FdbySMbAmadi4V92y3FTHOC1uLnxEAVepf2BFrG1jSkP7z3XlvojytzejRTsib1zGi1Rq669eqxM/1py9xZQ2RXJXLeFo/6SVBkdZvOafcI0MNHhR2SANhZ6VauzxFynb4KLbv4b6d+qnfcyI1t8BnuXWwt9b/iBmOjDkucanvIS2rLHLZiCe4aUmx7YgOCGpbpn5HobI1T6JB0l6DRkvPdZ3qtsONz8MTuEAQ2tgJ8S3b8XAtBliSj1NMKhg8ilH9gi0n5gvbP0HP/AJWxmuCsJhT+xKnNCdAZukqGT95Hm33cUmk/0GV2aWjSCJgLPWnWknweFik2UWy1yBLRM0BRGqfBjakLe74cGQVOE0/rU554bVyAqvig8JE3XLKI+720ufgluJ4POXObcwCVOEajX8mSfLaF+3dEqYJiKW7kAbijRu3OHRd3kqQyWEVZ2LXDKULtpX7xmQ80+UrvqCyeIxYOQcCY3NnQjL7J9BflU/5CxnRTg9mZzfcm5sMXGdJpHji0GdTQYbNe/CvmN8NuLxyHvfJx0d2NJ6CkN0Mm5GimoTLc2VpsQ/h53ZKnsJ0XhOf8wc4s13FQSVIzFPvAIVdKwMKNHpQPsKOod0eDMb1vTepY3tthgV1b6hBm0VYqU0QFXDbg9h/4AzYRrPEEIoyH2kRwPXl3V9tBH8dP67SJZKUBqsH6rWXHFMf1pEjJBfg6DTzsG/La0vTz67zEas1FWmBcTEF3DALJuk2YNR1W+6XsS8l4tGR87JVc4egwHhgOHjQ37xCMY5MYgRm+I3zt64Sx+4xrl1IKeJn1t+s+AAwYLm9zoo3JSQDQ+AU8EQK3CxgB",
+       "thinking": "",
+       "type": "thinking"
+      },
+      {
+       "id": "toolu_014L2JNdG7vrV6wsT9FGfmG4",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "contains": "INV-099",
+        "date_from": "",
+        "date_to": ""
+       },
+       "name": "list_notes",
+       "type": "tool_use"
+      },
+      {
+       "id": "toolu_01FCa7Amg1Dwei9mK836QKCs",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "vendor_id": "V1"
+       },
+       "name": "sizing_preview",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_014L2JNdG7vrV6wsT9FGfmG4",
+       "content": "{\"revision\": 1, \"count\": 0, \"notes\": []}"
+      },
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01FCa7Amg1Dwei9mK836QKCs",
+       "content": "{\"revision\": 1, \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"delivery_date\": \"2026-10-07\", \"order_by\": \"2026-10-06T12:00:00-04:00\", \"window_end\": \"2026-10-11\", \"window_days\": 7, \"buffer_days\": 2, \"lines\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"sku\": \"AW-CHK20\", \"cases\": 9, \"pack\": \"20 lb\", \"need\": 219.9, \"on_hand\": 47.9, \"inbound_counted\": 0.0, \"uplift_add\": 0.0, \"est_line_usd\": \"657.00\"}, {\"ingredient\": \"Large shell eggs\", \"sku\": \"V1-EGG\", \"cases\": 2, \"pack\": \"180 each\", \"need\": 415.7, \"on_hand\": 84.0, \"inbound_counted\": 0.0, \"uplift_add\": 66.0, \"est_line_usd\": \"86.40\"}, {\"ingredient\": \"Shredded cheddar\", \"sku\": \"V1-CHEESE\", \"cases\": 4, \"pack\": \"10 lb\", \"need\": 53.7, \"on_hand\": 14.68, \"inbound_counted\": 0.0, \"uplift_add\": 2.0, \"est_line_usd\": \"144.00\"}], \"exact_order\": {\"site_id\": \"SITE-01\", \"vendor_id\": \"V1\", \"lines\": [{\"sku\": \"AW-CHK20\", \"quantity\": 9, \"unit\": \"case\"}, {\"sku\": \"V1-EGG\", \"quantity\": 2, \"unit\": \"case\"}, {\"sku\": \"V1-CHEESE\", \"quantity\": 4, \"unit\": \"case\"}]}, \"skipped\": [], \"not_counted\": [\"INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\"], \"warnings\": [\"INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\", \"Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\"], \"applied\": [\"order.buffer_days=2 (human:ask)\", \"order.cover_through=Sunday (human:onboarding-defaults)\", \"order.brunch_uplift=0.25 (human:onboarding-defaults)\", \"order.max_unflagged_usd=1000 (human:onboarding-defaults)\", \"order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\", \"ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults)\", \"inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults)\", \"vendor.V1.delivery_days=Monday/Wednesday (note:N09)\"], \"est_total_usd\": \"887.40\", \"over_max\": false, \"rationale\": \"Order proposal \\u2014 Alder Wholesale (V1) \\u2014 computed at dataset revision 1\\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 2 buffer day(s).\\n\\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\\n-------------------------------------------------------------------------------------------------------------------------\\nChicken thigh boneless skinless      47.9 lb     24.43     9     0.0   219.9   172.0  AW-CHK20      20 lb      9   657.00\\nLarge shell eggs                       84 each    38.86     9    66.0   415.7   331.7  V1-EGG       180 each     2    86.40\\nShredded cheddar                    14.68 lb      5.74     9     2.0    53.7    39.0  V1-CHEESE     10 lb      4   144.00\\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\\n\\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\\n\\nEstimated total $887.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\\nApplied: order.buffer_days=2 (human:ask), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\\n\\nExact order the draft will contain:\\n{\\n \\\"site_id\\\": \\\"SITE-01\\\",\\n \\\"vendor_id\\\": \\\"V1\\\",\\n \\\"lines\\\": [\\n  {\\n   \\\"sku\\\": \\\"AW-CHK20\\\",\\n   \\\"quantity\\\": 9,\\n   \\\"unit\\\": \\\"case\\\"\\n  },\\n  {\\n   \\\"sku\\\": \\\"V1-EGG\\\",\\n   \\\"quantity\\\": 2,\\n   \\\"unit\\\": \\\"case\\\"\\n  },\\n  {\\n   \\\"sku\\\": \\\"V1-CHEESE\\\",\\n   \\\"quantity\\\": 4,\\n   \\\"unit\\\": \\\"case\\\"\\n  }\\n ]\\n}\", \"note\": \"This is a preview. Drafting, approval and submission happen in the order mode under the operator.\"}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "signature": "CAQStwcKEAgTGAI4AUIIdGhpbmtpbmcSDCE9jiFS1djT8M6H1hoMcX71et2Pi4R5ivC5IjB1DDGaPg/s9qhME4C0T0yPO8ut7TgDit/AE6VhCX59FeLXaPeFRk/rUxOWn/dCaicq1AbYwGpKsywUwok11PXoD0hso2piyscjFDkcg44VgbRF2lzaCnlZE6tQUUbKHV2+2Nsiin/hDUP9izZDm1jfeJglEIgl7KC/RtKsTIi2gi8adLICmZi6NpRaTVmiGtcd0ydIIgQG3uI0t1lHcxiFyVXgUJUuh389kq6nk28zaRqKoWJbpUtfat3xMRL8FnGOFICSGOPCTwgQ14X94Faq4Fnd1NYHQ092gYUmC8ERcoM6kUPfbHke3EXiA5HKxlHp4NWfU44FSOpRggT4kZgVaJAx6cNnhQkkKpLFAxuDRpqhLEKMe0wmVOK2PH7y3QEh22wgTDv2fVQ8tIK5hWAKrAwHzK7iFeQFuYUKKlP5HVYL4Dt0M5LfM/I1oL7HjkXbK/F9UusOjK90FgwNnSvgzymFr5dPOFidgkklcnV8Y01u9amG+NN/TXynDcDx1PhbkQ2m5Bl4AO6MFWQ/WTgBVd9vmkZXGw3ujWdv4LBgjph9ovD23HIvYj5I8ovioXuHFeUXuw8LHgV5Yx1z5BxDvpakvIYkhwo291QFWMSPiGZMzkWkfZ5OPrHDJPclNeCseFhYeUt13bF/aAZgP3Z+uCJQs4aneNnotXDW25UtNk2iYDqAydFvYxgXUv+aljip8p0maT8K1G3P4NP7mJ5Xjf0bVz/h5Urh6P8ee16GG/PmXskgBliCph3JyMKVIemc4uEVwBH4Cyv43j3VbStPGja0z+EIIItKsngCS0Gbo5E4dTBXukS6Cl2oGS0mAgpwhRjZ1JvNUN7GsvFSgUj3iJuWA0QOY4EclEVmP+5lZzP7ayqP3vKGHZwixCN1sq7cvJvnrKCHv+l9s3quXi59skXo4GMC4syAK16a3bbmWRVUOaZ2C3tcDpHWleXk9W/y6jP6ck5soSfK3CtwmEQcMJrjHHEgZJi5v2esIin/5ZYvm4wm09eU4DlFWqc8qyPTvFT1uaPsbXU4FyU/ljc67ik1q7kxigisHvr32TAqQAEqj1XKUE9vtgQ+x7105hsFDpEo3nTvCMF4qKo07KYIDLdS8XeGl2g8XcVnoPAyhICacxlCTLY43NmRAWM8wNpq8XYyshdU0RjExm/5vLGqniMHeG5tRdBT2bBNAluHkQAs7LjG6rAYAQ==",
+       "thinking": "",
+       "type": "thinking"
+      },
+      {
+       "id": "toolu_01GnJcq58h2w37Kdoe9g8ZuD",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "subject": "invoice.INV-099.physically_received"
+       },
+       "name": "explain",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01GnJcq58h2w37Kdoe9g8ZuD",
+       "content": "{\"subject\": \"invoice.INV-099.physically_received\", \"chain\": [{\"id\": \"5c80e21dbbc6\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.physically_received\", \"statement\": \"Note N15: the office marked the next order received but the cases were not seen.\", \"value\": {\"received\": false}, \"source\": \"note:N15\", \"recorded_at\": \"2026-11-03T22:05:36-05:00\", \"confirmed_at\": \"2026-11-03T22:05:36-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "This order is for Alder Wholesale's Wednesday 2026-10-07 delivery. It covers 7 days through Sunday 2026-10-11 plus 2 buffer days. The lines that matter most are 9 cases of AW-CHK20 chicken (about $657.00) and 4 cases of V1-CHEESE. The estimated total is $887.40, under your $1,000 unflagged limit.\n\nThe assumption that changes the quantities most is that the 40 lb of chicken on INV-099 is not counted as supply. That follows your rule `inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults)`. It is based on note N15: the office marked it received but the cases were not seen (notes.csv SITE-01 N15 rev1). The 25% brunch uplift (`order.brunch_uplift=0.25`) also adds 66.0 eggs and 2.0 lb of cheddar.\n\nTwo things need a decision before approval:\n- **INV-099 chicken:** If the 40 lb does arrive Tuesday 2026-10-06, you will carry about 40 lb beyond this order. Check whether it is actually on the dock. If it is likely to arrive, say so in `ask` and the proposal shrinks.\n- **Chicken runway:** The 47.9 lb on hand covers about 2.0 days, but the first feasible delivery is 2 days away. Ask Alder about an earlier drop or a pickup.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "list_notes",
+     "ok": true,
+     "gate": null,
+     "ms": 0
+    },
+    {
+     "name": "sizing_preview",
+     "ok": true,
+     "gate": null,
+     "ms": 2
+    },
+    {
+     "name": "explain",
+     "ok": true,
+     "gate": null,
+     "ms": 0
+    }
+   ],
+   "text": "This order is for Alder Wholesale's Wednesday 2026-10-07 delivery. It covers 7 days through Sunday 2026-10-11 plus 2 buffer days. The lines that matter most are 9 cases of AW-CHK20 chicken (about $657.00) and 4 cases of V1-CHEESE. The estimated total is $887.40, under your $1,000 unflagged limit.\n\nThe assumption that changes the quantities most is that the 40 lb of chicken on INV-099 is not counted as supply. That follows your rule `inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults)`. It is based on note N15: the office marked it received but the cases were not seen (notes.csv SITE-01 N15 rev1). The 25% brunch uplift (`order.brunch_uplift=0.25`) also adds 66.0 eggs and 2.0 lb of cheddar.\n\nTwo things need a decision before approval:\n- **INV-099 chicken:** If the 40 lb does arrive Tuesday 2026-10-06, you will carry about 40 lb beyond this order. Check whether it is actually on the dock. If it is likely to arrive, say so in `ask` and the proposal shrinks.\n- **Chicken runway:** The 47.9 lb on hand covers about 2.0 days, but the first feasible delivery is 2 days away. Ask Alder about an earlier drop or a pickup.",
+   "usage": {
+    "input_tokens": 10063,
+    "output_tokens": 898,
+    "cache_write_tokens": 4423,
+    "cache_read_tokens": 8846,
+    "rounds": 3,
+    "usd": 0.041932699999999996,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "1 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "no belief recorded"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "<proposal>\nOrder proposal \u2014 Alder Wholesale (V1) \u2014 computed at dataset revision 1\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 2 buffer day(s).\n\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\n-------------------------------------------------------------------------------------------------------------------------\nChicken thigh boneless skinless      47.9 lb     24.43     9     0.0   219.9   172.0  AW-CHK20      20 lb      9   657.00\nLarge shell eggs                       84 each    38.86     9    66.0   415.7   331.7  V1-EGG       180 each     2    86.40\nShredded cheddar                    14.68 lb      5.74     9     2.0    53.7    39.0  V1-CHEESE     10 lb      4   144.00\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\n\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\n\nEstimated total $887.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\nApplied: order.buffer_days=2 (human:ask), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\n\nExact order the draft will contain:\n{\n \"site_id\": \"SITE-01\",\n \"vendor_id\": \"V1\",\n \"lines\": [\n  {\n   \"sku\": \"AW-CHK20\",\n   \"quantity\": 9,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-EGG\",\n   \"quantity\": 2,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-CHEESE\",\n   \"quantity\": 4,\n   \"unit\": \"case\"\n  }\n ]\n}\n</proposal>\n\nExplain this proposal to the manager.",
+   "revision": 1
+  }
+ ],
+ "reference": "Scenario goal: The manager states a preference in conversation; it is recorded through the gate; the next question about the order shows it applied; the order explanation stays within the computed proposal.\n\nOrder proposal (code):\nOrder proposal \u2014 Alder Wholesale (V1) \u2014 computed at dataset revision 1\nDelivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 2 buffer day(s).\n\ningredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $\n-------------------------------------------------------------------------------------------------------------------------\nChicken thigh boneless skinless      47.9 lb     24.43     9     0.0   219.9   172.0  AW-CHK20      20 lb      9   657.00\nLarge shell eggs                       84 each    38.86     9    66.0   415.7   331.7  V1-EGG       180 each     2    86.40\nShredded cheddar                    14.68 lb      5.74     9     2.0    53.7    39.0  V1-CHEESE     10 lb      4   144.00\n  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)\n  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)\n  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each\n  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)\n  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb\n\nNot counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).\n\nEstimated total $887.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.\nWarning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.\nWarning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.\nApplied: order.buffer_days=2 (human:ask), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)\n\nExact order the draft will contain:\n{\n \"site_id\": \"SITE-01\",\n \"vendor_id\": \"V1\",\n \"lines\": [\n  {\n   \"sku\": \"AW-CHK20\",\n   \"quantity\": 9,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-EGG\",\n   \"quantity\": 2,\n   \"unit\": \"case\"\n  },\n  {\n   \"sku\": \"V1-CHEESE\",\n   \"quantity\": 4,\n   \"unit\": \"case\"\n  }\n ]\n}\n\nBeliefs in force at the end:\nLedger: onboarded 2026-11-03T22:05\n  kind         active  superseded  conflicted\n  policy           4           0           0\n  preference       6           1           0\n  assertion        4           0           0\n  observation      0           0           0\n\nRetained (human; a person changes these, data never does):\n  policy      inbound.on_hand_rule                 rule=physical_confirmation         human:onboarding-defaults  recorded 2026-11-03T22:05\n  policy      ingredient.ING-CHICKEN.count_unit    unit=lb                            human:onboarding-defaults  recorded 2026-11-03T22:05\n  policy      recipes.missing_item_rule            rule=unknown_and_flag              human:onboarding-defaults  recorded 2026-11-03T22:05\n  policy      sources.precedence                   rule=newer_notes_and_invoices_override_reference_tables human:onboarding-defaults  recorded 2026-11-03T22:05\n  preference  invoices.price_anomaly_ratio         ratio=2                            human:onboarding-defaults  recorded 2026-11-03T22:05\n  preference  order.brunch_uplift                  uplift=0.25                        human:onboarding-defaults  recorded 2026-11-03T22:05\n  preference  order.buffer_days                    days=2                             human:ask  recorded 2026-11-03T22:05\n  preference  order.cover_through                  weekday=Sunday                     human:onboarding-defaults  recorded 2026-11-03T22:05\n  preference  order.max_unflagged_usd              usd=1000                           human:onboarding-defaults  recorded 2026-11-03T22:05\n  preference  order.sku.ING-CHICKEN                sku=AW-CHK20, vendor_id=V1         human:onboarding-defaults  recorded 2026-11-03T22:05\n\nAssertions (facts; rechecked when the dataset revision changes):\n  assertion   invoice.INV-099.delivery_date        date=2026-10-06                    invoice:INV-099@rev1  recorded 2026-11-03T22:05\n  assertion   invoice.INV-099.physically_received  received=False                     note:N15  recorded 2026-11-03T22:05\n  assertion   invoice.INV-099.status               status=received                    invoice:INV-099@rev1  recorded 2026-11-03T22:05\n  assertion   vendor.V1.delivery_days              cutoff=noon the day before, days=Monday, Wednesday note:N09  recorded 2026-11-03T22:05\n\nObservations (detector output; rechecked every run): 0 current, 0 cleared, last revision n/a, last run never\n\nModel cost so far: no usage log yet",
+ "judge": {
+  "criteria": [
+   {
+    "id": "recorded_once",
+    "pass": true,
+    "evidence": "record_belief {\"kind\": \"preference\", \"subject\": \"order.buffer_days\", ... \"value_json\": \"{\\\"days\\\": 2}\"} was the only call; the assistant said \"I recorded this as a preference on `order.buffer_days` with the value `{\"days\": 2}`.\"",
+    "note": "One call, correct subject and value, repeated back."
+   },
+   {
+    "id": "applied_next_turn",
+    "pass": true,
+    "evidence": "sizing_preview {\"vendor_id\": \"V1\"} was called; the assistant said \"It uses your 2-day buffer (`order.buffer_days=2 (human:ask)`).\"",
+    "note": "Uses the preview and names the belief with 2 buffer days. It does not say '9 days total' but the rubric accepts the 2 buffer days wording."
+   },
+   {
+    "id": "no_invented_quantities",
+    "pass": true,
+    "evidence": "Quantities 9, 2 and 4 cases, $887.40, $657.00 and $1,000 all appear in the tool result or proposal; the deterministic evaluator reports numbers_grounded: pass on every turn.",
+    "note": "No invented figures."
+   },
+   {
+    "id": "explanation_bounded",
+    "pass": true,
+    "evidence": "\"Two things need a decision before approval\" and the quantities stated (9 cases AW-CHK20, 4 cases V1-CHEESE) match the proposal; no claim of approved, submitted or accepted.",
+    "note": "Explanation stays within the computed proposal."
+   }
+  ],
+  "overall_note": "All four criteria pass: the preference was recorded once, applied in the next answer, figures are grounded, and the order explanation stayed within the proposal.",
+  "model": "claude-sonnet-5-5",
+  "usage": {
+   "input_tokens": 7300,
+   "output_tokens": 580,
+   "cache_read_tokens": 773,
+   "cache_write_tokens": 0,
+   "usd": 0.0205546
+  }
+ },
+ "judge_trusted": true,
+ "cost_usd": 0.0996535,
+ "error": null,
+ "skipped": false,
+ "ok": true,
+ "deterministic_ok": true,
+ "judge_ok": true
+}

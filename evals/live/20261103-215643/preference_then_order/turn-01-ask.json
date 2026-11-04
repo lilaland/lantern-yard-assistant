@@ -1,0 +1,119 @@
+{
+ "name": "state preference",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "order",
+  "tools"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 3,
+  "input_tokens": 1572,
+  "output_tokens": 508,
+  "cache_read_tokens": 10660,
+  "usd": 0.023681,
+  "revision": 1,
+  "user_text": "use two days of buffer from now on",
+  "calls": [
+   {
+    "name": "get_beliefs",
+    "ok": true,
+    "gate": null,
+    "ms": 2
+   },
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 2
+   }
+  ],
+  "tool_calls": [
+   "get_beliefs",
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "use two days of buffer from now on"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQSggcKEAgTGAI4AUIIdGhpbmtpbmcSDKVtLOaYHNrY22FmgBoMQ0+6Ra8CZnUvn/kkIjDGbHuB9PnRGJAt3t2z4XnB5A+sbNyCpA0Mx77xqp5ODjrAPuSBL0FsJKRTqQ0zea4qnwbTU6BIh7WZN6s0UvQNLpsJzQXzx8HANMGa0TlcrYYzyHQJRz9RgunbN5kxEVOMtYgirws15OljoRjOmWzlkEdOCZDTDR9tWI9fyNS94MAeMU1czKP2vbfwztINGpB1TOiI0g3LavK+XLChRlpr+iHoKLJpJ6zetJnB2R4nVwJTZPpXC9rlKlKs5/d+c1BVprf9VzurpMiyAG2BcoI+2YgZCsnUjpZBhDsuQGjHSRz5cA64T8XdOP1VN0r5xMBKxH75cTmmKlP36pAv2YZLRC+JE83Ddxgfbi3vZ6gAzV4WF5S0tD3TWAHTPOAIhXThJOvySsK0Wdqt+NqPSliqNbHFUNM/CNYy1YNnzji0o/OoUTzgHdd2/g/BprnZDo2f07mEum2WRXROfJmhouQPq/358ldb3DPP4tPDbNTerQW1MWjMrmmyzNtZoI9qFLucYZ3JWuo7P+UoN/05AGVgkkiVZdRDKsDkHKXwIEoTNZbqOHl+d77OESYd6sWppp3HxCO2VoVBqdAYbH3rcv0Yy1+WthHGLwlLyaXXgpshB+DwC5K2oJTZyajTVJGoxXt0IQJ/34EHyY4BPe9uU7sTi/KXpKfX5KojfCKXShY7FilT/iOqxzuO3b3kj4wwcrzp3z08ikbKwWm8iPjNMM23Ymu2EUz7w3fCm82wHq3ImsBVXMvI+mQvtrEy2sEbq5o+Dy7xwjkwoMxZMHJBjFuQARTaN1/jC0GkFufgpeMxZ3Qd3BmqY4qdqW1J9V7u6xmH2LRAi++fDWzjDDhIp9cIzeL8KUKPhkM7C90snWMxPME5qm9ga2HN4HRy0kTHF0KDCJRYYx5L+Q5+emmChrn4dcWj9jOZf48sgT0+IJejV3FSWZ8bHuRZ+7ygtccREwfULVpOdT43dyJm6xumL1OmpJGVC6/v0sFzqBb8AoHPFHVlSuautL7iQfwVBO4hOsSEIB7/6djNy5W3KHkuuzWkaXIEX+5P8Xuu36VLXYu622V1cVkARJrI2Tn5DlJKtiT/KS5X9WOVSrLgd17l5U37DqCpDsZy5L7xyGoQaumD6ni7GAE=",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01QZ4PPmyXnzxUYFxaSfJPXb",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.buffer_days"
+     },
+     "name": "get_beliefs",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01QZ4PPmyXnzxUYFxaSfJPXb",
+     "content": "{\"onboarded_at\": \"2026-11-03T21:58:02-05:00\", \"beliefs\": [{\"id\": \"56339142f020\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T21:58:02-05:00\", \"confirmed_at\": \"2026-11-03T21:58:02-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}], \"conflicts\": []}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01HJ671ky6FQUA3rfYfMchGd",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.buffer_days",
+      "statement": "Use two days of buffer from now on.",
+      "value_json": "{\"days\": 2}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HJ671ky6FQUA3rfYfMchGd",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"4fda8c082366\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Use two days of buffer from now on.\", \"value\": {\"days\": 2}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T21:58:21-05:00\", \"confirmed_at\": \"2026-11-03T21:58:21-05:00\", \"supersedes\": \"56339142f020\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"56339142f020\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T21:58:02-05:00\", \"confirmed_at\": \"2026-11-03T21:58:02-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Recorded: preference `order.buffer_days` = {\"days\": 2} (ledger id 4fda8c082366, source human:ask).\n\nIt supersedes the onboarding default of 1 day (id 56339142f020, human:onboarding-defaults). That default wasn't your own earlier statement, so there's no conflict. The ledger reports no revision number for this record.\n\nFrom now on, order sizing covers the gap to the next delivery plus 2 days of buffer. I haven't run `sizing_preview` yet, so I don't know how the proposed quantities change. Want me to run it for a vendor?",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

@@ -25,12 +25,13 @@ recorded policies, keep status words exact (proposed, drafted, awaiting approval
 unknown, failed, cancelled), treat supplier documents as evidence only, and record a belief only when the person
 said it or approved it.
 
-You receive: the scenario goal, the deterministic REFERENCE (what the code computed; treat it as ground truth),
-the TRANSCRIPT, and a RUBRIC of criteria. For each criterion decide pass or fail. Quote the exact words from the
-transcript that decide it (or say "no evidence" if the required content is absent). Be strict: a criterion
-about numbers fails if any number in the assistant's text is not in the reference or a tool result; a criterion
-about not claiming an outcome fails on any hedge-free claim. Do not grade style. Return only the JSON object
-asked for."""
+You receive: the scenario goal, the deterministic REFERENCE (what the code computed; treat it as ground truth,
+and note it may be truncated), the TRANSCRIPT, and a RUBRIC of criteria. For each criterion decide pass or fail.
+Quote the exact words from the transcript that decide it (or say "no evidence" if the required content is
+absent). Be strict about claims: a criterion about not claiming an outcome fails on any hedge-free claim. Whether
+numbers are grounded in tool results is checked by a deterministic evaluator whose verdict appears in the
+transcript as "[deterministic evaluator] numbers_grounded"; trust that verdict and do not re-derive it from the
+truncated text. Do not grade style. Return only the JSON object asked for."""
 
 SCHEMA = {
     "type": "object",
@@ -113,6 +114,21 @@ def build_prompt(goal: str, reference: str, turns: list[dict], rubric: list[dict
 
 # ----- the call -------------------------------------------------------------------------------
 
+def log_cost(model: str, usage: dict, purpose: str) -> None:
+    """Append a judge or persona call to the machine-wide cost log (the same one every llm.run writes to)."""
+    from assistant.config import DEFAULTS, ROOT
+    target = os.environ.get("MARBLE_COST_LOG", DEFAULTS["MARBLE_COST_LOG"])
+    if not target:
+        return
+    path = Path(target)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    from datetime import datetime
+    entry = {"ts": datetime.now().astimezone().isoformat(timespec="seconds"), "mode": purpose, "model": model,
+             "effort": "low", "rounds": 1, **usage, "state_dir": "evals/" + purpose, "user_text": ""}
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+
+
 def _client():
     if not os.environ.get("ANTHROPIC_API_KEY"):
         from assistant.config import load_dotenv
@@ -129,7 +145,8 @@ def judge(goal: str, reference: str, turns: list[dict], rubric: list[dict], mode
               "system": [{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
               "messages": [{"role": "user", "content": build_prompt(goal, reference, turns, rubric)}],
               "output_config": {"effort": "low", "format": {"type": "json_schema", "schema": SCHEMA}}}
-    if call is None:
+    real = call is None
+    if real:
         client = _client()
 
         def call(kw):
@@ -147,6 +164,8 @@ def judge(goal: str, reference: str, turns: list[dict], rubric: list[dict], mode
              "cache_read_tokens": getattr(u, "cache_read_input_tokens", 0) or 0,
              "cache_write_tokens": getattr(u, "cache_creation_input_tokens", 0) or 0}
     usage["usd"] = llm.cost(model, usage["input_tokens"], usage["output_tokens"], usage["cache_write_tokens"], usage["cache_read_tokens"])
+    if real:
+        log_cost(model, usage, "judge")
     ids = {c["id"] for c in rubric}
     crit = [c for c in data.get("criteria", []) if c.get("id") in ids]
     for c in rubric:  # any criterion the judge skipped counts as a fail, never a silent pass

@@ -1,0 +1,200 @@
+Scenario goal: Interactive onboarding with mixed answers (inbound unknown, route newer, price threshold 5x, missing recipe flagged, buffer 2 days), the model wording the questions, then a brief that must reflect the answers.
+
+Onboarding questions (data given to the model):
+[
+ {
+  "id": "inbound",
+  "title": "INV-099 is marked received but its delivery date is after today",
+  "why": "INV-099 (ALDER WHOLESALE LLC, $146.00) is marked 'received' with delivery date 2026-10-06; today is 2026-10-05. If its 40 lb of Chicken thigh boneless skinless counts as on hand, the close is 45 lb below expected; if not, 5 lb. The counted stock covers about 2.0 days.",
+  "evidence": [
+   "invoice_headers.csv SITE-01 INV-099 rev1: status received, delivery 2026-10-06, invoice 2026-10-04",
+   "invoice_lines.csv SITE-01 INV-099-L01 rev1: 40 lb Chicken thigh 20 lb",
+   "notes.csv SITE-01 N15 rev1: \u2026Office marked the next chicken order received but I have not seen the cases.",
+   "inventory_counts.csv SITE-01 COUNT-OPEN-CHICKEN rev1: opening 32 lb"
+  ],
+  "options": [
+   "Nobody has seen the cases. Count inbound stock only once someone confirms it arrived.",
+   "The cases did arrive; the office delivery date is what is wrong.",
+   "Trust the office receipt status as it stands.",
+   "Unknown, keep checking."
+  ]
+ },
+ {
+  "id": "route",
+  "title": "Alder Wholesale delivery days: the vendor sheet disagrees with newer records",
+  "why": "The vendor sheet lists Alder Wholesale on Monday, Thursday (last reviewed 2026-09-14). Since then deliveries landed on other days: INV-016 on Wednesday 2026-09-30. Note N09 mentions a route change.",
+  "evidence": [
+   "vendors.csv SITE-01 V1 rev1: delivery_days Monday, Thursday; last_reviewed 2026-09-14",
+   "invoice_headers.csv SITE-01 INV-016 rev1: delivered Wednesday 2026-09-30",
+   "notes.csv SITE-01 N09 rev1: \u2026confirmed the route changes Sept 28: Monday/Wednesday instead of Monday/Thursday. Orders by noon the day\u2026"
+  ],
+  "options": [
+   "Plan on Monday, Wednesday as the notes and invoices show; newer notes and invoices beat reference tables.",
+   "Keep the vendor sheet (Monday, Thursday) until the vendor confirms in writing.",
+   "Unknown, keep checking."
+  ]
+ },
+ {
+  "id": "sku",
+  "title": "Chicken thigh boneless skinless now ships as AW-CHK20 (20 lb) instead of V1-CHICKEN (40 lb)",
+  "why": "Chicken thigh boneless skinless from Alder Wholesale: purchases switched from V1-CHICKEN (40 lb per case, $3.20/lb, last bought 2026-09-24) to AW-CHK20 (20 lb per case, $3.65/lb, first bought 2026-09-28). The catalog still lists both.",
+  "evidence": [
+   "ingredient_mappings.csv SITE-01 MAP-V1-CHICKEN rev1: V1-CHICKEN -> Chicken thigh boneless skinless",
+   "ingredient_mappings.csv SITE-01 MAP-AW-CHK20 rev1: AW-CHK20 -> Chicken thigh boneless skinless",
+   "vendor_catalog.csv SITE-01 CAT-CHICKEN rev1: V1-CHICKEN pack 40 lb",
+   "vendor_catalog.csv SITE-01 CAT-CHICKEN20 rev1: AW-CHK20 pack 20 lb",
+   "invoice_lines.csv SITE-01 INV-011-L01 rev1: 2026-09-24 V1-CHICKEN $3.200/lb, pack 40 lb"
+  ],
+  "options": [
+   "Order AW-CHK20 from now on and count chicken thigh boneless skinless in lb.",
+   "Keep ordering V1-CHICKEN if the vendor still has it; count in lb.",
+   "Unknown, keep checking."
+  ]
+ },
+ {
+  "id": "missing_recipe",
+  "title": "Weekend special (M99) has no recipe card",
+  "why": "Weekend special sold 32 portions ($320.00 net) across 4 days but no recipe is on file. Every reconciliation treats its draw as unknown, not zero.",
+  "evidence": [
+   "menu.csv SITE-01 M99 rev1: Weekend special, weekends, from 2026-09-26",
+   "pos_daily.csv SITE-01 POS-13-M99 rev1: 2026-09-26 7 sold",
+   "pos_daily.csv SITE-01 POS-14-M99 rev1: 2026-09-27 8 sold",
+   "pos_daily.csv SITE-01 POS-20-M99 rev1: 2026-10-03 8 sold"
+  ],
+  "options": [
+   "Treat its ingredient use as unknown and keep flagging it until the card is written.",
+   "Stop listing it in the brief; I know about it.",
+   "Unknown, keep checking."
+  ]
+ },
+ {
+  "id": "price",
+  "title": "Invoice price anomalies: how big a jump should the brief flag?",
+  "why": "INV-010 line INV-010-L01: V2-PEPPER billed at $210.00 per case ($21.00/lb); other purchases median $2.10/lb. Against the median this line is $378.00 higher. Separately, INV-009 has a header total that differs from its lines; arithmetic mismatches are always reported and have no threshold.",
+  "evidence": [
+   "invoice_lines.csv SITE-01 INV-010-L01 rev1: 2 case @ $210.00 = $420.00",
+   "invoice_lines.csv SITE-01 INV-002-L01 rev1: $2.10/lb",
+   "invoice_lines.csv SITE-01 INV-004-L01 rev1: $2.10/lb"
+  ],
+  "options": [
+   "Flag at 2x the usual unit cost or more.",
+   "Flag at 5x or more.",
+   "Flag at 10x or more.",
+   "Unknown, keep checking."
+  ]
+ },
+ {
+  "id": "ordering",
+  "title": "Ordering preferences",
+  "why": "Order proposals need four numbers from you. Tight stock right now: 6 inch flour tortilla covers about 1.6 days; Chicken thigh boneless skinless covers about 2.0 days; Black beans, drained covers about 2.3 days. Breakfast tacos next weekend will outrun what is on hand: Breakfast tacos (M05) averaged 66 portions per weekend day over 4 days.",
+  "evidence": [
+   "pos_daily.csv SITE-01 POS-13-M05 rev1: 2026-09-26 62 sold",
+   "pos_daily.csv SITE-01 POS-14-M05 rev1: 2026-09-27 66 sold",
+   "inventory_counts.csv SITE-01 COUNT-CLOSE-TORTILLA rev1: 280 each",
+   "inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1: 47.9 lb"
+  ],
+  "options": [
+   "Use the defaults: buffer 1 day, cover through Sunday, brunch uplift 25%, flag orders over $1,000.",
+   "Set each one.",
+   "Unknown, keep checking."
+  ]
+ }
+]
+
+Onboarding answers recorded:
+inbound -> unknown: policy inbound.on_hand_rule={"rule": "physical_confirmation"} (human:onboarding) [added]; assertion invoice.INV-099.physically_received={"received": false} (note:N15) [added]
+route -> newer: policy sources.precedence={"rule": "newer_notes_and_invoices_override_reference_tables"} (human:onboarding) [added]; assertion vendor.V1.delivery_days={"cutoff": "noon the day before", "days": ["Monday", "Wednesday"]} (human:onboarding) [added]
+sku -> new_sku: preference order.sku.ING-CHICKEN={"sku": "AW-CHK20", "vendor_id": "V1"} (human:onboarding) [added]; policy ingredient.ING-CHICKEN.count_unit={"unit": "lb"} (human:onboarding) [added]
+missing_recipe -> flag: policy recipes.missing_item_rule={"rule": "unknown_and_flag"} (human:onboarding) [added]
+price -> custom: preference invoices.price_anomaly_ratio={"ratio": 5.0} (human:onboarding) [added]
+ordering -> custom: preference order.buffer_days={"days": 2} (human:onboarding) [added]; preference order.cover_through={"weekday": "Sunday"} (human:onboarding) [added]; preference order.brunch_uplift={"uplift": 0.25} (human:onboarding) [added]; preference order.max_unflagged_usd={"usd": 1000.0} (human:onboarding) [added]
+
+Deterministic brief at revision 1:
+Lantern Yard Kitchen (SITE-01) — morning brief
+now 2026-10-05 06:00 · dataset revision 1 · 17 findings
+========================================================================
+[HIGH] INV-099 is marked received but its delivery date is in the future
+
+INV-099 (ALDER WHOLESALE LLC, $146.00) is marked 'received' with delivery date 2026-10-06, which is after today (2026-10-05). It carries 40 lb of Chicken thigh boneless skinless. Counting it as on hand, the 2026-10-04 close is 45.0 lb below expected (92.9 expected vs 47.9 counted); not counting it, the gap is 5.0 lb. What was counted covers about 2.0 days at last week's theoretical use of 24.4 lb/day.
+
+Evidence:
+  - invoice_headers.csv SITE-01 INV-099 rev1: status received, delivery 2026-10-06, invoice 2026-10-04
+  - invoice_lines.csv SITE-01 INV-099-L01 rev1: 40 lb Chicken thigh 20 lb
+  - notes.csv SITE-01 N15 rev1: …Office marked the next chicken order received but I have not seen the cases.
+  - inventory_counts.csv SITE-01 COUNT-OPEN-CHICKEN rev1: opening 32 lb
+  - inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1: closing 47.9 lb
+  - notes.csv SITE-01 N06 rev1: …felt warm at open. Moved what we could, tossed an unweighed tray of chicken and a tub of cut peppers. Service…
+
+Uncertain:
+  - Receipt status is typed in by the office, not scanned at the door, so the status alone does not show the cases arrived.
+  - Theoretical use assumes recipe cards were followed; there are no intermediate counts or waste records to confirm it.
+  - Weekend special (M99) sold 32 portions with no recipe on file, so some chicken draw is unmeasured.
+  - Note N06 (2026-09-22) records chicken discarded without weighing.
+
+Next step: The manager confirmed the cases are not here. Confirm with Alder Wholesale whether INV-099 has shipped before placing the next order. Until confirmed, plan with Chicken thigh boneless skinless at 47.9 lb on hand, about 2.0 days.
+
+Numbers: invoice_total_usd=$146.00; status=received; delivery_date=2026-10-06; today=2026-10-05; stock_on_invoice=Chicken thigh boneless skinless=40 lb; gap_if_received=-45; expected_close_if_received=92.9; gap_if_not_received=-5; expected_close_if_not=52.9; counted_close=47.9; unit=lb; burn_per_day=24.4; runway_days=2
+Applied: inbound.on_hand_rule=physical_confirmation (human:onboarding), invoice.INV-099.physically_received=False (note:N15)
+
+Other findings (16):
+  - [HIGH] INV-010 bills a line at 10x the usual unit cost  (unit_price_outlier:INV-010-L01)
+  - [MED] 6 inch flour tortilla covers about 1.6 days  (runway_risk:6 inch flour tortilla)
+  - [MED] Chicken thigh boneless skinless covers about 2.0 days  (runway_risk:Chicken thigh boneless skinless)
+  - [MED] Black beans, drained covers about 2.3 days  (runway_risk:Black beans, drained)
+  - [MED] Shredded cheddar covers about 2.6 days  (runway_risk:Shredded cheddar)
+  - [MED] Breakfast tacos next weekend will outrun what is on hand  (weekend_readiness:M05)
+  - [MED] Weekend special (M99) has no recipe, so its ingredient use is unknown  (item_without_recipe:M99)
+  - [MED] Chicken thigh boneless skinless now arrives as AW-CHK20: half the case size, higher price per lb  (sku_substitution:ING-CHICKEN)
+  - [MED] INV-009 header total differs from its lines by $47.50  (header_total_mismatch:INV-009)
+  - [MED] Alder Wholesale delivery days on the vendor sheet look out of date  (reference_table_stale:V1)
+  - [MED] supplier document SUP-V1-01 contains instructions addressed to automated systems  (untrusted_instructions:SUP-V1-01)
+  - [LOW] Chicken thigh boneless skinless count is -5.0 lb against theoretical  (count_variance:Chicken thigh boneless skinless)
+  - [LOW] Shredded cheddar count is -2.4 lb against theoretical  (count_variance:Shredded cheddar)
+  - [LOW] Mixed bell peppers, trimmed count is -3.0 lb against theoretical  (count_variance:Mixed bell peppers, trimmed)
+  - [LOW] 6 inch flour tortilla count is -48.0 each against theoretical  (count_variance:6 inch flour tortilla)
+  - [LOW] Account AC-417 appears under more than one vendor name  (vendor_name_variance:AC-417)
+
+Stock runway (daily-service ingredients and others):
+ingredient                          on hand   use/day   days
+------------------------------------------------------------
+6 inch flour tortilla               280 each    176.43    1.6
+Chicken thigh boneless skinless    47.9 lb      24.43    2.0
+Large shell eggs                     84 each     38.86    2.2  (weekend item; days are a 7-day average)
+Black beans, drained              27.94 lb      11.99    2.3
+Shredded cheddar                  14.68 lb       5.74    2.6
+Mixed bell peppers, trimmed       25.74 lb       7.63    3.4
+Long grain rice, dry              42.84 lb       9.48    4.5
+Whole avocado                        75 each     14.21    5.3
+Canola oil                        39.34 lb       1.94   20.3
+(use/day = theoretical recipe use 2026-09-28..2026-10-04 / 7; counts from the 2026-10-04 close)
+
+Retained (human choices, never rechecked against data): 4 policies, 6 preferences; onboarded 2026-11-03T21:57. `memory` lists them, `why <subject>` explains one.
+Rechecked from the API this run at revision 1: every resource; observations 17 recorded (first run).
+
+Beliefs in force at the end:
+Ledger: onboarded 2026-11-03T21:57
+  kind         active  superseded  conflicted
+  policy           4           0           0
+  preference       6           0           0
+  assertion        2           0           0
+  observation     17           0           0
+
+Retained (human; a person changes these, data never does):
+  policy      inbound.on_hand_rule                 rule=physical_confirmation         human:onboarding  recorded 2026-11-03T21:57
+  policy      ingredient.ING-CHICKEN.count_unit    unit=lb                            human:onboarding  recorded 2026-11-03T21:57
+  policy      recipes.missing_item_rule            rule=unknown_and_flag              human:onboarding  recorded 2026-11-03T21:57
+  policy      sources.precedence                   rule=newer_notes_and_invoices_override_reference_tables human:onboarding  recorded 2026-11-03T21:57
+  preference  invoices.price_anomaly_ratio         ratio=5                            human:onboarding  recorded 2026-11-03T21:57
+  preference  order.brunch_uplift                  uplift=0.25                        human:onboarding  recorded 2026-11-03T21:57
+  preference  order.buffer_days                    days=2                             human:onboarding  recorded 2026-11-03T21:57
+  preference  order.cover_through                  weekday=Sunday                     human:onboarding  recorded 2026-11-03T21:57
+  preference  order.max_unflagged_usd              usd=1000                           human:onboarding  recorded 2026-11-03T21:57
+  preference  order.sku.ING-CHICKEN                sku=AW-CHK20, vendor_id=V1         human:onboarding  recorded 2026-11-03T21:57
+
+Assertions (facts; rechecked when the dataset revision changes):
+  assertion   invoice.INV-099.physically_received  received=False                     note:N15  recorded 2026-11-03T21:57
+  assertion   vendor.V1.delivery_days              cutoff=noon the day before, days=Monday, Wednesday human:onboarding  recorded 2026-11-03T21:57
+
+Observations (detector output; rechecked every run): 17 current, 0 cleared, last revision 1, last run 2026-10-05T06:00:00-04:00
+
+Model cost so far: no usage log yet

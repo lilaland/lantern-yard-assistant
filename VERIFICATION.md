@@ -1,7 +1,7 @@
 # Verification record
 
 What the test suite proves, what it does not, and what failed on the way. Numbers are from the
-run on 2026-11-03 at 21:50 local time, after the agentic suite.
+run on 2026-11-03 at 22:05 local time, after two live tuning iterations.
 
 ## How to run
 
@@ -18,7 +18,7 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 
 ## Result
 
-151 passed, 0 failed, 0 skipped.
+154 passed, 0 failed, 0 skipped.
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -53,6 +53,16 @@ Agentic suite, fake mode (`python evals/agentic.py --fake`, 2026-11-03 21:55): 8
 fake assistant and a fake judge that passes every criterion (fake mode tests the pipeline, not judgement); the report shows every declared flow covered by at least one scenario.
 No live scenario, judge calibration or persona turn has run with a real model.
 
+## Live runs (real model)
+
+| When | Run | Result | Spend | Notes |
+|---|---|---|---|---|
+| 21:54 | `evals/agentic.py --budget-usd 3` | 0/8, every scenario errored before any turn | $0.00 | Two API limits the fakes could not see: at most 16 union-typed tool parameters per request (we sent 22 nullable ones) and no `additionalProperties` schema in structured output. Fixed in `33c761e`. |
+| 21:56 | same, after the schema fix | 3/8 OK; judge calibrated 4/4 | $0.72 (229 s) | Found: citations written as `(file ID, rev1)` so no link matched; briefs of 301 and 345 words; the ledger dropped the lost-response story once a draft was accepted; the judge re-graded numbers it could not see; two rubrics contradicted the prompt. |
+| 22:04 | same, after prompt, ledger-note and rubric fixes | 6/8 OK; all deterministic checks pass; judge calibrated 4/4 | $0.60 (174 s) | Remaining: the eggs answer ran twelve sentences against a six-sentence rule (prompt tightened again); one rubric misread the "unknown" onboarding answer (reworded). Not yet re-run. |
+
+Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 47 calls and $1.11 at 22:08, every model call from the two runs including judge and persona.
+
 ## Smoke path
 
 `demo/demo.sh --no-pause` ran end to end on 2026-11-03 at 20:37 (exit 0): onboarding, brief at
@@ -78,11 +88,10 @@ revision 1, `why`, delivery correction and brief at revision 2, order proposal, 
 
 ## Not verified
 
-- **Any live model call.** No `ANTHROPIC_API_KEY` was available during the build. The loop, the
-  prompts, the structured-output wording call and the fallbacks are tested with a fake API; the
-  installed SDK accepts every field the loop sends (checked by signature). No narrated brief,
-  order explanation, model-worded onboarding question or `ask` conversation has been produced by
-  a real model. Measured cost: $0.
+- **Live use through the UI and CLI by a person.** The model paths have now run live only through
+  the agentic suite (two iterations, above); the narrated `brief` and `ask` commands and the web
+  chat have not yet been driven by a person. The suite's third iteration, after the last prompt and
+  rubric changes, has not been run.
 - **Two-terminal rehearsal by hand.** Two scripted rehearsals are recorded in `demo/REHEARSAL.md`;
   the runbook has not yet been rehearsed with a person typing in terminal A.
 - **Scale dataset.** Only the small dataset is exercised; the scale file was never loaded.

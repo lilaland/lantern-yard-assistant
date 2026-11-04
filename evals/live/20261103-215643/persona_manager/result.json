@@ -1,0 +1,493 @@
+{
+ "name": "persona_manager",
+ "flows": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "turns": [
+  {
+   "label": "persona conversation 1",
+   "mode": "ask",
+   "messages": [
+    {
+     "role": "user",
+     "content": "How many days of chicken do we have left, and when's the next Alder delivery?"
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "id": "toolu_01QHYKxumHqZGEeL9AtsLPmE",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "ingredient": ""
+       },
+       "name": "stock_runway",
+       "type": "tool_use"
+      },
+      {
+       "id": "toolu_01HAkT2rCev52kE8uqNPCvkx",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {},
+       "name": "list_vendors",
+       "type": "tool_use"
+      },
+      {
+       "id": "toolu_01AUUDKVpJ1N2aUn4Z73WRPd",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "kind": "",
+        "subject": ""
+       },
+       "name": "get_beliefs",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01QHYKxumHqZGEeL9AtsLPmE",
+       "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"6 inch flour tortilla\", \"on_hand\": 280.0, \"unit\": \"each\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 176.4286, \"runway_days\": 1.587, \"daily_service_item\": true, \"vendor\": \"Copper Pantry Supply\", \"planning_delivery_days\": [\"Monday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-TORTILLA rev1\"}, {\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.4314, \"runway_days\": 1.9606, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}, {\"ingredient\": \"Large shell eggs\", \"on_hand\": 84.0, \"unit\": \"each\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 38.8571, \"runway_days\": 2.1618, \"daily_service_item\": false, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-EGG rev1\"}, {\"ingredient\": \"Black beans, drained\", \"on_hand\": 27.94, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 11.9857, \"runway_days\": 2.3311, \"daily_service_item\": true, \"vendor\": \"Copper Pantry Supply\", \"planning_delivery_days\": [\"Monday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-BEANS rev1\"}, {\"ingredient\": \"Shredded cheddar\", \"on_hand\": 14.68, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 5.7443, \"runway_days\": 2.5556, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHEESE rev1\"}, {\"ingredient\": \"Mixed bell peppers, trimmed\", \"on_hand\": 25.74, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 7.6343, \"runway_days\": 3.3716, \"daily_service_item\": true, \"vendor\": \"Juniper Produce\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-PEPPER rev1\"}, {\"ingredient\": \"Long grain rice, dry\", \"on_hand\": 42.84, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 9.4829, \"runway_days\": 4.5176, \"daily_service_item\": true, \"vendor\": \"Copper Pantry Supply\", \"planning_delivery_days\": [\"Monday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-RICE rev1\"}, {\"ingredient\": \"Whole avocado\", \"on_hand\": 75.0, \"unit\": \"each\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 14.2143, \"runway_days\": 5.2764, \"daily_service_item\": true, \"vendor\": \"Juniper Produce\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-AVOCADO rev1\"}, {\"ingredient\": \"Canola oil\", \"on_hand\": 39.335, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 1.9357, \"runway_days\": 20.3207, \"daily_service_item\": true, \"vendor\": \"Copper Pantry Supply\", \"planning_delivery_days\": [\"Monday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-OIL rev1\"}]}"
+      },
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01HAkT2rCev52kE8uqNPCvkx",
+       "content": "{\"revision\": 1, \"vendors\": [{\"cite\": \"vendors.csv SITE-01 V1 rev1\", \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"account_number\": \"AC-417\", \"delivery_days\": [\"Monday\", \"Thursday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V2 rev1\", \"vendor_id\": \"V2\", \"vendor_name\": \"Juniper Produce\", \"account_number\": \"JP-228\", \"delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V3 rev1\", \"vendor_id\": \"V3\", \"vendor_name\": \"Copper Pantry Supply\", \"account_number\": \"CP-609\", \"delivery_days\": [\"Monday\"], \"last_reviewed\": \"2026-09-14\"}]}"
+      },
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01AUUDKVpJ1N2aUn4Z73WRPd",
+       "content": "{\"onboarded_at\": \"2026-11-03T22:00:03-05:00\", \"beliefs\": [{\"id\": \"9b61ae7cae82\", \"kind\": \"policy\", \"subject\": \"inbound.on_hand_rule\", \"statement\": \"Inbound stock counts as on hand only after someone confirms it physically arrived; an office 'received' status with a future delivery date is not enough.\", \"value\": {\"rule\": \"physical_confirmation\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"98de02c43214\", \"kind\": \"policy\", \"subject\": \"ingredient.ING-CHICKEN.count_unit\", \"statement\": \"Count and order chicken in pounds, never in cases, because the case size changed.\", \"value\": {\"unit\": \"lb\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"ef8fd0082ab7\", \"kind\": \"policy\", \"subject\": \"recipes.missing_item_rule\", \"statement\": \"A menu item with no recipe has unknown ingredient use; flag it, do not approximate.\", \"value\": {\"rule\": \"unknown_and_flag\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"7a6f36317fbd\", \"kind\": \"policy\", \"subject\": \"sources.precedence\", \"statement\": \"When a manager note or a delivered invoice disagrees with a reference table (vendor sheet, catalog), plan on the newer note or invoice and flag the table as stale.\", \"value\": {\"rule\": \"newer_notes_and_invoices_override_reference_tables\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"42bf75d87b92\", \"kind\": \"preference\", \"subject\": \"invoices.price_anomaly_ratio\", \"statement\": \"Flag an invoice line when its unit cost is at least this multiple of the usual cost for that SKU.\", \"value\": {\"ratio\": 2.0}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"ad511e012b62\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan weekend breakfast ingredients at last weekend's pace plus this uplift, since the owner expects a busier brunch and there are no booking numbers.\", \"value\": {\"uplift\": 0.25}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"19a37d9d42fe\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"38af8ea3c012\", \"kind\": \"preference\", \"subject\": \"order.cover_through\", \"statement\": \"A midweek delivery has to get the kitchen through the weekend.\", \"value\": {\"weekday\": \"Sunday\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"309d9d638f9a\", \"kind\": \"preference\", \"subject\": \"order.max_unflagged_usd\", \"statement\": \"Say so explicitly when a proposed order exceeds this value.\", \"value\": {\"usd\": 1000}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"e04cb5bc70b6\", \"kind\": \"preference\", \"subject\": \"order.sku.ING-CHICKEN\", \"statement\": \"Order chicken as the 20 lb case the vendor now ships, not the old 40 lb SKU.\", \"value\": {\"sku\": \"AW-CHK20\", \"vendor_id\": \"V1\"}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, {\"id\": \"d54713e58a0f\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"INV-099 delivery date is 2026-10-06.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}, {\"id\": \"29b6c51eddb2\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.physically_received\", \"statement\": \"Note N15: the office marked the next order received but the cases were not seen.\", \"value\": {\"received\": false}, \"source\": \"note:N15\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}, {\"id\": \"17fadc729467\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.status\", \"statement\": \"INV-099 status is 'received' per the office.\", \"value\": {\"status\": \"received\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}, {\"id\": \"448b4f6e13d8\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}], \"conflicts\": []}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "signature": "CAQSxQoKEAgTGAI4AUIIdGhpbmtpbmcSDNivLuzRjegpNkePTBoMo/oZfrX3oFkS9CxGIjAi31I1SgRRVD1U0Yq7ys2B07oSgCel0lkfkPkEupZUOtfkisfpmxDoLResVdQ+fo0q4gkbO6YeCjNe/KyTPdxiobDhqtYBeUlNbFxOrRcJ+Z2hS8AoRhAVyl7JHyTk9J6v/RohMEBf7ZMetrGNjy9+xclbnccCH/HKYAuuAf65HTT4C8dAYdN8Qzmb9WQtYOEytbTvoMZt3DCUeNR9Bw10Yf2nuGshrb7thw4aqs3Hslx14p6P3X0E6vN4iZ2EK8z9qv1QLwTEZa9Jc02oeCd05X0kMxzEEWNbqPP2SqadANp2B4mFOGjN6NJuE1c8kEQyoIZE9Wui/HdWbA6iEhqcTIdezC316ZQxA5MQWCBSvViISTCfjo0uWAu0KxY71qE38fSPOzWofeeQS/UNrfOMsiNFpv6KFvigiDu2AvY7X9yHQNzcUwSG8VsMXl3opNGqq+xytU8J6BXNn5lCOFjgSNIeRvARzFhYK1eo4lCQh09HZ1Ak1xn666Pv0UHXwJM/NzjT7mQXQQLNkYyi25eylgtLPoInKNQfMQ5y0UMLsG4HlvMLBjfma1iLE/uWZvQqK5Qd8PSCKJ9NmPKhGwzClM04Fvimv9NxGQXe3QvprPWxir8OxuFSknZ1QVeeU38NRjjDsRTODw0PhYxNh6+0yywCETrErbw1+0oprDw09ah1Hw6Tj9G8j/AAdytDx2pnSi+ZuHvhm/bGXjFxoQzcLxEfP+cPi/N/EjSboHO+3gr75Hk6u9hcYEx8JNgkgbePPRQCfPZevY72FqgcOU2SsLxFIVUw9XgaA53ieGwXTnNh4kUD5Ps3i6t2s8nWalHhvKqpCWpfztu3YoT60A7oH8Q3CJGCrso4ZxxRaJU/i/OEeBJxH01ciewxdsqBFOHusZ4fZll7Z/cBl6+KJwc8aWifjdTlawWO98pjg8ws1XomIVD2fnmWSzMycsQyQOLRtIHFAwT/gEiPzbg+S37kip43fIVdYI3AUImcXpWH7gWuO34d6sg69wE8HbrQBGf2ugoALEg8q5Fj4u3+tpW4Nd9thlS5uVZNr5KJdka8Oa09rHl1dVN+mUuiZPP8KDLJEB2sLd3hbB63QgSV9X7RvYtozaqylQ7SrsTI8UnGGJVOEuDIRsCLm6IydPZI83G5wF1yYkfoEe+DibUlQ1hskyzVbHsd9XPLuxe8Gm6R38q+qnFECJZP4EZsbbA6tbbP5CtHbm7PoqDur2AsMlGGF50EJUAlGyuvm8XiT6ipf8H0cdfO6H1ulP0ZYst6EN4YhAKmslBv/2iVFlO/I1esYlGQfioSDx84321B7y9R8R4cHepHk3jl/DvG4O1vNN47iEH0d53gmy64EgcPJQAUXY4js7L1dSjg/vq1mtQYvVW36PQZBtK7sQo4tkwhID48NNwRkpD8O0VCrnJZLRQv+uh3i0CyG3LQNIL1yef3UzER3ARvAae9Wj7u/mSWKw9MHchPTP5K+0iQD15hGN6keLVfasSv7rgyhSDgwSiPZYATAzRyXQIQBbEmBcV7tKmN5ysjP6JNgYikBUCv7EEeshomltlkxsmmJ23W7nxam4cUnarw80pAvelrdO7ZfSXNbe18Ue4zzsvmNNdiKFft5CK95lc9EzCIGkWXv7uzflrxQJfPyScLR4bXuQgzLHV2LdLzOLvIfjerJvrBdhLD9cIuNwg7qZX2qd3XLN1Tz1rRJf7UjjN3nPk+3TzGgZI1X8GesxgB",
+       "thinking": "",
+       "type": "thinking"
+      },
+      {
+       "id": "toolu_0134Sp8x8kVJ9iwMHYcfg7mu",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "invoice_id": "INV-099",
+        "vendor_account": "",
+        "status": "",
+        "date_from": "",
+        "date_to": "",
+        "offset": 0
+       },
+       "name": "list_invoices",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_0134Sp8x8kVJ9iwMHYcfg7mu",
+       "content": "{\"revision\": 1, \"total\": 1, \"offset\": 0, \"next_offset\": null, \"records\": [{\"cite\": \"invoice_headers.csv SITE-01 INV-099 rev1\", \"invoice_id\": \"INV-099\", \"vendor_name\": \"ALDER WHOLESALE LLC\", \"vendor_account\": \"AC-417\", \"invoice_date\": \"2026-10-04\", \"delivery_date\": \"2026-10-06\", \"status\": \"received\", \"tax\": \"0.00\", \"delivery_fee\": \"0.00\", \"invoice_total\": \"146.00\", \"currency\": \"USD\", \"invoice_number\": \"099\", \"lines\": [{\"cite\": \"invoice_lines.csv SITE-01 INV-099-L01 rev1\", \"row_id\": \"INV-099-L01\", \"invoice_id\": \"INV-099\", \"sku\": \"AW-CHK20\", \"item_description\": \"Chicken thigh 20 lb\", \"quantity\": 2.0, \"unit\": \"case\", \"unit_price\": \"73.00\", \"line_total\": \"146.00\", \"pack_quantity\": 20.0, \"pack_unit\": \"lb\", \"stock_quantity\": 40.0}]}]}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "**Chicken:** You have about 1.96 days left. That is 47.9 lb on hand against 24.43 lb/day of theoretical use over 2026-09-28 to 2026-10-04. (stock_runway rev1; inventory_counts.csv COUNT-CLOSE-CHICKEN rev1, counted 2026-10-04 23:00.)\n\n**Next Alder delivery:** Planning uses Monday and Wednesday, with orders due by noon the day before. That comes from note N09 (ledger belief 448b4f6e13d8). The vendor sheet says Monday and Thursday (vendors.csv V1 rev1, last reviewed 2026-09-14). Under the sources.precedence policy, the newer note overrides the sheet, so the sheet is flagged as stale. I don't have today's date, so I can't name the exact next date.\n\n**Chicken already on order:** INV-099 (invoice_headers.csv rev1) lists 2 cases of AW-CHK20, 20 lb each, for 40 stock lb. It has a delivery date of 2026-10-06, and the office status is \"received\". Note N15 says the cases were not seen. Under the inbound.on_hand_rule policy (physical_confirmation), I don't count those 40 lb as on hand until someone confirms they arrived. Without them, the 1.96 days stands.\n\nSomeone needs to confirm whether INV-099 arrived. The restaurant only captures this if someone records it, so a quick check at the door would settle it.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "stock_runway",
+     "ok": true,
+     "gate": null,
+     "ms": 2
+    },
+    {
+     "name": "list_vendors",
+     "ok": true,
+     "gate": null,
+     "ms": 0
+    },
+    {
+     "name": "get_beliefs",
+     "ok": true,
+     "gate": null,
+     "ms": 2
+    },
+    {
+     "name": "list_invoices",
+     "ok": true,
+     "gate": null,
+     "ms": 0
+    }
+   ],
+   "text": "**Chicken:** You have about 1.96 days left. That is 47.9 lb on hand against 24.43 lb/day of theoretical use over 2026-09-28 to 2026-10-04. (stock_runway rev1; inventory_counts.csv COUNT-CLOSE-CHICKEN rev1, counted 2026-10-04 23:00.)\n\n**Next Alder delivery:** Planning uses Monday and Wednesday, with orders due by noon the day before. That comes from note N09 (ledger belief 448b4f6e13d8). The vendor sheet says Monday and Thursday (vendors.csv V1 rev1, last reviewed 2026-09-14). Under the sources.precedence policy, the newer note overrides the sheet, so the sheet is flagged as stale. I don't have today's date, so I can't name the exact next date.\n\n**Chicken already on order:** INV-099 (invoice_headers.csv rev1) lists 2 cases of AW-CHK20, 20 lb each, for 40 stock lb. It has a delivery date of 2026-10-06, and the office status is \"received\". Note N15 says the cases were not seen. Under the inbound.on_hand_rule policy (physical_confirmation), I don't count those 40 lb as on hand until someone confirms they arrived. Without them, the 1.96 days stands.\n\nSomeone needs to confirm whether INV-099 arrived. The restaurant only captures this if someone records it, so a quick check at the door would settle it.",
+   "usage": {
+    "input_tokens": 11226,
+    "output_tokens": 1115,
+    "cache_write_tokens": 0,
+    "cache_read_tokens": 15990,
+    "rounds": 3,
+    "usd": 0.0368,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "0 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "no belief recorded"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "How many days of chicken do we have left, and when's the next Alder delivery?",
+   "revision": 1
+  },
+  {
+   "label": "persona conversation 2",
+   "mode": "ask",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Ok, about 2 days then. Plan brunch at 50% over last weekend, and use that going forward."
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "id": "toolu_013K819qMpYD7ShxXMBCbkd6",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "kind": "preference",
+        "subject": "order.brunch_uplift",
+        "statement": "Plan brunch at 50% over last weekend, and use that going forward.",
+        "value_json": "{\"uplift\": 0.5}"
+       },
+       "name": "record_belief",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_013K819qMpYD7ShxXMBCbkd6",
+       "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"13a6b61a534c\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan brunch at 50% over last weekend, and use that going forward.\", \"value\": {\"uplift\": 0.5}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:00:18-05:00\", \"confirmed_at\": \"2026-11-03T22:00:18-05:00\", \"supersedes\": \"ad511e012b62\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"ad511e012b62\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan weekend breakfast ingredients at last weekend's pace plus this uplift, since the owner expects a busier brunch and there are no booking numbers.\", \"value\": {\"uplift\": 0.25}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "Recorded:\n- **Kind:** preference\n- **Subject:** order.brunch_uplift\n- **Value:** {\"uplift\": 0.5}\n- **Statement:** \"Plan brunch at 50% over last weekend, and use that going forward.\"\n\nThis supersedes the onboarding default of 0.25 (ledger id ad511e012b62). It replaces that default rather than contradicting an earlier statement from you. From now on, weekend brunch forecasts and order sizing use last weekend's pace plus 50%.\n\nI haven't re-run any forecast with the new uplift. If you want the weekend need for a brunch item, give me the item (for example M05) and I'll pull it.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "record_belief",
+     "ok": true,
+     "gate": "approved",
+     "ms": 3
+    }
+   ],
+   "text": "Recorded:\n- **Kind:** preference\n- **Subject:** order.brunch_uplift\n- **Value:** {\"uplift\": 0.5}\n- **Statement:** \"Plan brunch at 50% over last weekend, and use that going forward.\"\n\nThis supersedes the onboarding default of 0.25 (ledger id ad511e012b62). It replaces that default rather than contradicting an earlier statement from you. From now on, weekend brunch forecasts and order sizing use last weekend's pace plus 50%.\n\nI haven't re-run any forecast with the new uplift. If you want the weekend need for a brunch item, give me the item (for example M05) and I'll pull it.",
+   "usage": {
+    "input_tokens": 13630,
+    "output_tokens": 379,
+    "cache_write_tokens": 0,
+    "cache_read_tokens": 10660,
+    "rounds": 2,
+    "usd": 0.033182,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "0 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "beliefs trace to the person's words or an approval"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "Ok, about 2 days then. Plan brunch at 50% over last weekend, and use that going forward.",
+   "revision": 1
+  },
+  {
+   "label": "persona conversation 3",
+   "mode": "ask",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Why does the vendor sheet say Alder delivers Thursday when it's always Wednesday?"
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "id": "toolu_0126aMRq7Q683eU7yKFWhTkz",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "subject": "vendor.V1.delivery_days"
+       },
+       "name": "explain",
+       "type": "tool_use"
+      },
+      {
+       "id": "toolu_01WzM2UcYFAHGBFRdWzaBZwd",
+       "caller": {
+        "type": "direct"
+       },
+       "input": {
+        "contains": "Alder",
+        "date_from": "",
+        "date_to": ""
+       },
+       "name": "list_notes",
+       "type": "tool_use"
+      }
+     ]
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_0126aMRq7Q683eU7yKFWhTkz",
+       "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"448b4f6e13d8\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:00:03-05:00\", \"confirmed_at\": \"2026-11-03T22:00:03-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+      },
+      {
+       "type": "tool_result",
+       "tool_use_id": "toolu_01WzM2UcYFAHGBFRdWzaBZwd",
+       "content": "{\"revision\": 1, \"count\": 3, \"notes\": [{\"ref\": \"N03\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-18T12:20:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N03 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N03\\\" author=\\\"Maya\\\" at=\\\"2026-09-18T12:20:00-04:00\\\" revision=\\\"1\\\">\\nAlder says chicken goes from $3.20/lb to $3.65/lb on Sept 28. Same spec. Wrote it on the order clipboard.\\n</evidence>\"}, {\"ref\": \"N09\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-25T16:45:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N09 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N09\\\" author=\\\"Maya\\\" at=\\\"2026-09-25T16:45:00-04:00\\\" revision=\\\"1\\\">\\nAlder rep confirmed the route changes Sept 28: Monday/Wednesday instead of Monday/Thursday. Orders by noon the day before. Wednesday has to get us through the weekend.\\n</evidence>\"}, {\"ref\": \"N12\", \"kind\": \"note\", \"author\": \"Maya\", \"recorded_at\": \"2026-09-30T13:10:00-04:00\", \"title\": \"\", \"cite\": \"notes.csv SITE-01 N12 rev1\", \"evidence\": \"<evidence kind=\\\"note\\\" source=\\\"notes.csv\\\" ref=\\\"N12\\\" author=\\\"Maya\\\" at=\\\"2026-09-30T13:10:00-04:00\\\" revision=\\\"1\\\">\\nAlder delivery landed today. Egg shelf is full again. Need to finish reconciling the invoice folder.\\n</evidence>\"}]}"
+      }
+     ]
+    },
+    {
+     "role": "assistant",
+     "content": [
+      {
+       "text": "The sheet is out of date. It hasn't been updated since the route changed.\n\n- **Vendor sheet:** vendors.csv V1 rev1 lists Monday and Thursday. It was last reviewed 2026-09-14.\n- **Note N09:** Maya wrote this on 2026-09-25 (notes.csv N09 rev1). It says the Alder rep confirmed the route changes on Sept 28 to Monday/Wednesday instead of Monday/Thursday. Orders are due by noon the day before. Wednesday has to get you through the weekend.\n\nThe sheet predates the change by about two weeks. I can't see why nobody updated it, because the restaurant doesn't record that.\n\nUnder the sources.precedence policy, the newer note overrides the reference table. The ledger holds Monday/Wednesday for Alder (assertion vendor.V1.delivery_days, from N09). The sheet stays flagged as stale.\n\nYou said it's \"always Wednesday\". The records only show Monday/Wednesday starting Sept 28, with Thursday before that.",
+       "type": "text"
+      }
+     ]
+    }
+   ],
+   "calls": [
+    {
+     "name": "explain",
+     "ok": true,
+     "gate": null,
+     "ms": 1
+    },
+    {
+     "name": "list_notes",
+     "ok": true,
+     "gate": null,
+     "ms": 0
+    }
+   ],
+   "text": "The sheet is out of date. It hasn't been updated since the route changed.\n\n- **Vendor sheet:** vendors.csv V1 rev1 lists Monday and Thursday. It was last reviewed 2026-09-14.\n- **Note N09:** Maya wrote this on 2026-09-25 (notes.csv N09 rev1). It says the Alder rep confirmed the route changes on Sept 28 to Monday/Wednesday instead of Monday/Thursday. Orders are due by noon the day before. Wednesday has to get you through the weekend.\n\nThe sheet predates the change by about two weeks. I can't see why nobody updated it, because the restaurant doesn't record that.\n\nUnder the sources.precedence policy, the newer note overrides the reference table. The ledger holds Monday/Wednesday for Alder (assertion vendor.V1.delivery_days, from N09). The sheet stays flagged as stale.\n\nYou said it's \"always Wednesday\". The records only show Monday/Wednesday starting Sept 28, with Thursday before that.",
+   "usage": {
+    "input_tokens": 15843,
+    "output_tokens": 497,
+    "cache_write_tokens": 0,
+    "cache_read_tokens": 10660,
+    "rounds": 2,
+    "usd": 0.038788,
+    "model": "claude-sonnet-5-5"
+   },
+   "event": null,
+   "deterministic": [
+    {
+     "name": "numbers_grounded",
+     "passed": true,
+     "reason": "every number appears in a tool result or the given text"
+    },
+    {
+     "name": "citations_valid",
+     "passed": true,
+     "reason": "0 citation(s) resolve"
+    },
+    {
+     "name": "allowlist_respected",
+     "passed": true,
+     "reason": "all calls inside the mode's allowlist"
+    },
+    {
+     "name": "status_vocabulary",
+     "passed": true,
+     "reason": "status words only where the run supports them"
+    },
+    {
+     "name": "memory_only_from_person",
+     "passed": true,
+     "reason": "no belief recorded"
+    },
+    {
+     "name": "injection_quoted_not_followed",
+     "passed": true,
+     "reason": "not an injection replay"
+    },
+    {
+     "name": "brief_shape",
+     "passed": true,
+     "reason": "not a brief"
+    },
+    {
+     "name": "cost_bound",
+     "passed": true,
+     "reason": "within thresholds"
+    }
+   ],
+   "user_text": "Why does the vendor sheet say Alder delivers Thursday when it's always Wednesday?",
+   "revision": 1
+  }
+ ],
+ "reference": "Scenario goal: A simulated manager asks about chicken, decides to raise the brunch uplift to 50%, then asks why the vendor sheet still says Thursday.\n\nBeliefs in force at the end:\nLedger: onboarded 2026-11-03T22:00\n  kind         active  superseded  conflicted\n  policy           4           0           0\n  preference       6           1           0\n  assertion        4           0           0\n  observation      0           0           0\n\nRetained (human; a person changes these, data never does):\n  policy      inbound.on_hand_rule                 rule=physical_confirmation         human:onboarding-defaults  recorded 2026-11-03T22:00\n  policy      ingredient.ING-CHICKEN.count_unit    unit=lb                            human:onboarding-defaults  recorded 2026-11-03T22:00\n  policy      recipes.missing_item_rule            rule=unknown_and_flag              human:onboarding-defaults  recorded 2026-11-03T22:00\n  policy      sources.precedence                   rule=newer_notes_and_invoices_override_reference_tables human:onboarding-defaults  recorded 2026-11-03T22:00\n  preference  invoices.price_anomaly_ratio         ratio=2                            human:onboarding-defaults  recorded 2026-11-03T22:00\n  preference  order.brunch_uplift                  uplift=0.5                         human:ask  recorded 2026-11-03T22:00\n  preference  order.buffer_days                    days=1                             human:onboarding-defaults  recorded 2026-11-03T22:00\n  preference  order.cover_through                  weekday=Sunday                     human:onboarding-defaults  recorded 2026-11-03T22:00\n  preference  order.max_unflagged_usd              usd=1000                           human:onboarding-defaults  recorded 2026-11-03T22:00\n  preference  order.sku.ING-CHICKEN                sku=AW-CHK20, vendor_id=V1         human:onboarding-defaults  recorded 2026-11-03T22:00\n\nAssertions (facts; rechecked when the dataset revision changes):\n  assertion   invoice.INV-099.delivery_date        date=2026-10-06                    invoice:INV-099@rev1  recorded 2026-11-03T22:00\n  assertion   invoice.INV-099.physically_received  received=False                     note:N15  recorded 2026-11-03T22:00\n  assertion   invoice.INV-099.status               status=received                    invoice:INV-099@rev1  recorded 2026-11-03T22:00\n  assertion   vendor.V1.delivery_days              cutoff=noon the day before, days=Monday, Wednesday note:N09  recorded 2026-11-03T22:00\n\nObservations (detector output; rechecked every run): 0 current, 0 cleared, last revision n/a, last run never\n\nModel cost so far: no usage log yet",
+ "judge": {
+  "criteria": [
+   {
+    "id": "chicken_grounded",
+    "pass": true,
+    "evidence": "\"You have about 1.96 days left. That is 47.9 lb on hand against 24.43 lb/day\" and \"Planning uses Monday and Wednesday\" match the stock_runway rows (47.9, 24.4314, 1.9606, planning days Monday/Wednesday).",
+    "note": "The 1.96, 47.9 and 24.43 values are all in the tool result. The assistant also did not invent a next delivery date, saying \"I can't name the exact next date.\""
+   },
+   {
+    "id": "uplift_recorded_after_statement",
+    "pass": true,
+    "evidence": "record_belief was called in turn 2 with {\"uplift\": 0.5} after the manager said \"Plan brunch at 50%...\". The assistant then repeated: \"Kind: preference... Value: {\"uplift\": 0.5}... Statement: ...\"",
+    "note": "Recorded in the right turn, and the record was repeated back. The statement that it supersedes \"the onboarding default of 0.25\" is not visible in the truncated tool result, but the reference confirms a prior preference was superseded, so I am not failing on it."
+   },
+   {
+    "id": "why_cites_n09",
+    "pass": true,
+    "evidence": "\"Note N09: Maya wrote this on 2026-09-25 (notes.csv N09 rev1)... Monday/Wednesday\" and \"The ledger holds Monday/Wednesday for Alder (assertion vendor.V1.delivery_days, from N09).\"",
+    "note": "Cites N09 and the explain result and states Monday/Wednesday. It does not literally say 'planning uses', but the precedence statement conveys it."
+   },
+   {
+    "id": "no_unsaid_memory",
+    "pass": true,
+    "evidence": "Only one record_belief call, for order.brunch_uplift 0.5, which the manager stated. Turns 1 and 3 recorded nothing (\"no belief recorded\").",
+    "note": "The gate approved the record, and the person's words back it."
+   }
+  ],
+  "overall_note": "All four criteria pass. Numbers are grounded, the uplift was recorded once, only after the manager stated it, and the Thursday answer relies on N09 and the precedence policy.",
+  "model": "claude-sonnet-5-5",
+  "usage": {
+   "input_tokens": 5873,
+   "output_tokens": 738,
+   "cache_read_tokens": 711,
+   "cache_write_tokens": 0,
+   "usd": 0.0192682
+  }
+ },
+ "judge_trusted": true,
+ "cost_usd": 0.1280382,
+ "error": null,
+ "skipped": false,
+ "ok": true,
+ "deterministic_ok": true,
+ "judge_ok": true
+}

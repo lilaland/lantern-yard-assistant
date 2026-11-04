@@ -410,7 +410,8 @@ def sizing_preview(ctx, vendor_id):
 def fulfilment_status(ctx):
     return {"drafts": ctx.ledger.drafts(), "vocabulary": ["proposed", "drafted", "awaiting approval", "approved", "submitted",
                                                            "accepted", "unknown", "failed", "cancelled"],
-            "note": "accepted means the supplier recorded the order, not that anything shipped"}
+            "note": "accepted means the supplier recorded the order, not that anything shipped; each draft's own "
+                    "'note' field is the recorded outcome message (e.g. a lost response recovered by lookup)"}
 
 
 # ----- MEMORY -------------------------------------------------------------------------

@@ -182,3 +182,24 @@ def test_cli_propose_draft_approve_resume(sim, tmp_path):
     assert "[accepted]" in r.stdout and "Verified by lookup" in r.stdout and "O-" in r.stdout
     mem = _cli(sim, state, "memory").stdout
     assert draft_id in mem and "accepted" in mem
+
+
+def test_outcome_note_survives_acceptance_and_old_ledgers_migrate(records, ledger, flow, client, sim, tmp_path):
+    d = flow.create_draft(ordering.plan_order(records, ledger, "V1"))
+    sim.approve(d.draft_id)
+    with sim.under_scenario("supplier-timeout"):
+        out = flow.submit(d.draft_id)
+    stored = ledger.draft(d.draft_id)
+    assert stored.status == "accepted" and stored.last_error is None
+    assert "response to our submission was lost" in stored.note and "Verified by lookup" in stored.note
+    assert stored.note == out.message
+    # a ledger file created before the note column existed gains it on open
+    import sqlite3
+    old = tmp_path / "old.sqlite"
+    con = sqlite3.connect(old)
+    con.executescript("CREATE TABLE drafts (draft_id TEXT PRIMARY KEY, vendor_id TEXT NOT NULL, order_json TEXT NOT NULL, "
+                      "status TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, order_id TEXT, last_error TEXT);"
+                      "INSERT INTO drafts VALUES ('D-old','V1','{}','accepted','t','t','O-1',NULL);")
+    con.commit(); con.close()
+    with Ledger(old) as l:
+        assert l.draft("D-old").note is None and l.update_draft("D-old", "accepted", note="migrated").note == "migrated"

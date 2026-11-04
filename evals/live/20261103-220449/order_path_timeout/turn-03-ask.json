@@ -1,0 +1,75 @@
+{
+ "name": "ask about the outcome",
+ "tags": [
+  "order",
+  "approval",
+  "lost_response",
+  "status_vocabulary",
+  "ask"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 649,
+  "output_tokens": 231,
+  "cache_read_tokens": 10964,
+  "usd": 0.0058008,
+  "revision": 1,
+  "user_text": "did the Alder order go through?",
+  "calls": [
+   {
+    "name": "fulfilment_status",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "fulfilment_status"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "did the Alder order go through?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_014i9Tfi8bUzUqaTmQV2xtJY",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "fulfilment_status",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_014i9Tfi8bUzUqaTmQV2xtJY",
+     "content": "{\"drafts\": [{\"draft_id\": \"D-208b429b036e\", \"vendor_id\": \"V1\", \"order\": {\"lines\": [{\"quantity\": 8, \"sku\": \"AW-CHK20\", \"unit\": \"case\"}, {\"quantity\": 2, \"sku\": \"V1-EGG\", \"unit\": \"case\"}, {\"quantity\": 4, \"sku\": \"V1-CHEESE\", \"unit\": \"case\"}], \"site_id\": \"SITE-01\", \"vendor_id\": \"V1\"}, \"status\": \"accepted\", \"created_at\": \"2026-11-03T22:06:56-05:00\", \"updated_at\": \"2026-11-03T22:06:56-05:00\", \"order_id\": \"O-78b213132c37\", \"last_error\": null, \"note\": \"The response to our submission was lost, but the supplier had recorded the order. Verified by lookup: order O-78b213132c37 for reference D-208b429b036e, status accepted. Accepted means the supplier recorded it, not that it has shipped.\"}], \"vocabulary\": [\"proposed\", \"drafted\", \"awaiting approval\", \"approved\", \"submitted\", \"accepted\", \"unknown\", \"failed\", \"cancelled\"], \"note\": \"accepted means the supplier recorded the order, not that anything shipped; each draft's own 'note' field is the recorded outcome message (e.g. a lost response recovered by lookup)\"}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Yes. The Alder (V1) draft D-208b429b036e is **accepted**, with supplier order ID O-78b213132c37. The response to our submission was lost. A lookup with the supplier then confirmed they had recorded the order.\n\nThe order has 8 cases of AW-CHK20, 2 cases of V1-EGG and 4 cases of V1-CHEESE. \"Accepted\" only means the supplier recorded the order. It doesn't mean the order has shipped, and I have no shipping information.\n\nSource: fulfilment_status, draft D-208b429b036e. The tool gave no citation string for it.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

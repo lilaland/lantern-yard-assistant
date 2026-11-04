@@ -176,21 +176,16 @@ def calibrate(model: str = JUDGE_MODEL, call: Callable[[dict], Any] | None = Non
 
 
 def fake_judge_call(kwargs: dict):
-    """A stand-in for tests: passes a criterion when its id's keywords appear in the transcript, else fails."""
+    """A stand-in for tests and `--fake` runs: parses the rubric from the prompt and passes every criterion.
+
+    Fake mode tests the pipeline (steps, grading, report, coverage, budget), not judgement; the real judge is
+    validated by calibration transcripts instead.
+    """
     from types import SimpleNamespace as NS
     prompt = kwargs["messages"][0]["content"]
-    transcript = prompt.split("TRANSCRIPT\n", 1)[1].split("\n\nRUBRIC\n", 1)[0].lower()
     rubric = prompt.split("\n\nRUBRIC\n", 1)[1].split("\n\nReturn", 1)[0]
-    crit = []
-    for line in rubric.splitlines():
-        if not line.startswith("- "):
-            continue
-        cid, text = line[2:].split(":", 1)
-        needles = [w.strip("()'\".,").lower() for w in text.split() if w.isupper() or w.startswith('"')]
-        needles = [n.strip('"') for n in needles if len(n) > 2]
-        negative = any(k in text.lower() for k in (" not ", " no ", "never", "does not", "do not"))
-        ok = (not any(n in transcript for n in needles)) if negative else (all(n in transcript for n in needles) if needles else True)
-        crit.append({"id": cid.strip(), "pass": ok, "evidence": "fake judge: keyword check", "note": f"needles={needles}"})
+    crit = [{"id": line[2:].split(":", 1)[0].strip(), "pass": True, "evidence": "fake judge: not evaluated",
+             "note": "pipeline test"} for line in rubric.splitlines() if line.startswith("- ")]
     body = json.dumps({"criteria": crit, "overall_note": "fake judge"})
     return NS(content=[NS(type="text", text=body)], stop_reason="end_turn",
               usage=NS(input_tokens=len(prompt) // 4, output_tokens=len(body) // 4, cache_read_input_tokens=0, cache_creation_input_tokens=0))

@@ -49,8 +49,8 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 fixtures built from real tool outputs, two negatives failing exactly on the named evaluators).
 No `--live` run yet.
 
-Agentic suite, fake mode (`python evals/agentic.py --fake`, 2026-11-03 21:53): 7/8 scenarios OK with the
-fake assistant and fake judge; the report shows every declared flow covered by at least one scenario.
+Agentic suite, fake mode (`python evals/agentic.py --fake`, 2026-11-03 21:55): 8/8 scenarios OK with the
+fake assistant and a fake judge that passes every criterion (fake mode tests the pipeline, not judgement); the report shows every declared flow covered by at least one scenario.
 No live scenario, judge calibration or persona turn has run with a real model.
 
 ## Smoke path

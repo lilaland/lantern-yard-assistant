@@ -1,0 +1,84 @@
+{
+ "name": "chip: two days of buffer",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 28413,
+  "output_tokens": 300,
+  "cache_read_tokens": 11046,
+  "usd": 0.0620352,
+  "revision": 1,
+  "user_text": "use two days of buffer from now on",
+  "calls": [
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 3
+   }
+  ],
+  "tool_calls": [
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "use two days of buffer from now on"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_013i8bfw1pM41a6TZhz9KAM5",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.buffer_days",
+      "statement": "Use two days of buffer from now on.",
+      "value_json": "{\"days\": 2}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013i8bfw1pM41a6TZhz9KAM5",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"9fc4973553ed\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Use two days of buffer from now on.\", \"value\": {\"days\": 2}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:57:58-05:00\", \"confirmed_at\": \"2026-11-03T22:57:58-05:00\", \"supersedes\": \"0290868ca7e6\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"0290868ca7e6\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:57:36-05:00\", \"confirmed_at\": \"2026-11-03T22:57:36-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Recorded: preference, order.buffer_days, {\"days\": 2}. It replaces the onboarding default of 1 day, which was set by human:onboarding-defaults. This doesn't contradict anything you said earlier in this conversation. From now on, order sizing will cover the gap to the next delivery plus 2 days instead of 1. I haven't re-run any order proposal, so I can't say yet how much it changes the quantities. Do you want me to preview Alder's order under the new buffer?",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

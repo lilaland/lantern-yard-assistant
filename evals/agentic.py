@@ -61,9 +61,10 @@ class Turn:
     deterministic: list = field(default_factory=list)
     user_text: str = ""
     revision: int | None = None
+    history: list = field(default_factory=list)   # earlier turns the model had in context
 
     def as_run(self, flows: list[str]) -> dict:
-        return {"name": self.label, "tags": flows, "expect": {"pass": True},
+        return {"name": self.label, "tags": flows, "expect": {"pass": True}, "history": self.history,
                 "entry": {"mode": self.mode, "model": self.usage.get("model"), "rounds": self.usage.get("rounds"),
                           "input_tokens": self.usage.get("input_tokens", 0), "output_tokens": self.usage.get("output_tokens", 0),
                           "cache_read_tokens": self.usage.get("cache_read_tokens", 0), "usd": self.usage.get("usd"),
@@ -264,7 +265,9 @@ class Runner:
         self.judge_trusted = None
         self.calibration_rows: list[dict] = []
         self.calibrate = calibrate
-        self.client = ApiClient(self._cfg(out_dir / "_probe"))
+        probe = self._cfg(out_dir / "_probe")
+        self.model_used = probe.model
+        self.client = ApiClient(probe)
 
     def _cfg(self, state_dir: Path) -> Config:
         base = load(dry=False, state_dir=str(state_dir))
@@ -353,7 +356,8 @@ class Runner:
 
     def _turn_from(self, label, mode, r: llm.Result, cfg, user_text, revision, history_len=0) -> Turn:
         return Turn(label, mode, r.messages[history_len:], [{"name": c.name, "ok": c.ok, "gate": c.gate, "ms": c.ms} for c in r.tool_calls],
-                    r.text, {**r.usage.__dict__, "usd": r.usage.usd(cfg.model), "model": cfg.model}, None, [], user_text, revision)
+                    r.text, {**r.usage.__dict__, "usd": r.usage.usd(cfg.model), "model": cfg.model}, None, [], user_text, revision,
+                    r.messages[:history_len])
 
     def _ctx(self, ledger, mode, records=None):
         records = records or load_all(self.client)
@@ -487,7 +491,7 @@ def estimate(sc: dict, iterations: int = 1) -> float:
 
 def report_md(results: list[ScenarioResult], scenarios: list[dict], runner: Runner, seconds: float) -> str:
     out = [f"# Agentic eval report — {datetime.now():%Y-%m-%d %H:%M}", "",
-           f"Assistant model: {runner.assistant_model or 'default (claude-opus-5-5)'} · judge: {runner.judge_model} · "
+           f"Assistant model: {runner.model_used} · judge: {runner.judge_model} · "
            f"{'FAKE (pipeline test, no model calls)' if runner.fake else 'live'} · spent ${runner.spent:.4f} of ${runner.budget:.2f} · {seconds:.0f} s", ""]
     out.append(f"Judge calibration: {'trusted' if runner.judge_trusted else 'NOT trusted (judge verdicts shown but not counted)'}"
                + (": " + ", ".join(f"{r['case']} {'ok' if r['agree'] else 'DISAGREE'}" for r in runner.calibration_rows) if runner.calibration_rows else ""))

@@ -25,4 +25,4 @@ Rules for recording:
 - If the new statement contradicts an earlier human statement, say so when you repeat it back; the ledger keeps both.
 - Observations are never recorded here; they come from the detectors.
 
-Length is a hard limit: at most six sentences in total, counting any closing offer. The manager is reading before service; if more would help, say so in the sixth sentence and stop.
+Length is a hard limit: at most 120 words in total, counting any closing offer. The manager is reading before service; if more would help, offer it in the last sentence and stop.

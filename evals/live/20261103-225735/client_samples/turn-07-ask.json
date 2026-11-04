@@ -1,0 +1,79 @@
+{
+ "name": "wizard: ask Marbly to confirm",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 29768,
+  "output_tokens": 225,
+  "cache_read_tokens": 11046,
+  "usd": 0.0639952,
+  "revision": 1,
+  "user_text": "Did the Alder order go through?",
+  "calls": [
+   {
+    "name": "fulfilment_status",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "fulfilment_status"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Did the Alder order go through?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01Jhn65wfmqW1YgSL874v36q",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "fulfilment_status",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Jhn65wfmqW1YgSL874v36q",
+     "content": "{\"drafts\": [{\"draft_id\": \"D-0d1edd88d87f\", \"vendor_id\": \"V1\", \"order\": {\"lines\": [{\"quantity\": 9, \"sku\": \"AW-CHK20\", \"unit\": \"case\"}, {\"quantity\": 2, \"sku\": \"V1-EGG\", \"unit\": \"case\"}, {\"quantity\": 4, \"sku\": \"V1-CHEESE\", \"unit\": \"case\"}], \"site_id\": \"SITE-01\", \"vendor_id\": \"V1\"}, \"status\": \"accepted\", \"created_at\": \"2026-11-03T22:58:11-05:00\", \"updated_at\": \"2026-11-03T22:58:11-05:00\", \"order_id\": \"O-1a24d27ade6a\", \"last_error\": null, \"note\": \"The response to our submission was lost, but the supplier had recorded the order. Verified by lookup: order O-1a24d27ade6a for reference D-0d1edd88d87f, status accepted. Accepted means the supplier recorded it, not that it has shipped.\"}], \"vocabulary\": [\"proposed\", \"drafted\", \"awaiting approval\", \"approved\", \"submitted\", \"accepted\", \"unknown\", \"failed\", \"cancelled\"], \"note\": \"accepted means the supplier recorded the order, not that anything shipped; each draft's own 'note' field is the recorded outcome message (e.g. a lost response recovered by lookup)\"}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Yes. Draft D-0d1edd88d87f is accepted as supplier order O-1a24d27ade6a. Our submission response was lost, but a lookup with the supplier confirmed it recorded the order (fulfilment_status, draft D-0d1edd88d87f). The lines are 9 cases of AW-CHK20, 2 cases of V1-EGG and 4 cases of V1-CHEESE. Accepted means the supplier recorded it, not that it has shipped. I have no delivery date for it, so I can't say when it arrives. Do you want me to check anything else on it?",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

@@ -1,23 +1,75 @@
 {
  "name": "client_samples",
- "flows": ["ask", "brief", "memory", "gate", "order", "approval", "lost_response", "tools", "citations"],
+ "flows": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
  "goal": "Every sample prompt the Marbly page offers, in the order a new manager would click them, followed by the first order through the wizard path with a lost response.",
- "setup": {"onboard": "defaults"},
+ "setup": {
+  "onboard": "defaults"
+ },
  "steps": [
-  {"brief": true, "label": "chip: Give me this morning's brief"},
-  {"ask": "How many days of chicken do we have?", "label": "chip: chicken days"},
-  {"ask": "Why do you think Alder delivers on Wednesday?", "label": "chip: why Wednesday"},
-  {"ask": "use two days of buffer from now on", "gate": "approve", "label": "chip: two days of buffer"},
-  {"order_explain": true, "label": "wizard: explain"},
-  {"order_path": "supplier-timeout", "label": "wizard: draft, approve, submit (lost), verify"},
-  {"ask": "Did the Alder order go through?", "label": "wizard: ask Marbly to confirm"}
+  {
+   "brief": true,
+   "label": "chip: Give me this morning's brief"
+  },
+  {
+   "ask": "How many days of chicken do we have?",
+   "label": "chip: chicken days"
+  },
+  {
+   "ask": "Why do you think Alder delivers on Wednesday?",
+   "label": "chip: why Wednesday"
+  },
+  {
+   "ask": "use two days of buffer from now on",
+   "gate": "approve",
+   "label": "chip: two days of buffer"
+  },
+  {
+   "order_explain": true,
+   "label": "wizard: explain"
+  },
+  {
+   "order_path": "supplier-timeout",
+   "label": "wizard: draft, approve, submit (lost), verify"
+  },
+  {
+   "ask": "Did the Alder order go through?",
+   "label": "wizard: ask Marbly to confirm"
+  }
  ],
  "rubric": [
-  {"id": "brief_cited", "text": "The brief carries at least three citations in the file / SITE-01 / row / revision form and ends the headline with one next step."},
-  {"id": "chicken_answer", "text": "The chicken answer gives the days on hand and the next planning delivery day from a tool result, in at most six sentences."},
-  {"id": "why_wednesday", "text": "The Wednesday answer cites note N09 (or explain / get_beliefs) and says the vendor sheet still lists Monday/Thursday."},
-  {"id": "buffer_recorded", "text": "The buffer statement is recorded once as order.buffer_days = 2 and repeated back."},
-  {"id": "explanation_names_buffer", "text": "The order explanation says the window includes 2 buffer days because of the recorded preference and proposes no different quantities."},
-  {"id": "outcome_vocabulary", "text": "The confirmation answer says accepted, that the supplier recorded it, that the response was lost and the order was verified by lookup, and does not say shipped or delivered."}
+  {
+   "id": "brief_cited",
+   "text": "The brief carries at least three citations in the file / SITE-01 / row / revision form and ends the headline with one next step."
+  },
+  {
+   "id": "chicken_answer",
+   "text": "The chicken answer gives the days on hand and the next planning delivery day from a tool result, in at most 120 words."
+  },
+  {
+   "id": "why_wednesday",
+   "text": "The Wednesday answer cites note N09 (or explain / get_beliefs) and says the vendor sheet still lists Monday/Thursday."
+  },
+  {
+   "id": "buffer_recorded",
+   "text": "The buffer statement is recorded once as order.buffer_days = 2 and repeated back."
+  },
+  {
+   "id": "explanation_names_buffer",
+   "text": "The order explanation says the window includes 2 buffer days because of the recorded preference and proposes no different quantities."
+  },
+  {
+   "id": "outcome_vocabulary",
+   "text": "The confirmation answer says accepted, that the supplier recorded it, that the response was lost and the order was verified by lookup, and does not say shipped or delivered."
+  }
  ]
 }

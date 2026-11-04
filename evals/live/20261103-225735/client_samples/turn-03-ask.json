@@ -1,0 +1,81 @@
+{
+ "name": "chip: why Wednesday",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 27057,
+  "output_tokens": 310,
+  "cache_read_tokens": 11046,
+  "usd": 0.059423199999999995,
+  "revision": 1,
+  "user_text": "Why do you think Alder delivers on Wednesday?",
+  "calls": [
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "explain"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Why do you think Alder delivers on Wednesday?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01TcYyZHPPi5n2jUkFZC6Gcp",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TcYyZHPPi5n2jUkFZC6Gcp",
+     "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"7af95d5ccd00\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:57:36-05:00\", \"confirmed_at\": \"2026-11-03T22:57:36-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Two sources back it. Note N09 says Alder confirmed the route changes on Sept 28 to Monday/Wednesday instead of Monday/Thursday, with orders by noon the day before (notes.csv SITE-01 N09 rev1). INV-016 was also delivered on Wednesday 2026-09-30 (invoice_headers.csv SITE-01 INV-016 rev1). The vendor sheet still says Monday, Thursday, last reviewed 2026-09-14, so it looks stale (vendors.csv SITE-01 V1 rev1). The ledger holds this as an assertion from note N09, and nothing has rechecked it. It's informal, so a quick call to Alder would settle it. Do you want me to record a different delivery schedule?",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

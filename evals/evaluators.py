@@ -77,9 +77,9 @@ def user_text(run: dict) -> str:
 
 
 def corpus(run: dict) -> str:
-    """Everything the model was given: the user turn(s) and every tool result."""
+    """Everything the model was given: the user turn(s), every tool result, and earlier turns of the conversation."""
     parts = [user_text(run)]
-    for m in run.get("messages") or []:
+    for m in (run.get("history") or []) + (run.get("messages") or []):
         if m.get("role") == "user":
             c = m.get("content")
             if isinstance(c, str):

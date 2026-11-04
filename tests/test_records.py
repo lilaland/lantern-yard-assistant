@@ -78,3 +78,13 @@ def test_delivery_correction_changes_records(client, sim):
         assert (h.status, h.delivery_date, h.cite.revision) == ("scheduled", date(2026, 10, 8), 2)
         assert any(n.ref == "N16" and "NOT arrived" in n.text for n in r.notes)
         assert r.conflicts == []
+
+
+def test_with_clock_moves_only_the_date(client):
+    from datetime import timedelta
+    from assistant.records import with_clock
+    records = load_all(client)
+    later = with_clock(records, 2)
+    assert later.now.date() == records.now.date() + timedelta(days=2) and later.now.tzinfo == records.now.tzinfo
+    assert later.sales is records.sales and later.revision == records.revision and later.site == records.site
+    assert with_clock(records, 0) is records

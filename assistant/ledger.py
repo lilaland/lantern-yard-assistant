@@ -365,6 +365,15 @@ class Ledger:
     def pending_drafts(self) -> list[Draft]:
         return self.drafts(PENDING_DRAFT_STATUSES)
 
+    # ----- the demo clock ---------------------------------------------------------
+
+    def clock_days(self) -> int:
+        """Whole days the clock has been moved forward by "new session, next day"; 0 normally."""
+        return int(self.meta("clock.days_ahead") or 0)
+
+    def set_clock_days(self, days: int) -> None:
+        self.set_meta("clock.days_ahead", str(int(days)))
+
     # ----- conversation ----------------------------------------------------------
 
     def save_exchange(self, mode: str, question: str, answer: str, messages: list, revision: int | None) -> Exchange:

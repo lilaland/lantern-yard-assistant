@@ -7,7 +7,7 @@ from .. import analysis, detectors, llm, policies, render, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
-from ..records import load_all
+from ..records import load_all, with_clock
 
 
 def run(cfg: Config) -> int:
@@ -19,6 +19,7 @@ def run(cfg: Config) -> int:
               f"  python3 simulator.py serve --mode agent", file=sys.stderr)
         return 1
     with Ledger(cfg.db_path) as ledger:
+        records = with_clock(records, ledger.clock_days())
         params = policies.detector_params(ledger)
         findings = detectors.run_all(records, params)
         report = policies.recheck(ledger, records, findings)

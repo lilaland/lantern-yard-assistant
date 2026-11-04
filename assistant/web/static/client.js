@@ -4,7 +4,7 @@
   const main = document.getElementById('main');
   const kids = (...xs) => xs.flat().filter(x => x !== null && x !== undefined);
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  let intro = null, feed = null, chips = null, bell = null, book = null, tourBox = null, headAvatar = null, pending = 0;
+  let intro = null, feed = null, chips = null, bell = null, book = null, tourBox = null, headAvatar = null, subEl = null, pending = 0;
 
   // ---------- avatar: a marble of white and blue with gold streaks, big eyes only ----------
   function avatar(size = 44) {
@@ -388,8 +388,7 @@
       el('div', { class: 'chips' },
         el('button', { title: 'Re-ask the six questions. Your rules stay; a changed answer replaces the old one and the history is kept.', onclick: async () => { await api('/api/onboarding/restart', { method: 'POST' }); closePanels(); location.reload(); } }, 'Ask me the questions again'),
         el('button', { class: 'danger', title: 'Delete the ledger, conversation, usage log and setup progress for this state directory.', onclick: async () => { const name = prompt(`Type the state directory name to make Marbly forget everything (${intro.state_dir_name}).${intro.operator_url ? " The supplier's records are reset too, through the operator helper." : " The supplier's own records are untouched (no operator helper configured)."}`); if (!name) return; try { const r = await api('/api/reset', { method: 'POST', body: { confirm: name } }); const sup = await L.resetSupplier(r.operator_url); try { sessionStorage.setItem('ly_reset_note', `Fresh start: I have forgotten everything I knew. ${sup.note}`); } catch {} location.reload(); } catch (e) { toast(e.message); } } }, 'Forget everything and start over')),
-      el('p', { class: 'small muted' }, 'The supplier side (drafts, orders, scenario flags) belongs to the operator; Marbly never holds that credential. To reset it, in the operator terminal:'),
-      el('pre', { class: 'block small' }, `python3 simulator.py scenario --name normal --state <your --state file>   # clears scenario flags, keeps orders\npython3 simulator.py serve --mode agent --state .state/<new-name>.sqlite   # a clean supplier: restart with a new file`),
+      el('p', { class: 'small muted' }, `The supplier side (drafts, orders, scenario flags) belongs to the operator; Marbly never holds that credential. ${intro.operator_url ? 'The operator helper at ' + intro.operator_url + ' resets it when you click "Forget everything".' : 'Start demo/operator_helper.py in the operator terminal and set MARBLE_OPERATOR_URL so "Forget everything" resets it too.'}`),
       el('p', { class: 'small muted' }, `This page talks to ${intro.api_base || 'the simulator'}; the assistant's state directory is ${intro.state_dir_name}.`));
   }
 
@@ -464,8 +463,29 @@
 
   // ---------- the chip row: sample prompts during the setup, follow-ups from the findings afterwards ----------
   function setChips(list) {
-    chips.replaceChildren(...list.map(s => el('button', { title: s.kind === 'order' ? 'opens the order panel' : s.kind === 'brief' ? 'the morning brief' : 'a question for Marbly', onclick: () => sendText(s.text) }, s.text)));
+    chips.replaceChildren(...list.map(s => el('button', { title: s.kind === 'order' ? 'opens the order panel' : s.kind === 'planner' ? 'opens the planner' : s.kind === 'brief' ? 'the morning brief' : 'a question for Marbly', onclick: () => s.kind === 'planner' ? (say(s.text, 'You'), openPlanner()) : sendText(s.text) }, s.text)));
     spotlight();
+  }
+  const dayName = (iso) => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(iso).getDay()];
+
+  // ---------- sessions: a fresh brief each time; "next day" moves the demo clock ----------
+  async function openSession() {
+    const s = await api('/api/session');
+    panel('Sessions',
+      el('p', {}, `It is ${dayName(s.now)} ${s.now.slice(0, 16).replace('T', ' ')} in the records${s.days_ahead ? `, ${s.days_ahead} day${s.days_ahead === 1 ? '' : 's'} on from the packet's date` : ''}. ${s.session ? `Session ${s.session}${s.started_at ? ', started ' + s.started_at.slice(0, 16).replace('T', ' ') : ''}.` : 'No session started yet since the setup.'}`),
+      el('p', { class: 'small muted' }, 'A session starts with a fresh brief: what changed since the last one and what matters today; the chips then follow the brief. Memory, alerts seen and orders carry over. "Next day" moves the clock a day, so delivery dates, cutoffs and the weekend come closer; the counts are still the last ones taken.'),
+      el('div', { class: 'chips' }, el('button', { onclick: () => startSession(0) }, 'New session'), el('button', { onclick: () => startSession(1) }, 'New session, next day'),
+        s.days_ahead ? el('button', { class: 'ghost', onclick: () => startSession(0, true) }, "Back to the packet's date") : null));
+  }
+  async function startSession(advance = 0, reset = false) {
+    closePanels();
+    let s;
+    try { s = await api('/api/session', { method: 'POST', body: { advance_days: advance, reset } }); } catch (e) { toast(e.message); return; }
+    intro.now = s.now; intro.session = s; if (subEl) subEl.textContent = `Lantern Yard Kitchen · ${s.now.slice(0, 10)}`;
+    feed.replaceChildren();
+    say(`Session ${s.session} · ${dayName(s.now)} ${s.now.slice(0, 10)}${advance ? ', the next day' : reset ? ", back to the packet's date" : ''}. Here is the brief.`);
+    await runBrief();  // ends by setting the chips to the brief's follow-ups
+    refreshBell(); L.refreshStatus(); refreshTour();
   }
   // context: home (after the setup, on return), brief (after the brief), ask (after an answer: ranked by what was mentioned)
   async function refreshChips(context, text = '', exclude = '') {
@@ -531,23 +551,33 @@
     bell = el('button', { class: 'iconbtn', 'aria-label': 'alerts', title: 'alerts', onclick: openInbox }, '🔔');
     book = el('button', { class: 'iconbtn', 'aria-label': 'memory', title: 'memory', onclick: openMemory }, '📒');
     const plannerBtn = el('button', { class: 'iconbtn', 'aria-label': 'planner', title: 'what to order next', onclick: openPlanner }, '🗓');
+    const sessionBtn = el('button', { class: 'iconbtn', 'aria-label': 'session', title: 'new session (fresh brief), or the next day', onclick: openSession }, '🌅');
+    subEl = el('div', { class: 'sub' }, `Lantern Yard Kitchen · ${intro.now.slice(0, 10)}`);
     const input = el('textarea', { placeholder: 'Ask Marbly, or tell it a rule to remember' });
     const send = el('button', { onclick: () => { const t = input.value.trim(); if (!t) return; input.value = ''; sendText(t); } }, 'Send');
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send.click(); } });
     main.replaceChildren(el('div', { class: 'client' },
-      el('div', { class: 'client-head' }, headAvatar, el('div', {}, el('h1', {}, 'Marbly'), el('div', { class: 'sub' }, `Lantern Yard Kitchen · ${intro.now.slice(0, 10)}`)), el('div', { class: 'spacer' }),
-        bell, book, plannerBtn, el('button', { class: 'iconbtn', 'aria-label': 'settings', title: 'settings', onclick: openSettings }, '⚙')),
+      el('div', { class: 'client-head' }, headAvatar, el('div', {}, el('h1', {}, 'Marbly'), subEl), el('div', { class: 'spacer' }),
+        bell, book, plannerBtn, sessionBtn, el('button', { class: 'iconbtn', 'aria-label': 'settings', title: 'settings', onclick: openSettings }, '⚙')),
       tourBox, el('div', { class: 'pane' }, feed, chips, el('div', { class: 'composer' }, input, send))));  // one pane: the feed scrolls, chips and composer stay at its foot
     tour = intro.tour; renderTour();
     refreshBell();
     let resetNote = null; try { resetNote = sessionStorage.getItem('ly_reset_note'); sessionStorage.removeItem('ly_reset_note'); } catch {}
     if (resetNote) say(resetNote);
     if (!intro.onboarded_at) return runOnboarding();
-    say(intro.welcome_back);
-    const a = await api('/api/alerts');
-    const crit = a.alerts.filter(x => x.severity === 'HIGH');
-    if (crit.length) { say(`${crit.length} critical alert${crit.length === 1 ? '' : 's'} today:`); for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true)); }
-    if (!(tour && !tour.complete && tour.current === 'capabilities')) introduceCapabilities();  // otherwise step 3 introduces them
-    if (tour && !tour.complete) nextStepMessage(); else refreshChips('home');
+    if (tour && !tour.complete) {  // the setup is still in progress: pick it up where it stopped
+      say(intro.welcome_back);
+      const a = await api('/api/alerts');
+      const crit = a.alerts.filter(x => x.severity === 'HIGH');
+      if (crit.length) { say(`${crit.length} critical alert${crit.length === 1 ? '' : 's'} today:`); for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true)); }
+      if (tour.current !== 'capabilities') introduceCapabilities();  // otherwise step 3 introduces them
+      nextStepMessage();
+      return;
+    }
+    // set up and back: nothing from the setup is repeated; a session starts with a fresh brief
+    const ses = intro.session || {};
+    say('', 'Marbly', el('div', {}, el('p', {}, `Welcome back. It is ${dayName(intro.now)} ${intro.now.slice(0, 10)}${ses.days_ahead ? ` (${ses.days_ahead} day${ses.days_ahead === 1 ? '' : 's'} on from the packet's date)` : ''}; your memory and orders are where you left them. Start a session for today's brief, or carry on with the chips below.`),
+      el('div', { class: 'chips' }, el('button', { onclick: () => startSession(0) }, 'New session'), el('button', { onclick: () => startSession(1) }, 'New session, next day'))));
+    refreshChips('home');
   };
 })();

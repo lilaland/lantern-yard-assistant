@@ -15,7 +15,7 @@ from .. import detectors, llm, onboarding, policies, render, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
-from ..records import load_all
+from ..records import load_all, with_clock
 
 def wording_schema(ids: list[str]) -> dict:
     """Structured-output schema for the question lead-ins: one string per question id, nothing else.
@@ -146,6 +146,7 @@ def run_interactive(cfg: Config, answers_text: str | None = None, again: bool = 
         return 1
     provided = onboarding.parse_answers(answers_text) if answers_text else None
     with Ledger(cfg.db_path) as ledger:
+        records = with_clock(records, ledger.clock_days())
         params = policies.detector_params(ledger)
         findings = detectors.run_all(records, params)
         plan = onboarding.question_plan(records, findings, ledger, again)

@@ -26,7 +26,7 @@ from ..api_client import ApiClient, ApiError, ServerUnavailable
 from ..config import Config, ROOT
 from ..ledger import Ledger
 from ..orderflow import OrderFlow, approve_command
-from ..records import Records, load_all
+from ..records import Records, load_all, with_clock
 
 STATIC = Path(__file__).parent / "static"
 DIAGRAMS = ROOT / "docs" / "diagrams"
@@ -90,9 +90,12 @@ class App:
         with self._lock:
             if fresh or self._records is None or time.time() - self._records_at > RECORDS_TTL:
                 try:
-                    self._records = load_all(self.client)
+                    base = load_all(self.client)
                 except ServerUnavailable as e:
                     raise HttpError(503, f"operational API unreachable at {self.cfg.api_base}: {e}")
+                with self.ledger() as led:
+                    days = led.clock_days()  # the demo clock: "new session, next day"
+                self._records = with_clock(base, days)
                 self._records_at = time.time()
             return self._records
 
@@ -307,6 +310,31 @@ class App:
          "samples": ["Help me with the next Alder order"]},
     ]
 
+    # ----- sessions: a fresh brief each time, and a clock that can move a day for the demo -----
+
+    SESSION_KEY = "client.session"
+
+    def session(self) -> dict:
+        with self.ledger() as led:
+            n, days, started = int(led.meta(self.SESSION_KEY) or 0), led.clock_days(), led.meta("client.session_started_at")
+        return {"session": n, "days_ahead": days, "now": self.records().now.isoformat(), "started_at": started}
+
+    def session_start(self, body: dict) -> dict:
+        """A new session: the counter goes up and, when asked, the clock moves forward (or back to the packet's date).
+        Memory, alerts seen and orders are untouched; the next brief reports what changed."""
+        advance = int(body.get("advance_days") or 0)
+        if not 0 <= advance <= 30:
+            raise HttpError(400, "advance_days is 0..30")
+        with self.ledger() as led:
+            led.set_clock_days(0 if body.get("reset") else led.clock_days() + advance)
+            led.set_meta(self.SESSION_KEY, str(int(led.meta(self.SESSION_KEY) or 0) + 1))
+        with self._lock:
+            self._records = None  # the clock may have moved
+        now = self.records().now.isoformat()
+        with self.ledger() as led:
+            led.set_meta("client.session_started_at", now)
+        return self.session()
+
     @staticmethod
     def operator_url() -> str | None:
         """Where the operator's helper (demo/operator_helper.py) listens, if the person told us. The browser calls it on
@@ -327,8 +355,8 @@ class App:
                              "invoices, recipes and the shift notebook. I've read everything and found a few places where the "
                              "records disagree. Before I plan anything, let's straighten those out together; your answers "
                              "become rules I keep in Memory and apply every time."),
-                "welcome_back": "Welcome back. I've rechecked everything against your rules; here is where things stand.",
-                "capabilities": self.CAPABILITIES, "tour": self.tour()}
+                "welcome_back": "Welcome back. Your memory and orders are where you left them; a new session brings today's brief.",
+                "capabilities": self.CAPABILITIES, "tour": self.tour(), "session": self.session()}
 
     def _question_dict(self, q, leads: dict) -> dict:
         d = {"id": q.id, "title": q.title, "why": q.why, "lead": leads.get(q.id), "evidence": q.evidence,
@@ -509,6 +537,7 @@ class App:
         records = self.records()
         with self.ledger() as led:
             findings = list(self.context("ask", led, records).findings)  # ranked: severity, urgency, dollars
+            plan = ordering.planner(records, led)  # by cutoff, net of accepted orders
         picked = findings[:3]
         if context == "ask" and text:
             scored = sorted(((self._related(f, text), i, f) for i, f in enumerate(findings)), key=lambda t: (-t[0], t[1]))
@@ -520,10 +549,11 @@ class App:
             t = self._follow_up(f, records)
             if all(s["text"] != t for s in out):
                 out.append({"text": t, "kind": "ask", "vendor": None, "finding": f.id})
-        order = next((self._alert_action(f, records) | {"finding": f.id} for f in picked + findings
-                      if self._alert_action(f, records)["kind"] == "order"), None)
-        if order:
-            out.append({"text": order["label"], "kind": "order", "vendor": order["vendor"], "finding": order["finding"]})
+        nxt = next((v for v in plan if v["lines"] and v["urgency"] not in ("ordered", "nothing needed")), None)
+        if nxt:
+            out.append({"text": f"Plan the next {nxt['vendor_name'].split(',')[0].split()[0]} order", "kind": "order", "vendor": nxt["vendor_id"], "finding": None})
+        else:
+            out.append({"text": "What's next to order?", "kind": "planner", "vendor": None, "finding": None})
         return {"context": context, "suggestions": out[:5]}
 
     def alerts(self) -> dict:
@@ -1010,6 +1040,8 @@ def make_handler(app: App):
                 return a.onboarding_plan(q)
             if path == "/api/suggestions":
                 return self._json(200, a.suggestions(q))
+            if path == "/api/session":
+                return self._json(200, a.session())
             if path == "/api/alerts":
                 return a.alerts()
             if path == "/api/client/tour":
@@ -1055,6 +1087,8 @@ def make_handler(app: App):
                 return self._json(200, a.record_belief(body))
             if path == "/api/tools/execute":
                 return self._json(200, a.tool_execute(body))
+            if path == "/api/session":
+                return self._json(200, a.session_start(body))
             if path == "/api/order/draft":
                 return self._json(201, a.create_draft(body))
             if path == "/api/order/resume":

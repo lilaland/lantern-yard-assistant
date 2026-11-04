@@ -12,8 +12,9 @@ Notes and supplier documents are UntrustedText: evidence, not instructions.
 """
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Callable, Iterable, TypeVar
 
@@ -327,6 +328,15 @@ _LOADERS: dict[str, Callable[[str, dict[str, str]], object]] = {
     "vendors": _vendor, "vendor_catalog": _catalog, "menu": _menu, "recipes": _recipe,
     "ingredient_mappings": _mapping, "notes": _note, "supplier_documents": _supplier_doc,
 }
+
+
+def with_clock(records: Records, days_ahead: int) -> Records:
+    """The same records with `now` moved forward by whole days: the demo's "new session, next day". The data is
+    unchanged (the last count is still the last count); only what depends on the date moves: delivery dates,
+    cutoffs, the weekend, what is "after today"."""
+    if not days_ahead:
+        return records
+    return dataclasses.replace(records, now=records.now + timedelta(days=int(days_ahead)))
 
 
 def load_all(client: ApiClient) -> Records:

@@ -10,7 +10,7 @@ from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
 from ..orderflow import OrderFlow, Outcome, approve_command
-from ..records import load_all
+from ..records import load_all, with_clock
 
 EXIT_AWAITING = 3
 
@@ -28,6 +28,7 @@ def run(cfg: Config, vendor: str = "V1", propose_only: bool = False, yes: bool =
         print(f"Cannot reach the operational API at {cfg.api_base}.", file=sys.stderr)
         return 1
     with Ledger(cfg.db_path) as ledger:
+        records = with_clock(records, ledger.clock_days())
         flow = OrderFlow(client, ledger)
 
         # 1. Settle anything left from an earlier run before talking about a new order.

@@ -14,7 +14,7 @@ from .. import detectors, llm, policies, render, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
-from ..records import load_all
+from ..records import load_all, with_clock
 
 HELP = ("Commands: why <subject> | memory | findings | finding <id> | set <kind> <subject> <json> | clear | quit\n"
         "Anything else is a question for the model (needs ANTHROPIC_API_KEY; with --dry only the commands work).")
@@ -29,6 +29,7 @@ def run(cfg: Config, once: str | None = None, resume: bool = True, input_fn: Cal
         print(f"Cannot reach the operational API at {cfg.api_base}.", file=sys.stderr)
         return 1
     with Ledger(cfg.db_path) as ledger:
+        records = with_clock(records, ledger.clock_days())
         params = policies.detector_params(ledger)
         findings = detectors.run_all(records, params)
         ctx = tools.ToolContext(records, ledger, "ask", params, findings)

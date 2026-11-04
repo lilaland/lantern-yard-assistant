@@ -271,7 +271,8 @@ def test_suggestions_follow_the_findings(site):
     cfg, app, base = site
     s = get(base, "/api/suggestions?context=brief")[1]["suggestions"]
     assert s[0] == {"text": "Why aren't you counting INV-099 as on hand?", "kind": "ask", "vendor": None, "finding": "phantom_receipt:INV-099"}
-    assert sum(1 for x in s if x["kind"] == "order") == 1 and any(x["vendor"] == "V1" and x["text"] == "Plan the next Alder order" for x in s)
+    o = [x for x in s if x["kind"] in ("order", "planner")]
+    assert len(o) == 1 and o[0]["kind"] == "order" and o[0]["vendor"] in ("V1", "V2", "V3") and o[0]["text"].startswith("Plan the next ")
     assert 3 <= len(s) <= 5 and any("Juniper" in x["text"] and "INV-010" in x["text"] for x in s)
     h = get(base, "/api/suggestions?context=home")[1]["suggestions"]
     assert h[0]["kind"] == "brief" and h[0]["text"] == "Give me this morning's brief" and len(h) <= 5
@@ -285,6 +286,22 @@ def test_suggestions_follow_the_findings(site):
     with pytest.raises(urllib.error.HTTPError):
         get(base, "/api/suggestions?context=nope")
     assert [v["vendor_id"] for v in get(base, "/api/client/intro")[1]["vendors"]] == ["V1", "V2", "V3"]
+
+
+def test_sessions_move_the_demo_clock(site):
+    """A session is a counter and, when asked, a day forward; every record-dependent date follows, the data does not."""
+    cfg, app, base = site
+    s = get(base, "/api/session")[1]
+    assert s["session"] == 0 and s["days_ahead"] == 0 and s["now"].startswith("2026-10-05")
+    s = post(base, "/api/session", {"advance_days": 1})[1]
+    assert s["session"] == 1 and s["days_ahead"] == 1 and s["now"].startswith("2026-10-06") and s["started_at"].startswith("2026-10-06")
+    assert get(base, "/api/state")[1]["now"].startswith("2026-10-06") and get(base, "/api/client/intro")[1]["session"]["days_ahead"] == 1
+    assert get(base, "/api/order/proposal?vendor=V1")[1]["calendar"]["today"] == "2026-10-06"
+    assert post(base, "/api/session", {"advance_days": 40})[0] == 400
+    s = post(base, "/api/session", {"reset": True})[1]
+    assert s["session"] == 2 and s["days_ahead"] == 0 and s["now"].startswith("2026-10-05")
+    with Ledger(cfg.db_path) as l:
+        assert l.clock_days() == 0
 
 
 def test_tour_steps_are_derived_or_clicked(sim, tmp_path):
@@ -349,6 +366,9 @@ def test_client_wizard_and_sample_prompt_flows_in_api_order(sim, tmp_path):
         assert r["ok"] and r["result"]["drafts"][-1]["status"] == "accepted" and "Verified by lookup" in r["result"]["drafts"][-1]["note"]
         a = get(base, "/api/alerts")[1]
         assert a["counts"]["HIGH"] >= 1 and all(x["action"] for x in a["alerts"])
+        # the chips know the Alder order is in: the order chip moves to another vendor (or the planner)
+        chip = next(x for x in get(base, "/api/suggestions?context=home")[1]["suggestions"] if x["kind"] in ("order", "planner"))
+        assert chip["kind"] == "planner" or chip["vendor"] != "V1"
         # the wizard reopened after the accepted order: the list shows it with its status, and the proposal nets it out
         ds = get(base, "/api/order/drafts")[1]["drafts"]
         assert ds[0]["draft_id"] == did and ds[0]["status"] == "accepted" and ds[0]["vendor_name"] == "Alder Wholesale"

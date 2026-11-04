@@ -150,7 +150,10 @@ def serve(args: argparse.Namespace) -> int:
     httpd = HTTPServer(("127.0.0.1", args.control_port), make_handler(supplier))
     print(f"operator helper on http://127.0.0.1:{args.control_port} (POST /reset, GET /status); "
           f"simulator pid {supplier.proc.pid} on port {args.port}, state {state}", flush=True)
-    print("Ctrl-C stops both. Approve and scenario stay typed commands with the same --port and --state.", flush=True)
+    print("Ctrl-C (or kill) stops both. Approve and scenario stay typed commands with the same --port and --state.", flush=True)
+    # a plain `kill` must also take the simulator down with it, and a background job has SIGINT ignored
+    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
+    signal.signal(signal.SIGINT, signal.default_int_handler)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

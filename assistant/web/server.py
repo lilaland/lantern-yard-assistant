@@ -277,7 +277,15 @@ class App:
                 p = ordering.plan_order(records, led, vendor, prefs, params)
             except ValueError as e:
                 raise HttpError(400, str(e))
-            return {"rationale": ordering.rationale(p), "order": p.order, "lines": tools.plain(p.lines),
+            drafts = led.drafts()
+            covered = ordering.accepted_cover(drafts, vendor)
+            lines = tools.plain(p.lines)
+            for l in lines:  # what an accepted order already covers, so a reopened wizard does not propose it twice
+                l["already_ordered"] = covered.get(l["sku"], 0)
+                l["remaining"] = max(0, int(l["cases"]) - l["already_ordered"])
+            return {"rationale": ordering.rationale(p), "order": p.order, "lines": lines,
+                    "net_lines": ordering.net_lines(p, covered), "covered": covered,
+                    "accepted": [self._draft_summary(d, records) for d in drafts if d.vendor_id == vendor and d.status == "accepted"],
                     "skipped": p.skipped, "not_counted": p.not_counted, "warnings": p.warnings, "applied": p.applied,
                     "est_total_usd": str(p.est_total_usd) if p.est_total_usd is not None else None, "over_max": p.over_max,
                     "calendar": {"today": str(p.today), "delivery_date": str(p.delivery_date) if p.delivery_date else None,
@@ -285,7 +293,7 @@ class App:
                                  "order_by": p.order_by.isoformat() if p.order_by else None, "window_end": str(p.window_end),
                                  "window_days": p.window_days, "buffer_days": p.buffer_days, "planning_days": p.planning_days},
                     "overrides": {**overrides, **{k: (sorted(v) if isinstance(v, frozenset) else v) for k, v in pk.items()}},
-                    "what_if": bool(overrides or pk), "vendor": vendor, "revision": records.revision,
+                    "what_if": bool(overrides or pk), "vendor": vendor, "vendor_name": p.vendor_name, "revision": records.revision,
                     "prefs": tools.plain(prefs.__dict__)}
 
     # ----- client experience -----------------------------------------------------------
@@ -467,26 +475,36 @@ class App:
             if vendor in blocked:
                 raise HttpError(409, f"draft {blocked[vendor].draft_id} for {vendor} is {blocked[vendor].status}; settle it first")
             p = ordering.plan_order(records, led, vendor)  # from the ledger's beliefs only, never from what-if overrides
+            covered = ordering.accepted_cover(led.drafts(), vendor)
+            net = ordering.net_lines(p, covered)
+            base = [{"sku": l["sku"], "quantity": l["quantity"]} for l in net]  # what the wizard showed as the proposal
             if body.get("lines"):
                 try:
                     lines = ordering.validate_lines(records, vendor, body["lines"])
                 except ValueError as e:
                     raise HttpError(400, str(e))
-                diff = ordering.lines_diff(p.api_lines, [{"sku": l["sku"], "quantity": l["quantity"]} for l in lines])
+                diff = ordering.lines_diff(base, [{"sku": l["sku"], "quantity": l["quantity"]} for l in lines])
                 try:
                     d = flow.create_draft_from_lines(vendor, lines, note=f"manager edited the proposal: {'; '.join(diff)}")
                 except (RuntimeError, ApiError) as e:
                     raise HttpError(409, str(e))
-                return {"draft": d.__dict__, "approve_command": approve_command(d.draft_id, self.cfg.api_base),
+                return {"draft": self._draft_summary(d, records), "approve_command": approve_command(d.draft_id, self.cfg.api_base),
                         "how_to": self.APPROVE_HOW_TO, "rationale": ordering.rationale(p), "edited": diff,
                         "lines": lines}
             if not p.lines:
                 raise HttpError(400, "nothing to order for this vendor")
+            if not net:
+                raise HttpError(400, f"the accepted order(s) already cover this window for {vendor}: "
+                                     + ", ".join(f"{q} × {sku}" for sku, q in covered.items()) + "; nothing more to draft")
             try:
-                d = flow.create_draft(p)
+                if covered:  # only what is left after the accepted order(s)
+                    d = flow.create_draft_from_lines(vendor, net, note="net of accepted order(s): "
+                                                     + ", ".join(f"{q} × {sku} already ordered" for sku, q in covered.items()))
+                else:
+                    d = flow.create_draft(p)
             except (RuntimeError, ApiError) as e:
                 raise HttpError(409, str(e))
-            return {"draft": d.__dict__, "approve_command": approve_command(d.draft_id, self.cfg.api_base),
+            return {"draft": self._draft_summary(d, records), "approve_command": approve_command(d.draft_id, self.cfg.api_base),
                     "how_to": self.APPROVE_HOW_TO, "rationale": ordering.rationale(p)}
 
     REVISE_SCHEMA = {"type": "object", "properties": {
@@ -534,8 +552,20 @@ class App:
             return {"revision": records.revision, "now": records.now.isoformat(), "vendors": tools.plain(ordering.planner(records, led))}
 
     def drafts(self) -> dict:
+        records = self.records()
         with self.ledger() as led:
-            return {"drafts": [d.__dict__ for d in led.drafts()]}
+            return {"drafts": [self._draft_summary(d, records) for d in reversed(led.drafts())]}
+
+    def _draft_summary(self, d, records) -> dict:
+        """A draft as the client shows it: the ledger row plus the vendor's name and each line's ingredient."""
+        vendor = next((v for v in records.vendors if v.vendor_id == d.vendor_id), None)
+        names = {m.sku: m.ingredient_name for m in records.mappings if m.vendor_id == d.vendor_id}
+        lines = []
+        for l in d.order.get("lines", []):
+            item = records.catalog_item(d.vendor_id, l["sku"])
+            lines.append({**l, "ingredient": names.get(l["sku"], ""), "description": item.description if item else "",
+                          "pack": f"{item.pack_quantity:g} {item.pack_unit}" if item else ""})
+        return {**d.__dict__, "vendor_name": vendor.vendor_name if vendor else d.vendor_id, "lines": lines}
 
     def draft_status(self, draft_id: str) -> dict:
         with self.ledger() as led:
@@ -549,7 +579,7 @@ class App:
                     status = flow.approval_status(draft_id)
                 except ApiError as e:
                     raise HttpError(e.status, e.code)
-            return {"draft": led.draft(draft_id).__dict__, "server_status": status,
+            return {"draft": self._draft_summary(led.draft(draft_id), self.records()), "server_status": status,
                     "approve_command": approve_command(draft_id, self.cfg.api_base), "how_to": self.APPROVE_HOW_TO}
 
     def submit(self, draft_id: str) -> dict:

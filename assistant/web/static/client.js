@@ -158,78 +158,174 @@
     el('tbody', {}, ...lines.map((l, i) => el('tr', { class: l.quantity === 0 ? 'dropped' : '' }, el('td', {}, l.ingredient || ''), el('td', {}, el('strong', {}, l.sku), el('div', { class: 'small muted' }, l.description || '')), el('td', {}, l.pack || `${l.pack_quantity || ''} ${l.pack_unit || ''}`),
       el('td', {}, editable ? el('input', { type: 'number', min: 0, max: 100, value: String(l.quantity), style: 'width:64px', onchange: (e) => onChange(i, Number(e.target.value)) }) : el('strong', {}, String(l.quantity))),
       el('td', { class: 'small' }, (l.notes || []).join('; ') || (l.need ? `need ${Number(l.need).toFixed(1)}, on hand ${l.on_hand}` : ''))))));
-  async function openWizard(vendor = 'V1') {
-    const steps = el('div', {}); const body = el('div', {});
+  // One wizard per vendor, kept when the panel closes so nothing in progress is lost; links in the chat reopen it.
+  const wizards = {};
+  const DRAFT_STATUS = { drafted: ['drafted', 'MED'], awaiting_approval: ['awaiting approval', 'MED'], approved: ['approved, submitting', 'MED'],
+    submitting: ['result unknown', 'HIGH'], unknown: ['result unknown', 'HIGH'], accepted: ['accepted', 'ok'], failed: ['failed', 'err'], cancelled: ['cancelled', 'LOW'] };
+  const statusOf = (s) => DRAFT_STATUS[s] || [String(s || '').replace(/_/g, ' '), 'LOW'];
+  const OPEN_STATUSES = ['drafted', 'awaiting_approval', 'approved', 'submitting', 'unknown'];
+  const when = (iso) => (iso || '').slice(0, 16).replace('T', ' ');
+  // every "open your order" link in the chat shows where that order stands
+  function syncLinks(vendor) {
+    const w = wizards[vendor];
+    for (const b of document.querySelectorAll(`[data-orderlink="${vendor}"]`)) b.textContent = w ? `Open your ${w.name} order · ${w.state}` : `Open the ${vendor} order`;
+  }
+  const orderLink = (vendor) => { const b = el('button', { 'data-orderlink': vendor, onclick: () => openWizard(vendor, 'reopen') }, 'Open the order panel'); setTimeout(() => syncLinks(vendor)); return b; };
+  // mode: '' reopens an unfinished wizard or builds one; 'reopen' brings back the panel as it is, finished or not;
+  // 'fresh' starts a new proposal even when a draft is open.
+  async function openWizard(vendor = 'V1', mode = '') {
+    const existing = wizards[vendor];
+    if (existing && mode !== 'fresh' && (mode === 'reopen' || !existing.finished)) { closePanels(); document.body.append(existing.node); return; }
+    if (existing && existing.poll) clearInterval(existing.poll);
+    const w = wizards[vendor] = { vendor, name: vendor, state: 'opening', finished: false, poll: null, node: null };
+    const setState = (state) => { w.state = state; syncLinks(vendor); };
+    const steps = el('div', {}); const orders = el('div', { class: 'orders' }); const body = el('div', {});
     const setStep = (n) => { steps.replaceChildren(...['Review the proposal', 'Create the draft and get approval', 'Outcome'].map((t, i) => el('div', { class: `step ${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}` }, el('div', { class: 'n' }, String(i + 1)), el('span', {}, t)))); };
-    panel('Your next order', steps, body);
+    w.node = panel('Your next order', steps, orders, body);
     setStep(1); body.replaceChildren(el('p', { class: 'muted' }, 'sizing from your counts, recipes and rules…'));
-    let p;
-    try { p = await api(`/api/order/proposal?vendor=${encodeURIComponent(vendor)}`); } catch (e) { body.replaceChildren(el('p', {}, e.message)); return; }
-    if (!p.lines.length) { body.replaceChildren(el('p', {}, `Nothing to order from ${vendor} for the coverage window.`), el('pre', { class: 'block small' }, p.rationale)); return; }
-    // the lines the draft will contain; the manager can change them before anything is drafted
-    let lines = p.lines.map(l => ({ sku: l.sku, quantity: l.cases, unit: l.order_unit, ingredient: l.ingredient, description: l.sku, pack: `${l.pack_quantity} ${l.pack_unit}`, notes: l.notes, need: l.need, on_hand: l.on_hand }));
-    const original = lines.map(l => ({ sku: l.sku, quantity: l.quantity }));
-    const tableBox = el('div', {}); const changes = el('div', { class: 'small' }); const explain = el('div', {});
-    const render = () => { tableBox.replaceChildren(linesTable(lines, true, (i, q) => { lines[i].quantity = q; render(); })); const d = []; for (const o of original) { const n = lines.find(l => l.sku === o.sku); if (!n || n.quantity === 0) d.push(`drop ${o.sku}`); else if (n.quantity !== o.quantity) d.push(`${o.sku}: ${o.quantity} → ${n.quantity}`); } for (const n of lines) if (!original.find(o => o.sku === n.sku) && n.quantity > 0) d.push(`add ${n.sku} ×${n.quantity}`); changes.replaceChildren(d.length ? el('span', {}, el('strong', {}, 'Your changes: '), d.join('; ')) : el('span', { class: 'muted' }, 'as proposed')); };
-    render();
-    const req = el('input', { placeholder: 'ask for a change in words, e.g. "make the chicken 6 cases and drop the cheese"', style: 'flex:1' });
-    const cal = p.calendar;
-    body.replaceChildren(...kids(
-      el('p', {}, `${cal.delivery_date ? `Delivery ${cal.delivery_date}` : 'Next delivery'}${cal.order_by ? `, order by ${cal.order_by.slice(0, 16).replace('T', ' ')}` : ''}. Covers through ${cal.window_end} plus ${cal.buffer_days} buffer day(s). Nothing is sent until your operator approves it.`),
-      tableBox, changes,
-      el('div', { class: 'row' }, req, el('button', { class: 'ghost', onclick: () => revise() }, 'Ask Marbly to change it')),
-      el('p', { class: 'small muted' }, 'Edit the cases directly, or describe the change and Marbly proposes revised lines; the catalog check runs either way and nothing is drafted until you say so.'),
-      p.not_counted.length ? el('p', { class: 'small' }, el('strong', {}, 'Not counted: '), p.not_counted.join(' ')) : null,
-      p.warnings.length ? el('div', {}, ...p.warnings.map(w => el('p', { class: 'small' }, el('strong', {}, 'Heads up: '), w))) : null,
-      el('p', { class: 'small' }, `Estimated ${p.est_total_usd ? '$' + Number(p.est_total_usd).toFixed(2) : 'n/a'} at last invoiced prices for the proposal as sized${p.over_max ? ' (above your unflagged limit)' : ''}. Rules applied: ${p.applied.map(a => a.split(' (')[0]).join(', ')}.`),
-      el('div', { class: 'chips' }, el('button', { onclick: () => createDraft() }, 'Create the draft'), el('button', { onclick: () => explainIt() }, 'Explain this to me'), el('details', {}, el('summary', { class: 'small' }, 'full rationale'), el('pre', { class: 'block small' }, p.rationale))),
-      explain));
-    async function revise() {
-      const text = req.value.trim(); if (!text) { toast('say what to change'); return; }
-      explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is revising the lines…')); think(true);
-      try {
-        const r = await api('/api/order/revise', { method: 'POST', body: { vendor, request: text, lines: lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity })) } });
-        lines = r.lines.map(l => ({ ...l, notes: ['revised on your request'] })); render();
-        explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), `${r.note} (${r.diff.join('; ')})`)); req.value = '';
-      } catch (e) { explain.replaceChildren(el('p', { class: 'small' }, e.message)); }
-      think(false);
+    let p, drafts;
+    try { [p, drafts] = await Promise.all([api(`/api/order/proposal?vendor=${encodeURIComponent(vendor)}`), api('/api/order/drafts')]); }
+    catch (e) { body.replaceChildren(el('p', {}, e.message)); setState('could not load'); return; }
+    w.name = (p.vendor_name || vendor).split(' ')[0];
+    const mine = drafts.drafts.filter(d => d.vendor_id === vendor);
+    renderOrders(mine);
+    const open = mine.find(d => OPEN_STATUSES.includes(d.status));
+    if (open && mode !== 'fresh') { if (['submitting', 'unknown'].includes(open.status)) showUnknown(open); else watch(open.draft_id); return; }
+    showProposal();
+
+    // ----- your orders: every draft for this vendor with its status -----
+    function renderOrders(list) {
+      if (!list.length) { orders.replaceChildren(); return; }
+      orders.replaceChildren(el('h4', {}, `Your ${w.name} orders`), ...list.map(d => {
+        const [label, cls] = statusOf(d.status);
+        const act = ['drafted', 'awaiting_approval', 'approved'].includes(d.status) ? el('button', { onclick: () => watch(d.draft_id) }, 'Resume')
+          : ['submitting', 'unknown'].includes(d.status) ? el('button', { onclick: () => showUnknown(d) }, 'Resolve')
+          : d.status === 'accepted' ? el('button', { class: 'ghost', onclick: () => showOutcome(d) }, 'Outcome') : null;
+        return el('div', { class: `alertcard ${cls === 'HIGH' ? 'HIGH' : cls === 'MED' ? 'MED' : 'LOW'}` },
+          el('div', { class: 'row' }, el('span', { class: `badge ${cls}` }, label), el('strong', {}, d.draft_id), d.order_id ? el('span', { class: 'small muted' }, `→ ${d.order_id}`) : null, el('span', { class: 'spacer' }), act),
+          el('p', { class: 'small' }, d.lines.map(l => `${l.quantity} × ${l.sku}${l.ingredient ? ' (' + l.ingredient + ')' : ''}`).join(', ')),
+          el('p', { class: 'small muted' }, `${d.status === 'accepted' ? 'accepted' : 'updated'} ${when(d.updated_at)}${d.note ? ' · ' + d.note : ''}${d.last_error && !d.note ? ' · ' + d.last_error : ''}`));
+      }), el('div', { class: 'chips' }, el('button', { class: 'ghost', onclick: () => openWizard(vendor, 'fresh') }, 'Start a new proposal')));
     }
-    async function explainIt() {
-      explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is reading the proposal…')); think(true);
-      await stream('/api/order/explain', { vendor }, (ev) => { if (ev.type === 'done') explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), linkify(ev.text || ev.note || '', ev.citations))); if (ev.type === 'error') explain.replaceChildren(el('p', { class: 'small' }, ev.message)); });
-      think(false);
+    async function refreshOrders() { try { const d = await api('/api/order/drafts'); renderOrders(d.drafts.filter(x => x.vendor_id === vendor)); } catch (e) { console.error(e); } }
+
+    // ----- step 1: the proposal, net of what accepted orders already cover -----
+    function showProposal() {
+      setStep(1); setState('reviewing the proposal'); w.finished = false;
+      if (w.poll) { clearInterval(w.poll); w.poll = null; }
+      if (!p.lines.length) { body.replaceChildren(el('p', {}, `Nothing to order from ${p.vendor_name || vendor} for the coverage window.`), el('pre', { class: 'block small' }, p.rationale)); return; }
+      const avail = p.lines.filter(l => l.remaining > 0);
+      if (!avail.length) {
+        const ids = p.accepted.map(a => a.order_id || a.draft_id).join(', ');
+        body.replaceChildren(el('p', {}, `Your accepted order${p.accepted.length === 1 ? '' : 's'} (${ids}) already cover${p.accepted.length === 1 ? 's' : ''} this window for ${p.vendor_name || vendor}: ${Object.entries(p.covered).map(([sku, q]) => `${q} × ${sku}`).join(', ')}. Nothing more to draft.`),
+          el('details', {}, el('summary', { class: 'small' }, 'full rationale'), el('pre', { class: 'block small' }, p.rationale)));
+        return;
+      }
+      // the lines the draft will contain; the manager can change them before anything is drafted
+      const build = () => avail.map(l => ({ sku: l.sku, quantity: l.remaining, unit: l.order_unit, ingredient: l.ingredient, description: l.sku, pack: `${l.pack_quantity} ${l.pack_unit}`,
+        notes: l.already_ordered ? [...(l.notes || []), `${l.already_ordered} already ordered, ${l.cases} proposed in all`] : l.notes, need: l.need, on_hand: l.on_hand }));
+      let lines = build();
+      const original = lines.map(l => ({ sku: l.sku, quantity: l.quantity }));
+      const tableBox = el('div', {}); const changes = el('div', { class: 'small' }); const explain = el('div', {});
+      const render = () => { tableBox.replaceChildren(linesTable(lines, true, (i, q) => { lines[i].quantity = q; render(); })); const d = []; for (const o of original) { const n = lines.find(l => l.sku === o.sku); if (!n || n.quantity === 0) d.push(`drop ${o.sku}`); else if (n.quantity !== o.quantity) d.push(`${o.sku}: ${o.quantity} → ${n.quantity}`); } for (const n of lines) if (!original.find(o => o.sku === n.sku) && n.quantity > 0) d.push(`add ${n.sku} ×${n.quantity}`); changes.replaceChildren(d.length ? el('span', {}, el('strong', {}, 'Your changes: '), d.join('; '), ' ', el('button', { class: 'ghost small', onclick: () => { lines = build(); render(); } }, 'reset')) : el('span', { class: 'muted' }, 'as proposed')); setState(d.length ? 'proposal with your edits' : 'reviewing the proposal'); };
+      render();
+      const req = el('input', { placeholder: 'ask for a change in words, e.g. "make the chicken 6 cases and drop the cheese"', style: 'flex:1' });
+      const cal = p.calendar;
+      body.replaceChildren(...kids(
+        el('p', {}, `${cal.delivery_date ? `Delivery ${cal.delivery_date}` : 'Next delivery'}${cal.order_by ? `, order by ${when(cal.order_by)}` : ''}. Covers through ${cal.window_end} plus ${cal.buffer_days} buffer day(s). Nothing is sent until your operator approves it.`),
+        p.accepted.length ? el('p', { class: 'small' }, el('strong', {}, 'Already ordered: '), `${Object.entries(p.covered).map(([sku, q]) => `${q} × ${sku}`).join(', ')} (${p.accepted.map(a => a.order_id || a.draft_id).join(', ')}); the lines below are what is still needed.`) : null,
+        tableBox, changes,
+        el('div', { class: 'row' }, req, el('button', { class: 'ghost', onclick: () => revise() }, 'Ask Marbly to change it')),
+        el('p', { class: 'small muted' }, 'Edit the cases directly, or describe the change and Marbly proposes revised lines; the catalog check runs either way and nothing is drafted until you say so. Close this panel any time; the link in the chat brings it back as you left it.'),
+        p.not_counted.length ? el('p', { class: 'small' }, el('strong', {}, 'Not counted: '), p.not_counted.join(' ')) : null,
+        p.warnings.length ? el('div', {}, ...p.warnings.map(w => el('p', { class: 'small' }, el('strong', {}, 'Heads up: '), w))) : null,
+        el('p', { class: 'small' }, `Estimated ${p.est_total_usd ? '$' + Number(p.est_total_usd).toFixed(2) : 'n/a'} at last invoiced prices for the proposal as sized${p.over_max ? ' (above your unflagged limit)' : ''}. Rules applied: ${p.applied.map(a => a.split(' (')[0]).join(', ')}.`),
+        el('div', { class: 'chips' }, el('button', { onclick: () => createDraft() }, 'Create the draft'), el('button', { onclick: () => explainIt() }, 'Explain this to me'), el('details', {}, el('summary', { class: 'small' }, 'full rationale'), el('pre', { class: 'block small' }, p.rationale))),
+        explain));
+      async function revise() {
+        const text = req.value.trim(); if (!text) { toast('say what to change'); return; }
+        explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is revising the lines…')); think(true);
+        try {
+          const r = await api('/api/order/revise', { method: 'POST', body: { vendor, request: text, lines: lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity })) } });
+          lines = r.lines.map(l => ({ ...l, notes: ['revised on your request'] })); render();
+          explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), `${r.note} (${r.diff.join('; ')})`)); req.value = '';
+        } catch (e) { explain.replaceChildren(el('p', { class: 'small' }, e.message)); }
+        think(false);
+      }
+      async function explainIt() {
+        explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is reading the proposal…')); think(true);
+        await stream('/api/order/explain', { vendor }, (ev) => { if (ev.type === 'done') explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), linkify(ev.text || ev.note || '', ev.citations))); if (ev.type === 'error') explain.replaceChildren(el('p', { class: 'small' }, ev.message)); });
+        think(false);
+      }
+      async function createDraft() {
+        const final = lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity }));
+        const edited = JSON.stringify(final) !== JSON.stringify(original);
+        setStep(2); setState('creating the draft');
+        let r;
+        try { r = await api('/api/order/draft', { method: 'POST', body: edited ? { vendor, lines: final } : { vendor } }); }
+        catch (e) { setStep(1); setState('draft refused'); body.append(el('p', { class: 'small bad' }, e.message)); refreshOrders(); return; }
+        refreshOrders();
+        poll(r.draft.draft_id, showDraft(r));
+      }
     }
-    async function createDraft() {
-      const final = lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity }));
-      const edited = JSON.stringify(final) !== JSON.stringify(original);
-      setStep(2);
-      let r;
-      try { r = await api('/api/order/draft', { method: 'POST', body: edited ? { vendor, lines: final } : { vendor } }); } catch (e) { setStep(1); body.append(el('p', { class: 'small bad' }, e.message)); return; }
+
+    // ----- step 2: the draft as the supplier holds it, and how the operator approves it -----
+    function showDraft(r) {
+      const d = r.draft;
+      setStep(2); setState(`${d.draft_id} ${statusOf(r.server_status || d.status)[0]}`);
       const status = el('p', {}, 'Waiting for the operator…');
       const cmd = el('pre', { class: 'block' }, r.approve_command);
       body.replaceChildren(...kids(
-        el('p', {}, `Draft ${r.draft.draft_id} is with the supplier, awaiting approval${r.edited ? ' (your edits: ' + r.edited.join('; ') + ')' : ''}. The exact order:`),
-        linesTable(r.draft.order.lines.map(l => ({ ...l, ingredient: (lines.find(x => x.sku === l.sku) || {}).ingredient, pack: (lines.find(x => x.sku === l.sku) || {}).pack })), false),
-        el('details', {}, el('summary', { class: 'small' }, 'exact payload the supplier holds'), el('pre', { class: 'block small' }, JSON.stringify(r.draft.order, null, 1))),
+        el('p', {}, `Draft ${d.draft_id} is with the supplier, ${statusOf(r.server_status || d.status)[0]}${r.edited && r.edited.length ? ' (your edits: ' + r.edited.join('; ') + ')' : ''}. The exact order:`),
+        linesTable(d.lines, false),
+        el('details', {}, el('summary', { class: 'small' }, 'exact payload the supplier holds'), el('pre', { class: 'block small' }, JSON.stringify(d.order, null, 1))),
+        d.note && !r.edited ? el('p', { class: 'small muted' }, d.note) : null,
         el('h4', {}, 'How to approve'), el('p', { class: 'small' }, r.how_to),
         el('div', { class: 'row' }, cmd, el('button', { class: 'ghost', onclick: () => { navigator.clipboard?.writeText(r.approve_command); toast('copied'); } }, 'Copy')),
-        status));
-      const poll = setInterval(async () => {
+        status,
+        el('p', { class: 'small muted' }, 'You can close this panel; I keep watching for the approval, and the link in the chat brings you back here.')));
+      return status;
+    }
+    async function watch(draftId) {
+      let r;
+      try { r = await api(`/api/order/${draftId}`); } catch (e) { body.replaceChildren(el('p', { class: 'small bad' }, e.message)); return; }
+      poll(draftId, showDraft(r));
+    }
+    function poll(draftId, status) {
+      if (w.poll) clearInterval(w.poll);
+      const tick = async () => {
         try {
-          const s = await api(`/api/order/${r.draft.draft_id}`);
-          if (s.server_status === 'approved') {
-            clearInterval(poll); status.textContent = 'Approved. Submitting…';
-            const o = await api(`/api/order/${r.draft.draft_id}/submit`, { method: 'POST' });
-            setStep(3);
-            body.replaceChildren(el('div', { class: `alertcard ${o.state === 'accepted' ? 'LOW' : 'HIGH'}` }, el('div', { class: 'row' }, el('span', { class: 'badge ' + (o.state === 'accepted' ? 'ok' : 'err') }, o.state.replace('_', ' ')), el('strong', {}, r.draft.draft_id)), el('p', {}, o.message)),
-              el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); sendText('Did the Alder order go through?'); } }, 'Ask Marbly to confirm'), el('button', { onclick: () => { closePanels(); openPlanner(); } }, "What's next to order"), el('button', { onclick: closePanels }, 'Done')));
-            refreshBell();
-            const before = tour && tour.current;
-            await refreshTour();
-            if (before === 'order' && tour && tour.complete) { nextStepMessage(); afterFirstOrder(); }
-          }
+          const s = await api(`/api/order/${draftId}`);
+          if (s.server_status !== 'approved') return;
+          clearInterval(w.poll); w.poll = null; status.textContent = 'Approved. Submitting…'; setState(`${draftId} approved, submitting`);
+          const o = await api(`/api/order/${draftId}/submit`, { method: 'POST' });
+          showOutcome({ draft_id: draftId, status: o.state, order_id: o.order_id, note: o.message }, o);
+          refreshOrders(); refreshBell();
+          if (!w.node.isConnected) say('', 'Marbly', el('div', {}, el('p', {}, `Your ${w.name} draft ${draftId} was approved and ${o.state === 'accepted' ? 'accepted as ' + o.order_id : 'came back ' + statusOf(o.state)[0]}.`), el('div', { class: 'chips' }, orderLink(vendor))));
+          const before = tour && tour.current;
+          await refreshTour();
+          if (before === 'order' && tour && tour.complete) { nextStepMessage(); afterFirstOrder(); }
         } catch (e) { status.textContent = e.message; }
-      }, 2000);
+      };
+      w.poll = setInterval(tick, 2000); tick();
+    }
+    // a draft whose submission result was lost: resolve it from the supplier's records, never by resubmitting blindly
+    function showUnknown(d) {
+      setStep(2); setState(`${d.draft_id} result unknown`);
+      const status = el('p', {}, '');
+      body.replaceChildren(el('p', {}, `The supplier's answer to draft ${d.draft_id} was lost, so I do not know whether it went through.${d.note ? ' ' + d.note : ''} I can look it up by its reference; nothing is resubmitted until I know.`),
+        linesTable(d.lines, false),
+        el('div', { class: 'chips' }, el('button', { onclick: async () => { status.textContent = 'checking with the supplier…'; try { const r = await api('/api/order/resume', { method: 'POST' }); const o = r.outcomes[0]; const fresh = (await api('/api/order/drafts')).drafts.find(x => x.draft_id === d.draft_id) || d; renderOrders((await api('/api/order/drafts')).drafts.filter(x => x.vendor_id === vendor)); if (o) showOutcome(fresh, o); else status.textContent = 'nothing to resolve'; } catch (e) { status.textContent = e.message; } } }, 'Resolve it now'), el('button', { class: 'ghost', onclick: () => showProposal() }, 'Start a new proposal')),
+        status);
+    }
+
+    // ----- step 3: the outcome, from the supplier's records -----
+    function showOutcome(d, o = null) {
+      setStep(3); w.finished = true; if (w.poll) { clearInterval(w.poll); w.poll = null; }
+      const state = o ? o.state : d.status; const ok = state === 'accepted'; const orderId = (o && o.order_id) || d.order_id;
+      setState(`${d.draft_id} ${statusOf(state)[0]}${ok && orderId ? ' as ' + orderId : ''}`);
+      body.replaceChildren(el('div', { class: `alertcard ${ok ? 'LOW' : 'HIGH'}` }, el('div', { class: 'row' }, el('span', { class: 'badge ' + (ok ? 'ok' : 'err') }, statusOf(state)[0]), el('strong', {}, d.draft_id), orderId ? el('span', { class: 'small muted' }, `→ ${orderId}`) : null), el('p', {}, o ? o.message : d.note || `${d.draft_id} is ${statusOf(state)[0]}.`)),
+        el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); sendText(`Did the ${w.name} order go through?`); } }, 'Ask Marbly to confirm'), el('button', { onclick: () => { closePanels(); openPlanner(); } }, "What's next to order"), el('button', { class: 'ghost', onclick: () => openWizard(vendor, 'fresh') }, 'Start a new proposal'), el('button', { onclick: closePanels }, 'Done')));
     }
   }
 
@@ -351,7 +447,11 @@
     say(text, 'You', null, true);
     const low = text.toLowerCase();
     if (/\bbrief\b/.test(low) && /morning|give me|today|run/.test(low)) return runBrief();
-    if (/order/.test(low) && /help|next|make|place|plan/.test(low) && !/did|went|go through|status/.test(low)) { say('Opening your next order. I will show every line and why before anything is drafted.'); return openWizard('V1'); }
+    if (/order/.test(low) && /help|next|make|place|plan/.test(low) && !/did|went|go through|status/.test(low)) {
+      const w = wizards.V1;
+      say('', 'Marbly', el('div', {}, el('p', {}, w && !w.finished ? `Your ${w.name} order is still open where you left it; here it is again.` : 'Opening your next order. I will show every line and why before anything is drafted. Close the panel any time; this link brings it back as you left it.'), el('div', { class: 'chips' }, orderLink('V1'))));
+      return openWizard('V1');
+    }
     think(true);
     const out = say('…');
     const gates = el('div', {}); out.append(gates);

@@ -247,3 +247,8 @@ def test_planner_orders_vendors_by_cutoff_and_sees_drafts(records, ledger, flow,
     assert by2["V1"]["accepted"][0]["draft_id"] == d.draft_id and by2["V1"]["accepted"][0]["order_id"].startswith("O-")
     assert by2["V1"]["urgency"] == "ordered" and by2["V1"]["lines"] == []  # the accepted order covers the proposal
     assert by2["V1"]["proposed_lines"][0]["sku"] == "AW-CHK20"
+    covered = ordering.accepted_cover(ledger.drafts(), "V1")
+    assert covered["AW-CHK20"] == by2["V1"]["proposed_lines"][0]["cases"] and ordering.accepted_cover(ledger.drafts(), "V2") == {}
+    half = {k: v // 2 for k, v in covered.items()}  # part of it ordered: the rest is still proposed, with what was ordered on the line
+    net = ordering.net_lines(ordering.plan_order(records, ledger, "V1"), half)
+    assert net and all(n["cases"] == n["proposed"] - n["already_ordered"] and n["quantity"] == n["cases"] for n in net)

@@ -339,6 +339,27 @@ def lines_diff(before: list[dict], after: list[dict]) -> list[str]:
     return out or ["no change"]
 
 
+def accepted_cover(drafts: list, vendor_id: str) -> dict[str, int]:
+    """Cases per SKU that accepted orders for this vendor already cover."""
+    covered: dict[str, int] = {}
+    for d in drafts:
+        if d.vendor_id == vendor_id and d.status == "accepted":
+            for l in d.order.get("lines", []):
+                covered[l["sku"]] = covered.get(l["sku"], 0) + int(l.get("quantity", 0))
+    return covered
+
+
+def net_lines(p: Proposal, covered: dict[str, int]) -> list[dict]:
+    """The proposal's lines with what is already ordered taken out; lines fully covered are dropped."""
+    out = []
+    for l in p.lines:
+        left = l.cases - covered.get(l.sku, 0)
+        if left > 0:
+            out.append(l.api_line | {"quantity": left, "ingredient": l.ingredient, "cases": left, "proposed": l.cases,
+                                     "already_ordered": covered.get(l.sku, 0)})
+    return out
+
+
 def planner(records: Records, ledger: Ledger) -> list[dict]:
     """What to order next and when, per vendor: the next feasible delivery and its order-by moment, the
     ingredients that run out before it, the proposed lines, the estimate, and any open or accepted draft."""
@@ -362,16 +383,7 @@ def planner(records: Records, ledger: Ledger) -> list[dict]:
         vd = [d for d in drafts if d.vendor_id == v.vendor_id]
         open_draft = next((d for d in reversed(vd) if d.status in ("drafted", "awaiting_approval", "approved", "submitting", "unknown")), None)
         accepted = [d for d in vd if d.status == "accepted"]
-        # what an accepted order already covers: cases per SKU, subtracted from the proposal
-        covered: dict[str, int] = {}
-        for d in accepted:
-            for l in d.order.get("lines", []):
-                covered[l["sku"]] = covered.get(l["sku"], 0) + int(l.get("quantity", 0))
-        remaining = []
-        for l in p.lines:
-            left = l.cases - covered.get(l.sku, 0)
-            if left > 0:
-                remaining.append(l.api_line | {"ingredient": l.ingredient, "cases": left, "proposed": l.cases, "already_ordered": covered.get(l.sku, 0)})
+        remaining = net_lines(p, accepted_cover(vd, v.vendor_id))  # what an accepted order already covers comes off
         urgency = ("nothing needed" if not p.lines else "ordered" if accepted and not remaining else
                    "overdue" if hours_to_cutoff is not None and hours_to_cutoff < 0 else
                    "today" if hours_to_cutoff is not None and hours_to_cutoff <= 24 else "this week")

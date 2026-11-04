@@ -19,6 +19,8 @@ Terminal B: `export MARBLE_STATE_DIR=.marble/live MARBLE_SIM_STATE=.state/live.s
 | 10–11 | A: `scenario --name delivery-correction`. Chip "Give me this morning's brief" again. | Opens with what changed: INV-099 now scheduled, note N16, records corrected, your rules retained. |
 | 11–15 | "Start the order" on the setup card (or the pulsing chip). Change a quantity in the table, or type "drop the cheese" and let Marbly revise. "Create the draft". A: `scenario --name supplier-timeout`, then the approve command exactly as shown (it carries `--port` and, with `MARBLE_SIM_STATE` set in terminal B, `--state`). | Step 2 shows the order as a table with the exact payload behind a toggle, where to run the command, and a Copy button; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". Step 4 ticks, the card disappears, and Marbly lists what matters next per vendor, with the planner dimmed in. |
 
+A second web server for testing needs its own simulator: start it with `MARBLE_API_BASE=http://127.0.0.1:<sim port>` and `MARBLE_SIM_STATE=<that simulator's --state>`, or its drafts land on the default simulator at 8765.
+
 Fallbacks: without a key every step except narration still works (cards, inbox, memory, wizard);
 the brief falls back to the deterministic text. Gear → "Show developer pages" for the tool matrix,
 the injection lab and the revision diff if asked.

@@ -41,7 +41,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Live test of the worded revision (endpoint and wizard) | 09:25 | 09:26 | ~0.05 | $0.04 model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.3 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Wizard lists every draft with its status (resume, resolve, outcome); accepted orders net out of the next proposal and draft; the order message carries a link that reopens the panel as it was left; browser run in dry mode | 09:34 | 09:45 | ~0.18 | no model spend |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.55 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

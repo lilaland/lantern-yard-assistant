@@ -325,6 +325,26 @@ def test_client_wizard_and_sample_prompt_flows_in_api_order(sim, tmp_path):
         assert r["ok"] and r["result"]["drafts"][-1]["status"] == "accepted" and "Verified by lookup" in r["result"]["drafts"][-1]["note"]
         a = get(base, "/api/alerts")[1]
         assert a["counts"]["HIGH"] >= 1 and all(x["action"] for x in a["alerts"])
+        # the wizard reopened after the accepted order: the list shows it with its status, and the proposal nets it out
+        ds = get(base, "/api/order/drafts")[1]["drafts"]
+        assert ds[0]["draft_id"] == did and ds[0]["status"] == "accepted" and ds[0]["vendor_name"] == "Alder Wholesale"
+        assert ds[0]["lines"][0]["sku"] == "AW-CHK20" and ds[0]["lines"][0]["ingredient"].startswith("Chicken") and ds[0]["lines"][0]["pack"] == "20 lb"
+        p2 = get(base, "/api/order/proposal?vendor=V1")[1]
+        assert p2["vendor_name"] == "Alder Wholesale" and p2["covered"]["AW-CHK20"] == p["lines"][0]["cases"] and p2["accepted"][0]["order_id"] == o["order_id"]
+        assert all(l["remaining"] == 0 and l["already_ordered"] == l["cases"] for l in p2["lines"]) and p2["net_lines"] == []
+        code, r = post(base, "/api/order/draft", {"vendor": "V1"})
+        assert code == 400 and "already cover" in r["error"]  # never the same order twice by accident
+        # only part of the proposal ordered: the next draft is what is left, with a note saying why
+        with Ledger(cfg.db_path) as l:
+            l.update_draft(did, "accepted", order_id=o["order_id"])
+            l.db.execute("UPDATE drafts SET order_json=? WHERE draft_id=?", (json.dumps({**ds[0]["order"], "lines": ds[0]["order"]["lines"][:1]}), did))
+            l.db.commit()
+        p3 = get(base, "/api/order/proposal?vendor=V1")[1]
+        assert [n["sku"] for n in p3["net_lines"]] == [x["sku"] for x in p["lines"][1:]] and p3["net_lines"][0]["already_ordered"] == 0
+        code, r = post(base, "/api/order/draft", {"vendor": "V1"})
+        assert code == 201 and [x["sku"] for x in r["draft"]["order"]["lines"]] == [x["sku"] for x in p["lines"][1:]]
+        assert r["draft"]["note"].startswith("net of accepted order(s)") and r["draft"]["lines"][0]["ingredient"]
+        assert get(base, f"/api/order/{r['draft']['draft_id']}")[1]["draft"]["vendor_name"] == "Alder Wholesale"
     finally:
         httpd.shutdown()
 

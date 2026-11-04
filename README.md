@@ -77,7 +77,7 @@ overview and a four-step setup pinned to the top until it is complete: (1) strai
 (each question is a card whose options and ledger effects are fixed in code; the model may only word
 the lead-in), (2) look at today's critical alerts (the bell pulses until opened), (3) see what Marbly
 remembers (the book pulses) with the three capabilities and sample prompts, (4) place the first order
-and see it through. The order is a three-step wizard: review every line and why, with the cases editable and a
+and see it through. The order is a three-step wizard that also lists every draft for the vendor with its status (resume one that is awaiting approval, resolve one whose result was lost, reopen an outcome) and nets accepted orders out of the next proposal; closing the panel loses nothing, the link in the chat reopens it as it was left. The wizard: review every line and why, with the cases editable and a
 "change it in words" request that Marbly turns into revised lines (validated against the catalog
 before anything is drafted), create the draft and show the operator's approve command with where to
 run it (never a button), then the verified outcome. A planner (calendar icon) lists every vendor by

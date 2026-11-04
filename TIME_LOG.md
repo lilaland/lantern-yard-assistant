@@ -43,9 +43,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Wizard lists every draft with its status (resume, resolve, outcome); accepted orders net out of the next proposal and draft; the order message carries a link that reopens the panel as it was left; browser run in dry mode | 09:34 | 09:45 | ~0.18 | no model spend |
 
-| 2026-11-04 | Diagrams redrawn (system with both databases, the web layer and the cost log; Marbly onboarding flow; a new two-databases diagram), About page card with this server's paths and the exact wipe commands, ARCHITECTURE.md rewritten to the current system | 10:06 | 10:07 | ~0.02 | no model spend |
+| 2026-11-04 | Diagrams redrawn (system with both databases, the web layer and the cost log; Marbly onboarding flow; a new two-databases diagram), About page card with this server's paths and the exact wipe commands, ARCHITECTURE.md rewritten to the current system | 10:01 | 10:07 | ~0.10 | no model spend |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.57 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.65 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

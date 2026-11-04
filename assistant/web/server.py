@@ -313,6 +313,7 @@ class App:
             onboarded = led.meta("onboarded_at")
             counts = led.counts()
         return {"name": "Marbly", "site": records.site, "revision": records.revision, "now": records.now.isoformat(),
+                "api_base": self.cfg.api_base,
                 "onboarded_at": onboarded, "model": self.cfg.model, "key_present": self.key_present(), "dry": self.cfg.dry,
                 "beliefs": {k: counts[k]["active"] for k in ("policy", "preference", "assertion")},
                 "greeting": ("Hi, I'm Marbly. I help run Lantern Yard Kitchen from the numbers you already keep: sales, counts, "

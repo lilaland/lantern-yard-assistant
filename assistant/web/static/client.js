@@ -363,7 +363,14 @@
         el('div', {}, 'model'), el('div', {}, intro.dry ? 'off (--dry)' : intro.key_present ? intro.model : 'no key'), el('div', {}, 'memory'), el('div', {}, `${intro.beliefs.policy} rules · ${intro.beliefs.preference} preferences · ${intro.beliefs.assertion} facts`)),
       el('h3', {}, 'Developer view'), el('p', { class: 'small muted' }, 'Shows the chat with tool timeline, full memory, alerts with the revision diff, the order lab, the tool matrix, the injection lab and the diagrams.'),
       el('div', { class: 'chips' }, el('button', { onclick: () => { L.setDev(!dev); openSettings(); } }, dev ? 'Hide developer pages' : 'Show developer pages'), dev ? el('button', { onclick: () => { closePanels(); location.hash = '#/chat'; } }, 'Open developer chat') : null),
-      el('h3', {}, 'Setup'), el('div', { class: 'chips' }, el('button', { onclick: async () => { await api('/api/onboarding/restart', { method: 'POST' }); closePanels(); location.reload(); } }, 'Run the setup again'), el('button', { class: 'danger', onclick: async () => { const name = prompt(`Type the state directory name to wipe everything Marbly remembers (${intro.state_dir_name}). The supplier's records are untouched.`); if (!name) return; try { await api('/api/reset', { method: 'POST', body: { confirm: name } }); location.reload(); } catch (e) { toast(e.message); } } }, 'Start over (wipe memory)')));
+      el('h3', {}, 'Memory and setup'),
+      el('p', { class: 'small muted' }, 'Memory lives in the ledger on disk and survives every restart. Only the second button below removes it.'),
+      el('div', { class: 'chips' },
+        el('button', { title: 'Re-ask the six questions. Your rules stay; a changed answer replaces the old one and the history is kept.', onclick: async () => { await api('/api/onboarding/restart', { method: 'POST' }); closePanels(); location.reload(); } }, 'Ask me the questions again'),
+        el('button', { class: 'danger', title: 'Delete the ledger, conversation, usage log and setup progress for this state directory.', onclick: async () => { const name = prompt(`Type the state directory name to make Marbly forget everything (${intro.state_dir_name}). The supplier's own records are untouched.`); if (!name) return; try { await api('/api/reset', { method: 'POST', body: { confirm: name } }); location.reload(); } catch (e) { toast(e.message); } } }, 'Forget everything and start over')),
+      el('p', { class: 'small muted' }, 'The supplier side (drafts, orders, scenario flags) belongs to the operator; Marbly never holds that credential. To reset it, in the operator terminal:'),
+      el('pre', { class: 'block small' }, `python3 simulator.py scenario --name normal --state <your --state file>   # clears scenario flags, keeps orders\npython3 simulator.py serve --mode agent --state .state/<new-name>.sqlite   # a clean supplier: restart with a new file`),
+      el('p', { class: 'small muted' }, `This page talks to ${intro.api_base || 'the simulator'}; the assistant's state directory is ${intro.state_dir_name}.`));
   }
 
   // ---------- onboarding in chat ----------

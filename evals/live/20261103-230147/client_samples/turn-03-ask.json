@@ -1,0 +1,122 @@
+{
+ "name": "chip: why Wednesday",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "history": [
+  {
+   "content": "How many days of chicken do we have?",
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "caller": {
+      "type": "direct"
+     },
+     "id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "input": {
+      "ingredient": "Chicken thigh boneless skinless"
+     },
+     "name": "stock_runway",
+     "type": "tool_use"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": [
+    {
+     "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.43, \"runway_days\": 2.0, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}]}",
+     "tool_use_id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "type": "tool_result"
+    }
+   ],
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "text": "Chicken thigh boneless skinless: about 2.0 days of stock. We counted 47.9 lb at close on Oct 4. Last week's theoretical use was 24.43 lb a day (Sep 28 to Oct 4). Source: inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1.\n\nAlder Wholesale delivers Monday and Wednesday under the days planning uses.\n\nThe burn rate comes from recipes and POS sales, not from measured use. Actual use could differ.\n\nDo you want me to preview an Alder order?",
+     "type": "text"
+    }
+   ],
+   "role": "assistant"
+  }
+ ],
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 1493,
+  "output_tokens": 232,
+  "cache_read_tokens": 11044,
+  "usd": 0.0075148,
+  "revision": 1,
+  "user_text": "Why do you think Alder delivers on Wednesday?",
+  "calls": [
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "explain"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Why do you think Alder delivers on Wednesday?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01Ewbsyt4dbftcXiMoJhhQS4",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ewbsyt4dbftcXiMoJhhQS4",
+     "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"d1f1b7e49863\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T23:01:47-05:00\", \"confirmed_at\": \"2026-11-03T23:01:47-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Planning uses Monday and Wednesday because of note N09: \"Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\" The ledger holds that as an active assertion (notes.csv SITE-01 N09 rev1). Nothing else contradicts it.\n\nThe ledger marks it \"recheck: never\". I haven't verified it against the vendor sheet or a recent delivery. If the vendor sheet disagrees, I can pull it up. If Alder confirms different days, tell me and I'll record them.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

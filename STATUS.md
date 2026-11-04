@@ -47,9 +47,10 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 
 - No live model turn has been made through the UI yet; the gate card, timeline and cost line are
   exercised by tests with a fake API only.
-- The agentic suite has run live three times (3/8, 6/8, 6/8); the per-step cost table in `--list` is
-  measured. Each run surfaced a different defect; the fixes from the third (onboarded sentence in the
-  brief, tool-side rounding of runway days, hard length rule in `ask`) have not been re-run.
+- The agentic suite has run live three times (3/8, 6/8, 6/8) plus two runs of the `client_samples`
+  scenario (every Marbly sample prompt and the wizard path): the second passes every deterministic
+  check with one judge criterion open (a "why" answer that did not mention the vendor sheet). Each run
+  surfaced a different defect; the latest prompt changes have not been re-run.
 - The client experience has been driven live end to end with Sonnet 5.5 ($0.1720 for the whole
   flow): model-worded lead-ins, recheck, narrated brief, approval card, correction brief, order wizard
   with the lost response. Two defects found there are fixed (see VERIFICATION.md).

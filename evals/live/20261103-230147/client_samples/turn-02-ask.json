@@ -1,0 +1,82 @@
+{
+ "name": "chip: chicken days",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "history": [],
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 464,
+  "output_tokens": 258,
+  "cache_read_tokens": 5522,
+  "usd": 0.0184174,
+  "revision": 1,
+  "user_text": "How many days of chicken do we have?",
+  "calls": [
+   {
+    "name": "stock_runway",
+    "ok": true,
+    "gate": null,
+    "ms": 1
+   }
+  ],
+  "tool_calls": [
+   "stock_runway"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "How many days of chicken do we have?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "ingredient": "Chicken thigh boneless skinless"
+     },
+     "name": "stock_runway",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.43, \"runway_days\": 2.0, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Chicken thigh boneless skinless: about 2.0 days of stock. We counted 47.9 lb at close on Oct 4. Last week's theoretical use was 24.43 lb a day (Sep 28 to Oct 4). Source: inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1.\n\nAlder Wholesale delivers Monday and Wednesday under the days planning uses.\n\nThe burn rate comes from recipes and POS sales, not from measured use. Actual use could differ.\n\nDo you want me to preview an Alder order?",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

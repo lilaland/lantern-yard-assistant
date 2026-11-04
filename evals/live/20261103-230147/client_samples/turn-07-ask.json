@@ -1,0 +1,201 @@
+{
+ "name": "wizard: ask Marbly to confirm",
+ "tags": [
+  "ask",
+  "brief",
+  "memory",
+  "gate",
+  "order",
+  "approval",
+  "lost_response",
+  "tools",
+  "citations"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "history": [
+  {
+   "content": "How many days of chicken do we have?",
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "caller": {
+      "type": "direct"
+     },
+     "id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "input": {
+      "ingredient": "Chicken thigh boneless skinless"
+     },
+     "name": "stock_runway",
+     "type": "tool_use"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": [
+    {
+     "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.43, \"runway_days\": 2.0, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}]}",
+     "tool_use_id": "toolu_0145sg6nfH1gz11juQZWdMaF",
+     "type": "tool_result"
+    }
+   ],
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "text": "Chicken thigh boneless skinless: about 2.0 days of stock. We counted 47.9 lb at close on Oct 4. Last week's theoretical use was 24.43 lb a day (Sep 28 to Oct 4). Source: inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1.\n\nAlder Wholesale delivers Monday and Wednesday under the days planning uses.\n\nThe burn rate comes from recipes and POS sales, not from measured use. Actual use could differ.\n\nDo you want me to preview an Alder order?",
+     "type": "text"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": "Why do you think Alder delivers on Wednesday?",
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "caller": {
+      "type": "direct"
+     },
+     "id": "toolu_01Ewbsyt4dbftcXiMoJhhQS4",
+     "input": {
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": [
+    {
+     "content": "{\"subject\": \"vendor.V1.delivery_days\", \"chain\": [{\"id\": \"d1f1b7e49863\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T23:01:47-05:00\", \"confirmed_at\": \"2026-11-03T23:01:47-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}]}",
+     "tool_use_id": "toolu_01Ewbsyt4dbftcXiMoJhhQS4",
+     "type": "tool_result"
+    }
+   ],
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "text": "Planning uses Monday and Wednesday because of note N09: \"Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\" The ledger holds that as an active assertion (notes.csv SITE-01 N09 rev1). Nothing else contradicts it.\n\nThe ledger marks it \"recheck: never\". I haven't verified it against the vendor sheet or a recent delivery. If the vendor sheet disagrees, I can pull it up. If Alder confirms different days, tell me and I'll record them.",
+     "type": "text"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": "use two days of buffer from now on",
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "caller": {
+      "type": "direct"
+     },
+     "id": "toolu_017iJCU2izFYvmreiipDSaCV",
+     "input": {
+      "kind": "preference",
+      "statement": "Use two days of buffer from now on.",
+      "subject": "order.buffer_days",
+      "value_json": "{\"days\": 2}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ],
+   "role": "assistant"
+  },
+  {
+   "content": [
+    {
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"47860997ac3b\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Use two days of buffer from now on.\", \"value\": {\"days\": 2}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T23:02:05-05:00\", \"confirmed_at\": \"2026-11-03T23:02:05-05:00\", \"supersedes\": \"38b56d10c500\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"38b56d10c500\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T23:01:47-05:00\", \"confirmed_at\": \"2026-11-03T23:01:47-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}",
+     "tool_use_id": "toolu_017iJCU2izFYvmreiipDSaCV",
+     "type": "tool_result"
+    }
+   ],
+   "role": "user"
+  },
+  {
+   "content": [
+    {
+     "text": "Recorded: preference, order.buffer_days, {\"days\": 2}. It replaces the onboarding default of 1 day. That default was a system default, not something a person said earlier, so nothing contradicts it.\n\nFrom now on, order sizing covers the gap to the next delivery plus 2 buffer days. Orders will come out larger than before. Nothing has been drafted or sent.\n\nDo you want a sizing preview for Alder with the new buffer?",
+     "type": "text"
+    }
+   ],
+   "role": "assistant"
+  }
+ ],
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 4009,
+  "output_tokens": 192,
+  "cache_read_tokens": 11044,
+  "usd": 0.0121468,
+  "revision": 1,
+  "user_text": "Did the Alder order go through?",
+  "calls": [
+   {
+    "name": "fulfilment_status",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "fulfilment_status"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Did the Alder order go through?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_01AqavkDD7dRjnGPSXecgQNL",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "fulfilment_status",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AqavkDD7dRjnGPSXecgQNL",
+     "content": "{\"drafts\": [{\"draft_id\": \"D-f8e8e031b697\", \"vendor_id\": \"V1\", \"order\": {\"lines\": [{\"quantity\": 9, \"sku\": \"AW-CHK20\", \"unit\": \"case\"}, {\"quantity\": 2, \"sku\": \"V1-EGG\", \"unit\": \"case\"}, {\"quantity\": 4, \"sku\": \"V1-CHEESE\", \"unit\": \"case\"}], \"site_id\": \"SITE-01\", \"vendor_id\": \"V1\"}, \"status\": \"accepted\", \"created_at\": \"2026-11-03T23:02:14-05:00\", \"updated_at\": \"2026-11-03T23:02:14-05:00\", \"order_id\": \"O-6e15e140f7c0\", \"last_error\": null, \"note\": \"The response to our submission was lost, but the supplier had recorded the order. Verified by lookup: order O-6e15e140f7c0 for reference D-f8e8e031b697, status accepted. Accepted means the supplier recorded it, not that it has shipped.\"}], \"vocabulary\": [\"proposed\", \"drafted\", \"awaiting approval\", \"approved\", \"submitted\", \"accepted\", \"unknown\", \"failed\", \"cancelled\"], \"note\": \"accepted means the supplier recorded the order, not that anything shipped; each draft's own 'note' field is the recorded outcome message (e.g. a lost response recovered by lookup)\"}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Yes. Draft D-f8e8e031b697 is accepted. The supplier's lookup returned order O-6e15e140f7c0 with status accepted.\n\nThe lines are 9 cases of AW-CHK20, 2 cases of V1-EGG and 4 cases of V1-CHEESE.\n\nOur submission response was lost, and the lookup recovered the outcome. Accepted means the supplier recorded the order. It doesn't mean the order has shipped, and I have no delivery information.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

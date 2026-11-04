@@ -1,0 +1,85 @@
+{
+ "name": "state preference",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "order",
+  "tools"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 903,
+  "output_tokens": 520,
+  "cache_read_tokens": 5506,
+  "usd": 0.0218722,
+  "revision": 1,
+  "user_text": "use two days of buffer from now on",
+  "calls": [
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 4
+   }
+  ],
+  "tool_calls": [
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "use two days of buffer from now on"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQS6gkKEAgTGAI4AUIIdGhpbmtpbmcSDGcwWAak/tTfXriFhhoMERYmise0IiGWqoTCIjBZzmRQgrZkkHUc+6eHAf5Y3zjU5jZHFibaxeZ49bXnm/1KPb4dAAfEAqpOA87C7R0qhwlqn5qrXdjiMKSEMhe6+VPb+9c6CURqCVjcsn35sj5Xh9Gs9WjHYjzvMvxuh9Yu5pJLLiLbZZb1gj9MBIKeowrnMkZmGb9unpoPFprhscXb5FYZl2+NI0MHMQums68TLMA6RGVGnRU1Kv+TFpFRJdqqKQSQppL7OcTBp3lZtjix76Kly/DWfYX10HUvRBUrSGPOPCPB4CgodCt93Sc/Bt/tZRxAFLILyKe9Q5VebXz7fFBcoqaXATtdt74u5+oa5jUp3ro2dzZwl0CrlTtJ/hXYKWdntg2AcwFeDlpWBef1vxHOLirgtYlZ1sw792nkGrbqWeaQAPq38UCW9hP9n2xwioPoYfOqeHh2puQagpHgRqw/CHfr5CLGCQc8hG0NF17Z4ZOAJnxbMWa/BFVwBI+KxLFw5yTNFggq7pNOM5pWGEC0tqWSrKkSAu6+owj4Hhuijtkz0K4/OwxYxeYd4LsmdttXkw9L+WAnfFRcHyLS2yyRWlf2JVbIHseSq9+qK8HZ0xieIQTXxT5ow8VynRThIxtLmpI4dU2hGYagXuQGWGpQwjpKdPe7BcgUYAcLxPRV9qWkaXrozUBeE8X3GDJvgIk+hE1yC9knlE4fPZqJPf6PFbxAVeqoMtc5PxTyJUt6W/2CvXfmxf71sEA0z6UVwF1BUL7PqgkETg/e4FazdwIvoD9Nv2wuPR47v7oq9CgMNuBQq3MtTOdDDMCa0hjAKE+DUMhojkpd75394B6lqJIGYV7LQIptXlB/u+SXffJZ1+PDtjCGyLvyf9y/DBdcNW51Pa+popbo6QNKqJ0cSlJmYnxCWrx2Wb/XiiadwYkHWhmuqr8oENrukzR0wRjrqZOIvHa/2dSjFsGDkJu8agNWzAC+d0reVEXBfGL4s8KBZQMxHYDbLAMCGnFCwx+TElc6XA9WPG6lDP82MCpNi7v/LrBzJKaA9REZ9mX6ls1IJ+SnBni313lbschcHeU4U/kdqQbdfJesqPCKMFO4+wJ7dP2Epm1sm9exj6dNk425lkWwgTbJqGP/FsOfVO5ZYc/+chsRHOxH9PD4+MuNuHoyOX4ov+ZWgaOe8PGqs6PY1iOoPC2rURRE3fS/zqbahBJstvpfFse4L3LUmSGL1apoSbDahDGMGjd1CCOvXDiUa+vh06Dj8cHT3pMOHr61nnDo6zVAgsmyBFu25gftF8N6ah0IsnXsnc9z00fjel47txalpgZgTrAsPJUdGgmYDin3FUMT4HZ47xEHyLQLuO3TGyGQ5koS+WPkkzNbayg0VIpv5eyWhyT2oN4aDvRvsMr7Gl1epm0a1D/xCL1Mm3KYCVwXn+5nkKTUuM46qd/P+6bwQulYXPVh6r+bUEMLsv31qTdASM82mRgGpzzyY/kJccnlky5mYCF+8bT9fZtwe2iS1KaUH+yCVe7ElXqsjX7o+S+37UtGYkaMDQsmo0c/dc1ToVi2JwrmZBQUmIRhbhOwIBdMc4O+blI3RoR6y2Y7Is+PU8NlIo9YmjakjcZTRl+KQsa+eBr5d8CYp0VS3gRMuXZwGAE=",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01Kc3iyMe8rHPq2ecH7Qf6wV",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.buffer_days",
+      "statement": "Use two days of buffer from now on.",
+      "value_json": "{\"days\": 2}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Kc3iyMe8rHPq2ecH7Qf6wV",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"f9ca436012d6\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Use two days of buffer from now on.\", \"value\": {\"days\": 2}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:11:09-05:00\", \"confirmed_at\": \"2026-11-03T22:11:09-05:00\", \"supersedes\": \"a97d88757e36\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"a97d88757e36\", \"kind\": \"preference\", \"subject\": \"order.buffer_days\", \"statement\": \"Size orders to cover the gap to the next delivery plus this many days of buffer.\", \"value\": {\"days\": 1}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:11:06-05:00\", \"confirmed_at\": \"2026-11-03T22:11:06-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "I recorded a preference: order.buffer_days = {\"days\": 2}. It replaces the onboarding default of 1 day (an earlier setting, not something you said in this conversation), so this isn't a contradiction of anything you said.\n\nFrom now on, order sizing covers the gap to the next delivery plus 2 days of buffer instead of 1. Proposed quantities will likely go up. Nothing has been drafted or sent. I can run a sizing preview for a vendor if you'd like to see the new numbers.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

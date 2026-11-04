@@ -35,7 +35,7 @@
   },
   {
    "id": "no_footer_restated",
-   "text": "The assistant does not restate the retained/rechecked footer and does not propose order quantities (naming case counts or dollar totals for a proposed order fails)."
+   "text": "The assistant does not restate the retained/rechecked footer and does not propose an order: naming case counts, SKUs to order or a dollar total for a proposed order fails; quoting a finding's need or shortfall figure (e.g. eggs needed or short) is fine."
   }
  ]
 }

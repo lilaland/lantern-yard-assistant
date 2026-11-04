@@ -1,0 +1,85 @@
+{
+ "name": "persona conversation 2",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 3643,
+  "output_tokens": 355,
+  "cache_read_tokens": 11012,
+  "usd": 0.0130384,
+  "revision": 1,
+  "user_text": "Ok, about 2 days. Plan brunch at 50% over last weekend, and use that from now on.",
+  "calls": [
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 3
+   }
+  ],
+  "tool_calls": [
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Ok, about 2 days. Plan brunch at 50% over last weekend, and use that from now on."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQS0AUKEAgTGAI4AUIIdGhpbmtpbmcSDB7AYUm2JPeZJZgnnhoMgbD8SmGcRs4M5sLfIjCgJEiNwZGADUbXz35CHzYc7C5kVM0Lw2LDQum0TUQZ7FKAKr9hfJDlf8W7xU1pJZQq7QT/s9Tf9/hy0f3pZ4uBXiR5CDuPgvlxb8w7HoSwHSIL72ybYLD2VpGXsT2s6i6ZkgyK4xVJkIBHYlnt38CekZh/BPkCWZaXJe/ryeIR825rqJ+YAhrGT/vXM3k1iHYJso70Yre2gsGasbbup7ZGGE0WdVZniieDJz/hVrvXlcW4xgnDr7Nc0QzCdqJgWHJRxuSNwfy5dW2SeeIBOVs3WFPR1coaR6xtPsGeFEqZx8IC8TxhrXU1J4RzDvx+8smDGjS/QdtlAXHWGvusHq3HYNT+eJJdpFqRQu/+1I8fSA+Q15eCIs581BiALapsfmLlo/LHo4oqEKt/O1m7C+s3PdpiUUKYtJRYbczwOfyOoREOZAWJLX7n7Cqv28cVWTedD5yrrDdHfrw6GOPfbFoSjC/FyY9bDW99AMhBBEDse0sflfl6Coy60npQJjFXpOenwPUUa1M/EdqwKIbXcuWny6X/vWom6KhFPMuxd90/ygazy1mzIiE3QTXoXZj72H8H4h5m2Yf5dPTSFlu3pZ6+6Vq3CnBL5lMn19GS0EPgDibarGoHkFXYltrKknUDqAaQUAT+I7Ujvn6fyDXG+79K3uCZISoQCb7BGfZgOAI+VrFwqTt9t9amEkPEGIuQ3OFzylTF+7s935KwVQeSHmJ9c2SwNuGwrqvWnSIwwytDywOgp6Jb6p+IdBhNXbGIuOamUSbVas07/0p4QWNPrGEwxNg1sN0nX7SDgKhAWUov1XEvtr9AKNDqrGZ+CY49xJu+gabSrVPvCeSsUotgK0NyrU7QnXIs6m87+5RceClB89rMtdxYUl4kfNXERnVi8SwYAQ==",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01H3uyc21PdRMvdE46pupYCy",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "preference",
+      "subject": "order.brunch_uplift",
+      "statement": "Plan brunch at 50% over last weekend, and use that from now on.",
+      "value_json": "{\"uplift\": 0.5}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01H3uyc21PdRMvdE46pupYCy",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"c43faef878c6\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan brunch at 50% over last weekend, and use that from now on.\", \"value\": {\"uplift\": 0.5}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:12:49-05:00\", \"confirmed_at\": \"2026-11-03T22:12:49-05:00\", \"supersedes\": \"4a4bd1002ad6\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"4a4bd1002ad6\", \"kind\": \"preference\", \"subject\": \"order.brunch_uplift\", \"statement\": \"Plan weekend breakfast ingredients at last weekend's pace plus this uplift, since the owner expects a busier brunch and there are no booking numbers.\", \"value\": {\"uplift\": 0.25}, \"source\": \"human:onboarding-defaults\", \"recorded_at\": \"2026-11-03T22:12:41-05:00\", \"confirmed_at\": \"2026-11-03T22:12:41-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "I recorded a preference, order.brunch_uplift, with the value {\"uplift\": 0.5}. Weekend brunch forecasts will now use last weekend's sales plus 50%.\n\nThis replaces the earlier onboarding default of 0.25 (25%). That earlier value wasn't a statement from you in this conversation. It stays in the ledger history as superseded.\n\nI haven't re-run any weekend forecast or order sizing with the new uplift. I can do that for a specific item if you'd like.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

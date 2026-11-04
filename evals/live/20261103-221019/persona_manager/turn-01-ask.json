@@ -1,0 +1,122 @@
+{
+ "name": "persona conversation 1",
+ "tags": [
+  "ask",
+  "memory",
+  "gate",
+  "persona",
+  "why"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 2,
+  "input_tokens": 1261,
+  "output_tokens": 482,
+  "cache_read_tokens": 11012,
+  "usd": 0.0095444,
+  "revision": 1,
+  "user_text": "How many days of chicken do we have left, and when's the next Alder delivery?",
+  "calls": [
+   {
+    "name": "stock_runway",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "list_vendors",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "get_beliefs",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   }
+  ],
+  "tool_calls": [
+   "stock_runway",
+   "list_vendors",
+   "get_beliefs"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "How many days of chicken do we have left, and when's the next Alder delivery?"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "id": "toolu_019TcWk39361k8HQy38ca95s",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "ingredient": "Chicken thigh boneless skinless"
+     },
+     "name": "stock_runway",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01HCAMnLMEew2wKA5rTeUAsY",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "list_vendors",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01LTadKeW1Sy2QhUmXEv3rjh",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "",
+      "subject": "vendor.V1.delivery_days"
+     },
+     "name": "get_beliefs",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019TcWk39361k8HQy38ca95s",
+     "content": "{\"revision\": 1, \"burn_window\": [\"2026-09-28\", \"2026-10-04\"], \"rows\": [{\"ingredient\": \"Chicken thigh boneless skinless\", \"on_hand\": 47.9, \"unit\": \"lb\", \"counted_at\": \"2026-10-04T23:00:00-04:00\", \"burn_per_day\": 24.4314, \"runway_days\": 1.9606, \"daily_service_item\": true, \"vendor\": \"Alder Wholesale\", \"planning_delivery_days\": [\"Monday\", \"Wednesday\"], \"count_cite\": \"inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1\"}]}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HCAMnLMEew2wKA5rTeUAsY",
+     "content": "{\"revision\": 1, \"vendors\": [{\"cite\": \"vendors.csv SITE-01 V1 rev1\", \"vendor_id\": \"V1\", \"vendor_name\": \"Alder Wholesale\", \"account_number\": \"AC-417\", \"delivery_days\": [\"Monday\", \"Thursday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V2 rev1\", \"vendor_id\": \"V2\", \"vendor_name\": \"Juniper Produce\", \"account_number\": \"JP-228\", \"delivery_days\": [\"Monday\", \"Wednesday\", \"Friday\"], \"last_reviewed\": \"2026-09-14\"}, {\"cite\": \"vendors.csv SITE-01 V3 rev1\", \"vendor_id\": \"V3\", \"vendor_name\": \"Copper Pantry Supply\", \"account_number\": \"CP-609\", \"delivery_days\": [\"Monday\"], \"last_reviewed\": \"2026-09-14\"}]}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LTadKeW1Sy2QhUmXEv3rjh",
+     "content": "{\"onboarded_at\": \"2026-11-03T22:12:41-05:00\", \"beliefs\": [{\"id\": \"c162c81547b1\", \"kind\": \"assertion\", \"subject\": \"vendor.V1.delivery_days\", \"statement\": \"Note N09: Alder Wholesale delivers Monday, Wednesday; orders by noon the day before.\", \"value\": {\"cutoff\": \"noon the day before\", \"days\": [\"Monday\", \"Wednesday\"]}, \"source\": \"note:N09\", \"recorded_at\": \"2026-11-03T22:12:41-05:00\", \"confirmed_at\": \"2026-11-03T22:12:41-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": 1}], \"conflicts\": []}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Chicken thigh boneless skinless has 47.9 lb on hand. That's about 1.96 days at the last week's burn of 24.4314 lb per day (inventory_counts.csv SITE-01 COUNT-CLOSE-CHICKEN rev1).\n\nPlanning has Alder Wholesale delivering Monday and Wednesday, with orders due by noon the day before. This comes from note N09 and is recorded in the ledger as an assertion (vendor.V1.delivery_days). The vendor sheet still lists Monday and Thursday, but it was last reviewed 2026-09-14 and may be stale (vendors.csv SITE-01 V1 rev1).\n\nI can't tell you the calendar date of the next delivery. The tools don't give me today's date, and I don't know which day the count was taken after. If Thursday is actually right, the gap would be longer than the chicken lasts. Confirming the delivery days with Alder would settle it.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

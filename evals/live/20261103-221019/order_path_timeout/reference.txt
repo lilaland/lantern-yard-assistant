@@ -1,0 +1,81 @@
+Scenario goal: The real order path runs under the supplier-timeout scenario (draft, operator approval, submit with the response lost, verified by reference); afterwards the person asks what happened and the assistant must answer from the ledger with exact status words.
+
+Order proposal (code):
+Order proposal — Alder Wholesale (V1) — computed at dataset revision 1
+Delivery: Wednesday 2026-10-07; order by Tuesday 12:00 (Monday/Wednesday route; cutoff noon the day before). Covers today through Sunday 2026-10-11 = 7 days, plus 1 buffer day(s).
+
+ingredient                            on hand  use/day  days  uplift    need   short  SKU             pack cases    est $
+-------------------------------------------------------------------------------------------------------------------------
+Chicken thigh boneless skinless      47.9 lb     24.43     8     0.0   195.5   147.6  AW-CHK20      20 lb      8   584.00
+Large shell eggs                       84 each    38.86     8    66.0   376.9   292.9  V1-EGG       180 each     2    86.40
+Shredded cheddar                    14.68 lb      5.74     8     2.0    47.9    33.3  V1-CHEESE     10 lb      4   144.00
+  Chicken thigh boneless skinless: SKU AW-CHK20: preference order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults)
+  Large shell eggs: SKU V1-EGG: most recently purchased (2026-09-30)
+  Large shell eggs: uplift 25% on 2 weekend day(s): +66.0 each
+  Shredded cheddar: SKU V1-CHEESE: most recently purchased (2026-09-30)
+  Shredded cheddar: uplift 25% on 2 weekend day(s): +2.0 lb
+
+Not counted: INV-099 (40 lb Chicken thigh boneless skinless, status received, delivery 2026-10-06) is not counted as supply: invoice.INV-099.physically_received=False (note:N15).
+
+Estimated total $814.40 at the last invoiced unit cost per SKU (an estimate; orders do not carry prices). Under your $1,000 unflagged limit.
+Warning: INV-099 is received to land Tuesday 2026-10-06, inside this window, but is not counted. If it does arrive you will carry about 40 lb of Chicken thigh boneless skinless beyond this order; if that is likely, say so in `ask` and the proposal shrinks.
+Warning: Chicken thigh boneless skinless: 47.9 lb covers about 2.0 days but the first feasible Alder Wholesale delivery is Wednesday 2026-10-07, 2 day(s) away. Ask about an earlier drop or a pickup.
+Applied: order.buffer_days=1 (human:onboarding-defaults), order.cover_through=Sunday (human:onboarding-defaults), order.brunch_uplift=0.25 (human:onboarding-defaults), order.max_unflagged_usd=1000 (human:onboarding-defaults), order.sku.ING-CHICKEN=AW-CHK20 (human:onboarding-defaults), ingredient.ING-CHICKEN.count_unit=lb (human:onboarding-defaults), inbound.on_hand_rule=physical_confirmation (human:onboarding-defaults), vendor.V1.delivery_days=Monday/Wednesday (note:N09)
+
+Exact order the draft will contain:
+{
+ "site_id": "SITE-01",
+ "vendor_id": "V1",
+ "lines": [
+  {
+   "sku": "AW-CHK20",
+   "quantity": 8,
+   "unit": "case"
+  },
+  {
+   "sku": "V1-EGG",
+   "quantity": 2,
+   "unit": "case"
+  },
+  {
+   "sku": "V1-CHEESE",
+   "quantity": 4,
+   "unit": "case"
+  }
+ ]
+}
+
+order path: draft D-e3e407a75800 created, operator approved, submitted -> [accepted] The response to our submission was lost, but the supplier had recorded the order. Verified by lookup: order O-0812e3c3dec3 for reference D-e3e407a75800, status accepted. Accepted means the supplier recorded it, not that it has shipped.
+
+Beliefs in force at the end:
+Ledger: onboarded 2026-11-03T22:12
+  kind         active  superseded  conflicted
+  policy           4           0           0
+  preference       6           0           0
+  assertion        4           0           0
+  observation      0           0           0
+
+Retained (human; a person changes these, data never does):
+  policy      inbound.on_hand_rule                 rule=physical_confirmation         human:onboarding-defaults  recorded 2026-11-03T22:12
+  policy      ingredient.ING-CHICKEN.count_unit    unit=lb                            human:onboarding-defaults  recorded 2026-11-03T22:12
+  policy      recipes.missing_item_rule            rule=unknown_and_flag              human:onboarding-defaults  recorded 2026-11-03T22:12
+  policy      sources.precedence                   rule=newer_notes_and_invoices_override_reference_tables human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  invoices.price_anomaly_ratio         ratio=2                            human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  order.brunch_uplift                  uplift=0.25                        human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  order.buffer_days                    days=1                             human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  order.cover_through                  weekday=Sunday                     human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  order.max_unflagged_usd              usd=1000                           human:onboarding-defaults  recorded 2026-11-03T22:12
+  preference  order.sku.ING-CHICKEN                sku=AW-CHK20, vendor_id=V1         human:onboarding-defaults  recorded 2026-11-03T22:12
+
+Assertions (facts; rechecked when the dataset revision changes):
+  assertion   invoice.INV-099.delivery_date        date=2026-10-06                    invoice:INV-099@rev1  recorded 2026-11-03T22:12
+  assertion   invoice.INV-099.physically_received  received=False                     note:N15  recorded 2026-11-03T22:12
+  assertion   invoice.INV-099.status               status=received                    invoice:INV-099@rev1  recorded 2026-11-03T22:12
+  assertion   vendor.V1.delivery_days              cutoff=noon the day before, days=Monday, Wednesday note:N09  recorded 2026-11-03T22:12
+
+Observations (detector output; rechecked every run): 0 current, 0 cleared, last revision n/a, last run never
+
+Drafts:
+  D-e3e407a75800  accepted           V1  order_id=O-0812e3c3dec3  2026-11-03T22:12
+
+Model cost so far: no usage log yet

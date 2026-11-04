@@ -1,0 +1,151 @@
+{
+ "name": "manager asserts a date",
+ "tags": [
+  "correction",
+  "conflict",
+  "recheck",
+  "brief",
+  "memory"
+ ],
+ "expect": {
+  "pass": true
+ },
+ "entry": {
+  "mode": "ask",
+  "model": "claude-sonnet-5-5",
+  "rounds": 3,
+  "input_tokens": 3036,
+  "output_tokens": 831,
+  "cache_read_tokens": 16518,
+  "usd": 0.0176856,
+  "revision": 1,
+  "user_text": "Alder told me INV-099 lands on Tuesday the 6th, record that.",
+  "calls": [
+   {
+    "name": "explain",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "list_invoices",
+    "ok": true,
+    "gate": null,
+    "ms": 0
+   },
+   {
+    "name": "record_belief",
+    "ok": true,
+    "gate": "approved",
+    "ms": 3
+   }
+  ],
+  "tool_calls": [
+   "explain",
+   "list_invoices",
+   "record_belief"
+  ]
+ },
+ "messages": [
+  {
+   "role": "user",
+   "content": "Alder told me INV-099 lands on Tuesday the 6th, record that."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQSuAcKEAgTGAI4AUIIdGhpbmtpbmcSDLodprpF/ImKQBVH7RoMROs0b5VSC62/0R6oIjBwPzlUzvLta6d0xBSthOuAFb2m5bCaNg6XNWvyB3XbpN+do9umTTBp5782u5mRIAgq1Qamg0NqwVxH1uVsvdtdksUqk38N7v4vn5WCNKI1JckEqYzIW14i4AxG0xke+EzJndl2I7nA3NZ1dsPL51XgPslCXMuLZUCqARu1WPmBdnqqHnj03Vkgf1OkKT/JKN8aZfsNs06g0gYQgZkrw/SoOaVKpX1WhjSJ9IAmf+39v0BeQRJPyweQ53Vm5ODrY5vjeLHGpGt2IcI4HXGZrXA0zA0eiTO401ai475GIZwF+AGf6Y4YE+QwkQh4bW1DrFHYVYedIEeFRQT+WE9aSGVu4ogMDuVaND7CkfuUlb2d/zepMeuBO0z/zABtqLoIFjhIR8EdnzXpDpcO+Dn/dSNjZxf7XqomRtcnvNkaSEN9SkQ5kcI1D0F8Fil+GnQ1kTz70GWeAr+PHmAgqS6urYhf81AYbRpuBpaNm9Nu6b5rLuGwr3B7xTYPPnoDfgQAE0PntTzfuhIEFShsjrdpDdHE6IHc1GsqKckNeHyXisZlBnEQS3N9MRX6P/wtmvMKvojNbJsbkpoR2OorcGH059oUKrdSsv72U5hvdQZBQlRW9ZhoWJgGZdE/tHeACQdEQXtQJ5GPCca50RnP5mxUpnRVFWzGOoFmBO/oCR25QxXW0CodgDijz6p6scRCsqM4N8qaStj6jkglZyfoFH6OMOcccDB/OY6ddpby9uCFXgqpy/P0uGfb4XyglNG5pTVTUwKanbh/SsoAHIIGxHO44K6MCkvKel++1BQbbsfVXaDcbDdjSHQ2J1qSmoh+kfI5B8o2Pwuh5Xwxc86e9oGv5pZTJSHhx8Cpdw0/bAMXI5DB7FdsLD9cw/GF3nnJgvYbWcJgvSxwjclMF2+4CNA+oKy+KE3mLLjzhIe25HkgkBywO5NvjYyXVPWywGL/Sp8CgqGeo1OZlk8U/y/7UFQuBWSXMwnCML4XnYxHXTfuNuVfJUUqUE1kGjObg6V7V/pOrFBjz9ayycAcWk4LGPiJboMyFHeBUzeVX13HigyFj9GD4gqo1JHDJuvC76NJtjWGSmI+42KnMock9A9BNulIjfDgHysr3ZJjAVpaF4qks4LzAkFm/iqj1McrXiJ6UoHWdWo9/qqFZYHNF0yPsEetZFBkarStFM0zTGStFVw+phW97dctV/dwoSQDGAE=",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01672tCP5MDbpkFTCUKmVWMC",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "subject": "invoice.INV-099.delivery_date"
+     },
+     "name": "explain",
+     "type": "tool_use"
+    },
+    {
+     "id": "toolu_01Rj1w8AHwS5KZqFkAqmP1mH",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "invoice_id": "INV-099",
+      "vendor_account": "",
+      "status": "",
+      "date_from": "",
+      "date_to": "",
+      "offset": 0
+     },
+     "name": "list_invoices",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01672tCP5MDbpkFTCUKmVWMC",
+     "content": "{\"subject\": \"invoice.INV-099.delivery_date\", \"chain\": [{\"id\": \"6c53d0a7a1f1\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"INV-099 delivery date is 2026-10-06.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T22:11:32-05:00\", \"confirmed_at\": \"2026-11-03T22:11:32-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}]}"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Rj1w8AHwS5KZqFkAqmP1mH",
+     "content": "{\"revision\": 1, \"total\": 1, \"offset\": 0, \"next_offset\": null, \"records\": [{\"cite\": \"invoice_headers.csv SITE-01 INV-099 rev1\", \"invoice_id\": \"INV-099\", \"vendor_name\": \"ALDER WHOLESALE LLC\", \"vendor_account\": \"AC-417\", \"invoice_date\": \"2026-10-04\", \"delivery_date\": \"2026-10-06\", \"status\": \"received\", \"tax\": \"0.00\", \"delivery_fee\": \"0.00\", \"invoice_total\": \"146.00\", \"currency\": \"USD\", \"invoice_number\": \"099\", \"lines\": [{\"cite\": \"invoice_lines.csv SITE-01 INV-099-L01 rev1\", \"row_id\": \"INV-099-L01\", \"invoice_id\": \"INV-099\", \"sku\": \"AW-CHK20\", \"item_description\": \"Chicken thigh 20 lb\", \"quantity\": 2.0, \"unit\": \"case\", \"unit_price\": \"73.00\", \"line_total\": \"146.00\", \"pack_quantity\": 20.0, \"pack_unit\": \"lb\", \"stock_quantity\": 40.0}]}]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "signature": "CAQSmwYKEAgTGAI4AUIIdGhpbmtpbmcSDD9fCYEofhOyHHnUexoMsGHthsDG7oJ3DKtaIjBH4aHHNeqfS9iPbou/l/jTNtdZMrYOOI9psYLYnz/ULXf/hcKJ/VYICc6uC5Q/tr0quAXNOBOoFg2VPzUPnm668jyx7qlmLIG7g7/PvTAphjsu4w2cfK7rT41ywwI/LRXlD4aqU1IVMGBle2LEVsTUYN/3b0Hjd8+aPTOY+R8TQX6w2dz2f9N7GkgibCO4mPfti/NzohKjNn0YrwyxhUQGaiMLS1Z354jrWt3RGRpBXjopn0qoNmVi2J+3BbkfjSdPNUXkFKaLZN8hTju6CjU0LEArb1pWsNxkZy9mluPC5ben/s0aPTFORYL1XXOwE4xJnvP5i8hLyW7vsYJckz6Yt+ONlqRkJRVmtMGtXHl6UnV+vkd4p+WF7X6/LhTi/RrR+gfyjsVUv2aZFGr3Tro86h1YkNkyENPvO6q3XHzByVlEAv9pcxIzavXNOu9CjU8s27f/T+/SELht894VwZSRLNVZ72+qKqCtz3cmwTdVoLArls7Hzt5ZHuvva/Q/ZGmy2G5qTVM8WDkGWDMw2SZ6dAtb++syWP7KiFAp/YEv7Kgih6GWgVO55HK9cE/FDbQr/eDsb0fg6nZW0nyJHXAdpIPDEE6C8TlHalIDwpgKG1zsSK4Up4vc2cVYc7PK4UXnU+WsoIA5oLpgmo5pOnWAXr4UtKoOVk5Mmc6cOeelV5/MRbZSrJTWlcpe9upZlnyG2WVXSyQ3iqUt/vJltwPfNxT2G+TH0StcBozcZGnTLX6xQpAvoREmR54a08r1Fpdigmf0Sq92nqc0qTLFQEpy/W8eZz7Pc7o4RxhT5nSBDGYFyNBu5mzUSsnQoCj9O63AA3jVkVGQGcBLUfg+3oFHbLa3UJV1xiY5JujslHpvfLVALBykGcF/H6Rx6WrEpBPcIH0LQTOYkILFrbzjAMUcjp2pbuD4oxyxSR3rKjDp9kvvXH4AncTeNui3vLOc4ix4CQPRDTj/DqeJdyPIAflIoamTuqsvV7HuPNUYAQ==",
+     "thinking": "",
+     "type": "thinking"
+    },
+    {
+     "id": "toolu_01GYt8YHM1W8KRQX2YZbopFW",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "kind": "assertion",
+      "subject": "invoice.INV-099.delivery_date",
+      "statement": "Alder told the manager INV-099 lands on Tuesday the 6th.",
+      "value_json": "{\"date\": \"2026-10-06\"}"
+     },
+     "name": "record_belief",
+     "type": "tool_use"
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GYt8YHM1W8KRQX2YZbopFW",
+     "content": "{\"action\": \"superseded\", \"recorded\": {\"id\": \"1d52d9099ed9\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"Alder told the manager INV-099 lands on Tuesday the 6th.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"human:ask\", \"recorded_at\": \"2026-11-03T22:11:38-05:00\", \"confirmed_at\": \"2026-11-03T22:11:38-05:00\", \"supersedes\": \"6c53d0a7a1f1\", \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"never\", \"revision\": null}, \"previous\": {\"id\": \"6c53d0a7a1f1\", \"kind\": \"assertion\", \"subject\": \"invoice.INV-099.delivery_date\", \"statement\": \"INV-099 delivery date is 2026-10-06.\", \"value\": {\"date\": \"2026-10-06\"}, \"source\": \"invoice:INV-099@rev1\", \"recorded_at\": \"2026-11-03T22:11:32-05:00\", \"confirmed_at\": \"2026-11-03T22:11:32-05:00\", \"supersedes\": null, \"conflicts_with\": null, \"status\": \"active\", \"recheck\": \"on_revision_change\", \"revision\": 1}}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "Recorded: assertion, subject invoice.INV-099.delivery_date, value date 2026-10-06 (Tuesday). It replaces the earlier record from the invoice itself, which already said 2026-10-06 (`invoice_headers.csv SITE-01 INV-099 rev1`). Nothing changes in the numbers, and it contradicts nothing.\n\nYour statement is now the source, and it won't be rechecked if the invoice is revised. The invoice still has status \"received\" even though the delivery date is after the Oct 4 closing count. I haven't recorded whether the chicken was physically received. If you tell me it hasn't arrived, I'll record that.",
+     "type": "text"
+    }
+   ]
+  }
+ ],
+ "event": null
+}

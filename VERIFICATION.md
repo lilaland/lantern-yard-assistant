@@ -59,9 +59,10 @@ No live scenario, judge calibration or persona turn has run with a real model.
 |---|---|---|---|---|
 | 21:54 | `evals/agentic.py --budget-usd 3` | 0/8, every scenario errored before any turn | $0.00 | Two API limits the fakes could not see: at most 16 union-typed tool parameters per request (we sent 22 nullable ones) and no `additionalProperties` schema in structured output. Fixed in `33c761e`. |
 | 21:56 | same, after the schema fix | 3/8 OK; judge calibrated 4/4 | $0.72 (229 s) | Found: citations written as `(file ID, rev1)` so no link matched; briefs of 301 and 345 words; the ledger dropped the lost-response story once a draft was accepted; the judge re-graded numbers it could not see; two rubrics contradicted the prompt. |
-| 22:04 | same, after prompt, ledger-note and rubric fixes | 6/8 OK; all deterministic checks pass; judge calibrated 4/4 | $0.60 (174 s) | Remaining: the eggs answer ran twelve sentences against a six-sentence rule (prompt tightened again); one rubric misread the "unknown" onboarding answer (reworded). Not yet re-run. |
+| 22:04 | same, after prompt, ledger-note and rubric fixes | 6/8 OK; all deterministic checks pass; judge calibrated 4/4 | $0.60 (174 s) | Remaining: the eggs answer ran twelve sentences against a six-sentence rule (prompt tightened again); one rubric misread the "unknown" onboarding answer (reworded). |
+| 22:10 | same, after those two changes | 6/8 OK; judge calibrated 4/4 | $0.57 (163 s) | Both earlier failures cleared. New: the brief opened with "Defaults are not in force; you are onboarded" (the prompt only covered the not-onboarded case; fixed); the eggs answer rounded a tool's 2.1622 days to 2.2 (the tool now reports the brief's rounding); ten sentences against a six-sentence rule (rule moved to the end of the prompt as a hard limit); one judge call over-strict about a need figure (rubric clarified). Not yet re-run. |
 
-Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 47 calls and $1.11 at 22:08, every model call from the two runs including judge and persona.
+Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 78 calls and $1.68 at 22:13, every model call from the three runs including judge and persona.
 
 ## Smoke path
 
@@ -90,8 +91,7 @@ revision 1, `why`, delivery correction and brief at revision 2, order proposal, 
 
 - **Live use through the UI and CLI by a person.** The model paths have now run live only through
   the agentic suite (two iterations, above); the narrated `brief` and `ask` commands and the web
-  chat have not yet been driven by a person. The suite's third iteration, after the last prompt and
-  rubric changes, has not been run.
+  chat have not yet been driven by a person. A fourth iteration, after the changes from the third, has not been run.
 - **Two-terminal rehearsal by hand.** Two scripted rehearsals are recorded in `demo/REHEARSAL.md`;
   the runbook has not yet been rehearsed with a person typing in terminal A.
 - **Scale dataset.** Only the small dataset is exercised; the scale file was never loaded.

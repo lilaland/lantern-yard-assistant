@@ -117,7 +117,7 @@ def test_analysis_tools_match_the_detectors_and_policies(ctx):
     assert rec["under_policy"]["gap"] == -5.0 and rec["trusting_office_status"]["gap"] == -45.0
     assert rec["under_policy"]["excluded_invoices"] == ["INV-099"]
     run = tools.execute(ctx, "stock_runway", {"ingredient": None})
-    assert run["rows"][0]["ingredient"] == "6 inch flour tortilla" and run["rows"][0]["runway_days"] == pytest.approx(1.587, abs=0.01)
+    assert run["rows"][0]["ingredient"] == "6 inch flour tortilla" and run["rows"][0]["runway_days"] == 1.6  # rounded like the brief's table
     chicken = next(r for r in run["rows"] if r["ingredient"].startswith("Chicken"))
     assert chicken["planning_delivery_days"] == ["Monday", "Wednesday"]
     wk = tools.execute(ctx, "weekend_forecast", {"pos_item_id": "M05"})

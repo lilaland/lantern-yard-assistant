@@ -346,7 +346,8 @@ def stock_runway(ctx, ingredient):
         vendor = detectors._vendor_for_ingredient(r, ing)
         vdays = list(ctx.params.delivery_days.get(vendor.vendor_id, vendor.delivery_days)) if vendor else []
         rows.append({"ingredient": ing, "on_hand": close.quantity, "unit": close.unit, "counted_at": close.counted_at,
-                     "burn_per_day": b, "runway_days": days, "daily_service_item": ing in daily,
+                     "burn_per_day": round(b, 2), "runway_days": round(days, 1) if days is not None else None,
+                     "daily_service_item": ing in daily,
                      "vendor": vendor.vendor_name if vendor else None, "planning_delivery_days": vdays,
                      "count_cite": close.cite})
     rows.sort(key=lambda x: x["runway_days"] if x["runway_days"] is not None else 1e9)

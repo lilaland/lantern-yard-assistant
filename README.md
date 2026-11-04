@@ -115,7 +115,7 @@ trusted only after it grades four calibration transcripts (two good, two bad) co
 (`evals/live/<timestamp>/report.md`) has the per-scenario table, the judge's evidence, a flow ×
 scenario coverage matrix and the spend; each turn is also written as a run record for
 `evals/run.py --runs`. Measured on 2026-11-03: about $0.60 per iteration with the Opus assistant and Sonnet judge;
-two iterations took the pass rate from 3/8 to 6/8 by fixing what the first one found (see
+three iterations took the pass rate from 3/8 to 6/8 and surfaced a different defect each time (see
 `VERIFICATION.md`, "Live runs").
 
 Two read-only tools were added for these flows: `sizing_preview` (what the order mode would propose
@@ -135,8 +135,8 @@ Default model `claude-opus-5-5` ($4 / $20 per million input / output tokens), ov
 `.marble/usage.jsonl` and the machine-wide `.marble/costs.jsonl`; `python -m assistant memory` and the
 UI's Memory page print the totals. Measured on 2026-11-03 through the agentic eval suite: a narrated
 brief costs about $0.04, an `ask` turn about $0.016, an order explanation about $0.04, a Sonnet judge
-verdict about $0.02; one full suite iteration of eight scenarios about $0.60. Spend across the two live
-iterations and their calibration: $1.11 (47 calls). The deterministic path (`--dry`) is what every test
+verdict about $0.02; one full suite iteration of eight scenarios about $0.60. Spend across three live
+iterations and their calibration: $1.68 (78 calls). The deterministic path (`--dry`) is what every test
 and the smoke demo exercise.
 
 ## Actual time spent

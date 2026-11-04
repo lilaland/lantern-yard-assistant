@@ -47,9 +47,9 @@ model and measured cost, actual time, unfinished work), `VERIFICATION.md`, `tran
 
 - No live model turn has been made through the UI yet; the gate card, timeline and cost line are
   exercised by tests with a fake API only.
-- The agentic suite has run live twice (3/8 then 6/8); the per-step cost table in `--list` is now
-  measured. The two remaining judge failures were a verbose `ask` answer (prompt tightened) and a
-  rubric that misread the "unknown" onboarding answer (reworded); a third iteration has not run.
+- The agentic suite has run live three times (3/8, 6/8, 6/8); the per-step cost table in `--list` is
+  measured. Each run surfaced a different defect; the fixes from the third (onboarded sentence in the
+  brief, tool-side rounding of runway days, hard length rule in `ask`) have not been re-run.
 - No person has yet driven the narrated `brief`, `ask` or the web chat live; the UI's gate card and
   timeline have been exercised by tests and by the suite's API-level turns only.
 - The Memory page's usage table links each row to a run transcript by timestamp prefix; two calls in

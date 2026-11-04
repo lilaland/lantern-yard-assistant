@@ -1,6 +1,6 @@
 # Status and unfinished work
 
-Updated after block 9 (2026-11-03 evening). This is the honest state of the submission; the
+Updated after block 10 (2026-11-03 evening). This is the honest state of the submission; the
 README's "unfinished work" section is written from it.
 
 ## Working and tested
@@ -19,6 +19,7 @@ README's "unfinished work" section is written from it.
 | Interactive onboarding: six questions from findings, options/defaults/ledger effects fixed in code, "unknown" keeps facts at evidence level, idempotent re-run, `--answers` for scripts | `assistant/onboarding.py`, `modes/onboard.py` | `tests/test_onboarding.py` incl. a CLI run followed by a brief |
 | `ask` REPL: deterministic commands (`why`, `memory`, `findings`, `set`) without a model; model answers with READ/ANALYSIS/MEMORY tools; conversation persisted per exchange and resumed across restarts | `assistant/modes/ask.py`, `prompts/ask.md` | `tests/test_ask.py` (fake model; CLI run changes the next order proposal) |
 | CLI: `onboard [--defaults|--answers|--again]`, `brief`, `ask [--once|--fresh]`, `order`, `why`, `memory`, `reset` | `assistant/cli.py` | subprocess tests above; `demo/demo.sh` |
+| Named safety tests: injection (SUP-V1-01 flagged, evidence-only text, no tool can submit, a disobedient model changes nothing, documents cannot write policies, server-enforced approval, no invented reference) and scope (client and fixture refuse SITE-02, no tool takes a site, no CSV or fixture-state access, agent token only) | `tests/test_injection.py`, `tests/test_scope.py` | `VERIFICATION.md` is the written record (116 tests) |
 
 ## Not yet verified
 
@@ -31,7 +32,6 @@ README's "unfinished work" section is written from it.
 
 | Block | Item | Why it matters |
 |---|---|---|
-| 10 | `test_injection.py`, `test_scope.py`, `VERIFICATION.md` | Injection and scope are covered indirectly (detector test, tool allowlist test, client site pinning) but not as named tests with a written record |
 | 11 | `ARCHITECTURE.md` (≤ 2 pages, diagram), README submission section, transcripts export and index, cost total | Required deliverables |
 | 12 | Two dress rehearsals of `demo/DEMO_SCRIPT.md` | |
 

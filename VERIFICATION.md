@@ -1,0 +1,77 @@
+# Verification record
+
+What the test suite proves, what it does not, and what failed on the way. Numbers are from the
+run on 2026-11-03 at 21:00 local time, commit after block 10.
+
+## How to run
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Every test runs against a real `simulator.py` started by `tests/conftest.py` on a free port with a
+throwaway state file. Operator actions (`approve`, `scenario`) run through `simulator.py` as a
+subprocess, exactly as a person would in the second terminal; the assistant code under test never
+receives the operator credential. Model calls are faked in tests; no test needs a network or a key.
+
+Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite time about 8 s.
+
+## Result
+
+116 passed, 0 failed, 0 skipped.
+
+| File | Tests | What it proves |
+|---|---|---|
+| `test_config.py` | 4 | Environment and `.env` loading; the fixed "now" per dataset revision; only the agent token is configurable |
+| `test_api_client.py` | 15 | Pagination to `next_offset: null`, filters, typed errors, SITE-01 pinned in the client and refused by the fixture, draft validation codes, draft → 409 → approve → submit → verify, idempotent resubmission, a lost response recovered by `client_reference`, revision bump under `delivery-correction` |
+| `test_records.py` | 6 | Row counts per resource, parsing, citations, `<evidence>` wrapping with escaping, revision dedupe (higher wins, equal-but-different is a conflict), revision-2 records |
+| `test_analysis.py` | 11 | Pinned fixture numbers: theoretical use, purchases from captured pack sizes, reconciliation gaps (eggs exact, tortillas −48, chicken −5/−45), invoice checks (INV-009 +$47.50, INV-010 10x), price history, runway, weekend forecast |
+| `test_detectors.py` | 10 | Every planted anomaly has a finding; the phantom receipt headlines at revision 1; ranking is deterministic; every finding is cited, SITE-01 scoped and revision stamped; at revision 2 the phantom clears, chicken is −5 lb and N16 is cited |
+| `test_ledger.py` | 8 | Who may write what (policies and preferences only from people, observations only from detectors); unchanged vs superseded vs conflicted; a person resolving a conflict; persistence across reopen and across four separate processes; draft lifecycle |
+| `test_policies.py` | 8 | Defaults carry sources; ledger → detector params; a preference removes and restores a finding; a policy or a confirmed receipt flips INV-099; recheck across the correction (one cleared, two superseded, ten human beliefs untouched); a human statement contradicted by a correction is flagged, not overwritten |
+| `test_tools.py` | 6 | Per-mode allowlists; strict schemas with no `site_id`; free text only as `<evidence>`; analysis tools match the detectors; `record_belief` guard rails |
+| `test_llm.py` | 6 | All tool results in one user message, `is_error` on failures, allowlist enforced at execution, round and output-limit guards, a tool crash becomes an error result, missing key reported before any request, cost table |
+| `test_order_flow.py` | 9 | Fixture sizing (8 × AW-CHK20, 2 × eggs, 4 × cheddar for Wednesday 2026-10-07, est. $814.40); lines valid for the catalog; preferences and a confirmed receipt change the order; draft → 409 → approve → submit → verified; lost response recovered without a second draft; unknown result persisted, blocks the vendor, settles on restart; cancel never submits; the CLI across four processes |
+| `test_onboarding.py` | 9 | Six questions from the current findings; default answers equal the documented defaults under a human source; "unknown" keeps facts at evidence level; answers change the detectors; re-run asks nothing until `--again`; ordering values validated; CLI run then brief |
+| `test_ask.py` | 6 | The prompt lists every default subject; deterministic commands without a model; the model records a stated preference through `record_belief` and the conversation persists and is trimmed; a model cannot record outside the tool; a `set` in one process changes the order proposal in the next |
+| `test_correction.py` | 4 | The "what changed" block across `delivery-correction` (headline move, cleared finding, new note N16 cited, corrected records, unchanged counts), "no changes" on a repeat, a conflict surfaced as "Needs you", the order warning for inbound scheduled inside the window, the CLI before/after |
+| `test_injection.py` | 7 | SUP-V1-01 is flagged and marked not acted on; free text reaches the model only inside escaped `<evidence>`; the brief request quotes it as excerpts; no tool exists that could submit, approve or draft; a model that obeys the document gets error results and changes nothing; documents cannot write policies; the fixture enforces approval and the flow never invents a reference or calls an order accepted without a lookup |
+| `test_scope.py` | 7 | The client refuses other sites before a request leaves; the fixture returns 403 for SITE-02; no tool takes or returns another site; every record and citation is SITE-01; the assistant source never imports `csv`, reads `data/`, or references `.state/`, `/control` or `/approve`; configuration carries only the agent token; every citation names file, row (or stated aggregate), and revision |
+
+## Smoke path
+
+`demo/demo.sh --no-pause` ran end to end on 2026-11-03 at 20:37 (exit 0): onboarding, brief at
+revision 1, `why`, delivery correction and brief at revision 2, order proposal, full order under
+`supplier-timeout` (draft, operator approval, response lost, verified by reference), resume, memory.
+
+## Failures found during development, and what changed
+
+| When | What failed | Cause | Fix | Guarded by |
+|---|---|---|---|---|
+| Block 2 | Revision-2 test: chicken gap −45 instead of −5 | On-hand stock was derived from the anomaly list; the corrected INV-099 (`scheduled`) had no anomaly and silently counted | Explicit rule `analysis.not_on_hand_invoices`; later made a manager policy | `test_detectors.py::test_after_delivery_correction_the_phantom_clears` |
+| Block 3 | Revision-2 footer showed 16 "changed" observations | The detector source string embedded the revision, so identical values looked new | Revision moved to its own column; unchanged = same value and same source | `test_policies.py::test_recheck_first_run_repeat_run_and_revision_change` |
+| Block 5 | Two pinned order numbers wrong (3 vs 4 cases; "nothing to order" vendor) | Author arithmetic, not code | Recomputed by hand and re-pinned | `test_order_flow.py` |
+| Block 5 | Eggs warned about a pre-delivery gap | Seven-day average applied to a weekend-only item | Warning limited to daily-service ingredients | `test_order_flow.py::test_proposal_on_the_fixture_with_default_preferences` |
+| Block 7 | "unknown" answer on the route question crashed | Evidence belief spliced into the outer tuple instead of nested | Nested | `test_onboarding.py::test_unknown_keeps_facts_at_evidence_level` |
+| Block 8 | `set` command rejected valid JSON | `shlex` stripped the quotes | Plain `split(None, 2)` | `test_ask.py::test_dry_commands_work_without_a_model` |
+| Block 8 | Fake API saw requests grow after the call | The loop handed the fake its live message list | Loop passes a snapshot per request | `test_llm.py`, `test_ask.py` |
+| Block 8 | Runbook claimed the office-status policy alone flips INV-099 | A recorded receipt fact outranks the policy by design | Runbook corrected to the fact | `test_policies.py::test_a_policy_changes_how_inv099_is_treated` |
+| Block 10 | "All orders" assertion failed only in the full suite | Shared simulator across test files | Assertion narrowed to the draft's own reference | `test_injection.py` |
+
+## Not verified
+
+- **Any live model call.** No `ANTHROPIC_API_KEY` was available during the build. The loop, the
+  prompts, the structured-output wording call and the fallbacks are tested with a fake API; the
+  installed SDK accepts every field the loop sends (checked by signature). No narrated brief,
+  order explanation, model-worded onboarding question or `ask` conversation has been produced by
+  a real model. Measured cost: $0.
+- **Two-terminal rehearsal by hand.** The smoke script plays both roles; the runbook has not yet
+  been rehearsed with a person typing in terminal A (block 12).
+- **Scale dataset.** Only the small dataset is exercised; the scale file was never loaded.
+
+## Limits of what the tests can say
+
+- Theoretical use assumes recipe cards were followed; the data has no intermediate counts or
+  waste quantities, so a reconciliation gap is a signal, not a measurement.
+- The order cutoff rule is the one note N09 states, applied to every vendor.
+- Tests pin behaviour on this fixture's numbers; a different dataset would need its own pins.

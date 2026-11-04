@@ -37,7 +37,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Session overview, transcript re-export and render, time-log cross-check, repo cleanup, GitHub push, private review | 08:42 | 08:47 | ~0.2 | |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~1.65 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Flow improvements (additional): confirm before questions, memory intro + dimmed spotlights + in-place edits + add-to-memory, visible recheck with its effect, editable proposal with worded revisions, operator command how-to with port/state, planner of what to order next, 6 tests | 09:15 | 09:23 | ~0.6 | browser run in dry mode; worded revision needs a key and is untested live |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.25 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

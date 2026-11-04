@@ -22,6 +22,22 @@ from .ordering import Proposal
 APPROVE_COMMAND = "python3 simulator.py approve --draft-id {draft_id}"
 
 
+def approve_command(draft_id: str, api_base: str | None = None) -> str:
+    """The operator's command, with --port when the simulator is not on 8765 and --state when the operator
+    told us the fixture's state path (MARBLE_SIM_STATE); the assistant never reads that path itself."""
+    import os
+    import urllib.parse
+    cmd = APPROVE_COMMAND.format(draft_id=draft_id)
+    if api_base:
+        port = urllib.parse.urlsplit(api_base).port
+        if port and port != 8765:
+            cmd += f" --port {port}"
+    state = os.environ.get("MARBLE_SIM_STATE")
+    if state:
+        cmd += f" --state {state}"
+    return cmd
+
+
 @dataclass
 class Outcome:
     state: str            # accepted | unknown | awaiting_approval | failed | cancelled
@@ -66,6 +82,20 @@ class OrderFlow:
             raise RuntimeError(f"server draft differs from the proposal: {resp.get('order')} vs {proposal.order}")
         return self.ledger.save_draft(resp["draft_id"], proposal.vendor_id, resp["order"], resp.get("status", "awaiting_approval"))
 
+    def create_draft_from_lines(self, vendor_id: str, lines: list[dict], note: str) -> Draft:
+        """A draft from lines a person edited (validated against the catalog by ordering.validate_lines first)."""
+        blocked = self.blocked_vendors()
+        if vendor_id in blocked:
+            b = blocked[vendor_id]
+            raise RuntimeError(f"draft {b.draft_id} for {vendor_id} is {b.status}; resolve it before drafting again")
+        order = {"site_id": "SITE-01", "vendor_id": vendor_id, "lines": [{"sku": l["sku"], "quantity": int(l["quantity"]), "unit": l["unit"]} for l in lines]}
+        resp = self.client.create_draft(vendor_id, order["lines"])
+        if resp.get("order") != order:
+            self.ledger.save_draft(resp["draft_id"], vendor_id, resp.get("order", {}), "failed")
+            raise RuntimeError(f"server draft differs from the edited lines: {resp.get('order')} vs {order}")
+        d = self.ledger.save_draft(resp["draft_id"], vendor_id, resp["order"], resp.get("status", "awaiting_approval"))
+        return self.ledger.update_draft(d.draft_id, d.status, note=note)
+
     def cancel(self, draft_id: str) -> Draft:
         d = self.ledger.draft(draft_id)
         if d is None:
@@ -89,7 +119,7 @@ class OrderFlow:
             if e.code == "approval_required":
                 d = self.ledger.update_draft(draft_id, "awaiting_approval", last_error=e.code)
                 return Outcome("awaiting_approval", f"The supplier reports {draft_id} is not approved; nothing was "
-                               f"submitted. Approve it with: {APPROVE_COMMAND.format(draft_id=draft_id)}", draft=d)
+                               f"submitted. Approve it with: {approve_command(draft_id, self.client.base)}", draft=d)
             d = self.ledger.update_draft(draft_id, "failed", last_error=e.code)
             return Outcome("failed", f"The supplier refused {draft_id}: {e.code}.", draft=d)
         except ApiError as e:
@@ -183,6 +213,6 @@ class OrderFlow:
                 out.append(self.submit(d.draft_id))
             else:
                 out.append(Outcome(status, f"{d.draft_id} is {status.replace('_', ' ')}" +
-                                   ("" if status == "approved" else f"; approve with: {APPROVE_COMMAND.format(draft_id=d.draft_id)}"),
+                                   ("" if status == "approved" else f"; approve with: {approve_command(d.draft_id, self.client.base)}"),
                                    draft=self.ledger.draft(d.draft_id)))
         return out

@@ -203,3 +203,47 @@ def test_outcome_note_survives_acceptance_and_old_ledgers_migrate(records, ledge
     con.commit(); con.close()
     with Ledger(old) as l:
         assert l.draft("D-old").note is None and l.update_draft("D-old", "accepted", note="migrated").note == "migrated"
+
+
+def test_edited_lines_are_validated_and_drafted_with_a_note(records, ledger, flow, client, sim, monkeypatch):
+    from assistant.orderflow import approve_command
+    p = ordering.plan_order(records, ledger, "V1")
+    with pytest.raises(ValueError, match="not a catalog SKU"):
+        ordering.validate_lines(records, "V1", [{"sku": "V2-PEPPER", "quantity": 1}])
+    with pytest.raises(ValueError, match="outside 1..100"):
+        ordering.validate_lines(records, "V1", [{"sku": "AW-CHK20", "quantity": 0}])
+    with pytest.raises(ValueError, match="appears twice"):
+        ordering.validate_lines(records, "V1", [{"sku": "AW-CHK20", "quantity": 1}, {"sku": "AW-CHK20", "quantity": 2}])
+    with pytest.raises(ValueError, match="at least one line"):
+        ordering.validate_lines(records, "V1", [])
+    lines = ordering.validate_lines(records, "V1", [{"sku": "AW-CHK20", "quantity": 6}, {"sku": "V1-EGG", "quantity": 2}])
+    assert lines[0]["unit"] == "case" and lines[0]["ingredient"] == "Chicken thigh boneless skinless" and lines[0]["pack"] == "20 lb"
+    diff = ordering.lines_diff(p.api_lines, [{"sku": l["sku"], "quantity": l["quantity"]} for l in lines])
+    assert diff == ["AW-CHK20: 8 -> 6", "removed V1-CHEESE (was 4)"]
+    d = flow.create_draft_from_lines("V1", lines, note="manager edited the proposal: " + "; ".join(diff))
+    assert d.order["lines"] == [{"sku": "AW-CHK20", "quantity": 6, "unit": "case"}, {"sku": "V1-EGG", "quantity": 2, "unit": "case"}]
+    assert "manager edited" in d.note and d.status == "awaiting_approval"
+    assert client.get_draft(d.draft_id)["order"] == d.order
+    # the operator's command carries the fixture's port and, when the operator told us, its state path
+    cmd = approve_command(d.draft_id, client.base)
+    assert cmd.startswith(f"python3 simulator.py approve --draft-id {d.draft_id} --port {sim.port}") and "--state" not in cmd
+    monkeypatch.setenv("MARBLE_SIM_STATE", ".state/live.sqlite")
+    assert approve_command(d.draft_id, "http://127.0.0.1:8765").endswith(f"--draft-id {d.draft_id} --state .state/live.sqlite")
+
+
+def test_planner_orders_vendors_by_cutoff_and_sees_drafts(records, ledger, flow, client, sim):
+    plan = ordering.planner(records, ledger)
+    by = {v["vendor_id"]: v for v in plan}
+    assert set(by) == {"V1", "V2", "V3"}
+    assert by["V1"]["delivery_date"].isoformat() == "2026-10-07" and by["V1"]["urgency"] in ("today", "this week")
+    assert any(r["ingredient"].startswith("Chicken") for r in by["V1"]["runs_out_before_delivery"])
+    assert by["V1"]["lines"][0]["sku"] == "AW-CHK20" and by["V1"]["accepted"] == [] and by["V1"]["open_draft"] is None
+    assert [v["vendor_id"] for v in plan][0] in ("V2", "V3", "V1")  # sorted by urgency then cutoff, never alphabetically by accident
+    assert all(v["hours_to_cutoff"] is None or isinstance(v["hours_to_cutoff"], float) for v in plan)
+    d = flow.create_draft(ordering.plan_order(records, ledger, "V1"))
+    sim.approve(d.draft_id)
+    flow.submit(d.draft_id)
+    by2 = {v["vendor_id"]: v for v in ordering.planner(records, ledger)}
+    assert by2["V1"]["accepted"][0]["draft_id"] == d.draft_id and by2["V1"]["accepted"][0]["order_id"].startswith("O-")
+    assert by2["V1"]["urgency"] == "ordered" and by2["V1"]["lines"] == []  # the accepted order covers the proposal
+    assert by2["V1"]["proposed_lines"][0]["sku"] == "AW-CHK20"

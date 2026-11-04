@@ -327,3 +327,31 @@ def test_client_wizard_and_sample_prompt_flows_in_api_order(sim, tmp_path):
         assert a["counts"]["HIGH"] >= 1 and all(x["action"] for x in a["alerts"])
     finally:
         httpd.shutdown()
+
+
+def test_onboarding_effect_edited_draft_revise_and_planner(sim, tmp_path):
+    cfg = Config(api_base=sim.base, agent_token="demo-agent-site-01", model="m", effort="low", state_dir=tmp_path / ".marble", dry=True)
+    httpd, app, base = web.start_in_thread(cfg)
+    try:
+        for q in get(base, "/api/onboarding/plan")[1]["questions"]:
+            post(base, "/api/onboarding/answer", {"id": q["id"], "answer": "office" if q["id"] == "inbound" else q["default"]})
+        code, r = post(base, "/api/onboarding/complete")
+        fx = r["effect"]
+        assert code == 200 and fx["before"] == 17 and fx["after"] >= 16
+        assert any(c["id"] == "phantom_receipt:INV-099" and c["from"] == "HIGH" and c["to"] == "LOW" for c in fx["severity_changed"])
+        assert any(a.startswith("inbound.on_hand_rule=office_status") for a in fx["applied"]) and fx["critical_after"] >= 1
+        # the draft carries the manager's edits and a note; bad edits are refused with the reason
+        code, r = post(base, "/api/order/draft", {"vendor": "V1", "lines": [{"sku": "AW-CHK20", "quantity": 0}]})
+        assert code == 400 and "outside 1..100" in r["error"]
+        code, r = post(base, "/api/order/draft", {"vendor": "V1", "lines": [{"sku": "AW-CHK20", "quantity": 5}, {"sku": "V1-EGG", "quantity": 2}]})
+        assert code == 201 and r["edited"] and r["draft"]["note"].startswith("manager edited") and "How" not in r["how_to"][:3]
+        assert r["draft"]["order"]["lines"][0] == {"sku": "AW-CHK20", "quantity": 5, "unit": "case"}
+        assert f"--port {sim.port}" in r["approve_command"] and "operator's terminal" in r["how_to"]
+        code, r = post(base, "/api/order/revise", {"vendor": "V1", "request": "drop the cheese"})
+        assert code == 400 and "no model" in r["error"]
+        pl = get(base, "/api/order/planner")[1]
+        assert {v["vendor_id"] for v in pl["vendors"]} == {"V1", "V2", "V3"}
+        v1 = next(v for v in pl["vendors"] if v["vendor_id"] == "V1")
+        assert v1["open_draft"]["status"] == "awaiting_approval" and v1["lines"] and v1["order_by"]
+    finally:
+        httpd.shutdown()

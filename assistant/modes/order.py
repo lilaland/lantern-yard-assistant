@@ -9,7 +9,7 @@ from .. import detectors, llm, ordering, policies, tools
 from ..api_client import ApiClient, ServerUnavailable
 from ..config import Config
 from ..ledger import Ledger
-from ..orderflow import APPROVE_COMMAND, OrderFlow, Outcome
+from ..orderflow import OrderFlow, Outcome, approve_command
 from ..records import load_all
 
 EXIT_AWAITING = 3
@@ -85,8 +85,9 @@ def run(cfg: Config, vendor: str = "V1", propose_only: bool = False, yes: bool =
         draft = flow.create_draft(proposal)
         print(f"\n[drafted] {draft.draft_id} — status {draft.status.replace('_', ' ')}. Exact order held by the supplier:")
         print(json.dumps(draft.order, indent=1))
-        print(f"\nTo approve, run in another terminal:\n  {APPROVE_COMMAND.format(draft_id=draft.draft_id)}\n"
-              f"Ctrl-C here cancels (the draft stays unsubmitted).")
+        print(f"\nTo approve, run in the operator's terminal (the one that started the simulator, from this folder):\n"
+              f"  {approve_command(draft.draft_id, cfg.api_base)}\n"
+              f"If the simulator was started with --state, add the same --state. Ctrl-C here cancels (the draft stays unsubmitted).")
 
         # 4. Wait for a person. Polling only reads the draft; nothing is submitted until the server says approved.
         deadline = time.time() + timeout

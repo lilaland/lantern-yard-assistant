@@ -293,3 +293,95 @@ def rationale(p: Proposal) -> str:
     out.append("Exact order the draft will contain:")
     out.append(json.dumps(p.order, indent=1))
     return "\n".join(out)
+
+
+# ----- manager edits and the planner ------------------------------------------------------------
+
+def validate_lines(records: Records, vendor_id: str, lines: list[dict]) -> list[dict]:
+    """Lines a person (or the model on their behalf) edited: catalog SKUs of this vendor, integer 1..100,
+    the vendor's order unit, no duplicates. Returns normalised lines or raises ValueError with the reason."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for l in lines or []:
+        sku = str(l.get("sku", "")).strip()
+        cat = records.catalog_item(vendor_id, sku)
+        if cat is None:
+            raise ValueError(f"{sku!r} is not a catalog SKU for {vendor_id}")
+        if sku in seen:
+            raise ValueError(f"{sku} appears twice")
+        seen.add(sku)
+        try:
+            qty = int(l.get("quantity"))
+        except (TypeError, ValueError):
+            raise ValueError(f"{sku}: quantity must be a whole number")
+        if not 1 <= qty <= 100:
+            raise ValueError(f"{sku}: quantity {qty} is outside 1..100 (drop the line to order none)")
+        out.append({"sku": sku, "quantity": qty, "unit": cat.order_unit, "description": cat.description,
+                    "pack": f"{cat.pack_quantity:g} {cat.pack_unit}", "ingredient": records.ingredient_for_sku(sku)})
+    if not out:
+        raise ValueError("an order needs at least one line")
+    if len(out) > 20:
+        raise ValueError("at most 20 lines")
+    return out
+
+
+def lines_diff(before: list[dict], after: list[dict]) -> list[str]:
+    b = {l["sku"]: l["quantity"] for l in before}
+    a = {l["sku"]: l["quantity"] for l in after}
+    out = []
+    for sku in sorted(set(b) | set(a)):
+        if sku in b and sku not in a:
+            out.append(f"removed {sku} (was {b[sku]})")
+        elif sku in a and sku not in b:
+            out.append(f"added {sku} x{a[sku]}")
+        elif b[sku] != a[sku]:
+            out.append(f"{sku}: {b[sku]} -> {a[sku]}")
+    return out or ["no change"]
+
+
+def planner(records: Records, ledger: Ledger) -> list[dict]:
+    """What to order next and when, per vendor: the next feasible delivery and its order-by moment, the
+    ingredients that run out before it, the proposed lines, the estimate, and any open or accepted draft."""
+    now, today = records.now, records.now.date()
+    burn, _ = an.daily_burn(records, 7)
+    counts = an.opening_and_closing(records)
+    daily = an.daily_service_ingredients(records)
+    drafts = ledger.drafts()
+    out = []
+    for v in records.vendors:
+        p = plan_order(records, ledger, v.vendor_id)
+        supplied = {m.ingredient_name for m in records.mappings if m.vendor_id == v.vendor_id}
+        runs_out = []
+        for ing in sorted(supplied):
+            if ing not in counts or ing not in daily:
+                continue
+            days = an.runway_days(counts[ing][1].quantity, burn.get(ing, 0.0))
+            if days is not None and p.delivery_date and days < (p.delivery_date - today).days + 0.5:
+                runs_out.append({"ingredient": ing, "days": round(days, 1)})
+        hours_to_cutoff = (p.order_by - now).total_seconds() / 3600 if p.order_by else None
+        vd = [d for d in drafts if d.vendor_id == v.vendor_id]
+        open_draft = next((d for d in reversed(vd) if d.status in ("drafted", "awaiting_approval", "approved", "submitting", "unknown")), None)
+        accepted = [d for d in vd if d.status == "accepted"]
+        # what an accepted order already covers: cases per SKU, subtracted from the proposal
+        covered: dict[str, int] = {}
+        for d in accepted:
+            for l in d.order.get("lines", []):
+                covered[l["sku"]] = covered.get(l["sku"], 0) + int(l.get("quantity", 0))
+        remaining = []
+        for l in p.lines:
+            left = l.cases - covered.get(l.sku, 0)
+            if left > 0:
+                remaining.append(l.api_line | {"ingredient": l.ingredient, "cases": left, "proposed": l.cases, "already_ordered": covered.get(l.sku, 0)})
+        urgency = ("nothing needed" if not p.lines else "ordered" if accepted and not remaining else
+                   "overdue" if hours_to_cutoff is not None and hours_to_cutoff < 0 else
+                   "today" if hours_to_cutoff is not None and hours_to_cutoff <= 24 else "this week")
+        out.append({"vendor_id": v.vendor_id, "vendor_name": v.vendor_name, "planning_days": p.planning_days,
+                    "delivery_date": p.delivery_date, "order_by": p.order_by, "hours_to_cutoff": round(hours_to_cutoff, 1) if hours_to_cutoff is not None else None,
+                    "window_end": p.window_end, "lines": remaining, "proposed_lines": [l.api_line | {"ingredient": l.ingredient, "cases": l.cases} for l in p.lines],
+                    "est_total_usd": p.est_total_usd, "over_max": p.over_max, "runs_out_before_delivery": runs_out,
+                    "warnings": p.warnings, "skipped": p.skipped, "open_draft": open_draft.__dict__ if open_draft else None,
+                    "accepted": [{"draft_id": d.draft_id, "order_id": d.order_id, "updated_at": d.updated_at, "lines": d.order.get("lines", [])} for d in accepted],
+                    "urgency": urgency})
+    order = {"overdue": 0, "today": 1, "this week": 2, "ordered": 3, "nothing needed": 4}
+    out.sort(key=lambda x: (order.get(x["urgency"], 9), x["hours_to_cutoff"] if x["hours_to_cutoff"] is not None else 1e9))
+    return out

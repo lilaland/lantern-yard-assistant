@@ -35,10 +35,22 @@
     return wrap;
   }
   const think = (on) => { pending += on ? 1 : -1; if (headAvatar) headAvatar.classList.toggle('thinking', pending > 0); };
+  // Dim everything except one element and pulse it; any click clears it.
+  function dimSpot(target, text) {
+    document.querySelector('.dim')?.remove();
+    if (!target) return;
+    const ov = el('div', { class: 'dim' }, el('div', { class: 'dim-text' }, text || ''));
+    target.classList.add('spot', 'spot-lit');
+    const clear = () => { ov.remove(); target.classList.remove('spot-lit'); target.removeEventListener('click', clear); };
+    ov.onclick = clear; target.addEventListener('click', clear);
+    document.body.append(ov);
+  }
+  const thinkingBubble = (text) => say('', 'Marbly', el('div', { class: 'row' }, el('span', { class: 'marbly-avatar thinking' , html: avatar(30).innerHTML }), el('span', { class: 'muted' }, text)));
 
   // ---------- feed ----------
-  const say = (text, who = 'Marbly', node = null) => {
+  const say = (text, who = 'Marbly', node = null, memo = false) => {
     const b = el('div', { class: `bubble ${who === 'Marbly' ? 'm' : 'u'}` }, who === 'Marbly' ? el('div', { class: 'who' }, avatar(22), ' Marbly') : el('div', { class: 'who' }, who), node || text);
+    if (memo) b.append(el('div', { class: 'memo-row' }, el('button', { class: 'ghost small', onclick: (e) => { e.target.disabled = true; b.append(memoryForm(typeof text === 'string' ? text.slice(0, 140) : '')); } }, '+ add to memory')));
     feed.append(b); b.scrollIntoView({ block: 'start', behavior: 'smooth' }); return b;
   };
   const closePanels = () => { for (const p of document.querySelectorAll('.sidepanel')) p.remove(); };
@@ -71,7 +83,7 @@
     if (!tour) return;
     if (tour.complete) { say("That's the setup done. The bell, the book and the order steps are always here, and the chips below are good places to start. Ask me anything about the numbers."); return; }
     if (tour.current === 'memory') { say("Step 3. Everything you just told me is in Memory: your rules, your preferences, and the facts I am tracking with where each one came from. Open the book to see it."); introduceCapabilities(); }
-    if (tour.current === 'order') say("Step 4, the big one. Let's place your first order together: I size it from your counts, recipes and rules, show every line and why, and nothing is sent until your operator approves it. Click the pulsing chip or the button above.");
+    if (tour.current === 'order') { say("Step 4, the big one. Let's place your first order together: I size it from your counts, recipes and rules, show every line and why, and nothing is sent until your operator approves it. Click the pulsing chip or the button above."); const chip = [...chips.querySelectorAll('button')].find(b => /next Alder order/i.test(b.textContent)); dimSpot(chip, 'Your first order starts here.'); }
   }
 
   // ---------- alerts inbox ----------
@@ -99,23 +111,53 @@
   }
 
   // ---------- memory (client view) ----------
+  function beliefEditor(x, onSaved) {
+    const keys = Object.keys(x.value || {});
+    const single = keys.length === 1;
+    const input = single ? el('input', { value: String(x.value[keys[0]]), style: 'width:160px' }) : el('textarea', {}, JSON.stringify(x.value));
+    const box = el('div', { class: 'row hidden' }, single ? el('span', { class: 'small muted' }, keys[0]) : null, input,
+      el('button', { onclick: async () => {
+        let value;
+        try { value = single ? { [keys[0]]: (typeof x.value[keys[0]] === 'number' ? Number(input.value) : input.value) } : JSON.parse(input.value); } catch { toast('not valid JSON'); return; }
+        try { const r = await api('/api/beliefs', { method: 'POST', body: { kind: x.kind, subject: x.subject, statement: `Changed in Memory: ${x.subject} = ${JSON.stringify(value)}`, value } }); toast(`remembered (${r.action})`); onSaved && onSaved(); } catch (e) { toast(e.message); }
+      } }, 'Save'));
+    return [el('button', { class: 'ghost small', onclick: () => box.classList.toggle('hidden') }, 'change'), box];
+  }
+  function memoryForm(prefill, onSaved) {
+    const subjects = ['order.buffer_days', 'order.brunch_uplift', 'order.cover_through', 'order.max_unflagged_usd', 'invoices.price_anomaly_ratio', 'inbound.on_hand_rule', 'sources.precedence', 'recipes.missing_item_rule', 'order.sku.ING-CHICKEN', 'invoice.INV-099.physically_received', 'vendor.V1.delivery_days'];
+    const kind = el('select', {}, ...['preference', 'policy', 'assertion'].map(k => el('option', { value: k }, k)));
+    const subject = el('input', { list: 'subjects', placeholder: 'subject, e.g. order.buffer_days', style: 'width:220px' });
+    const statement = el('input', { value: prefill || '', placeholder: 'in your words', style: 'width:100%' });
+    const value = el('input', { placeholder: 'value as JSON, e.g. {"days": 2}', style: 'width:220px' });
+    const dl = el('datalist', { id: 'subjects' }, ...subjects.map(sb => el('option', { value: sb })));
+    const form = el('div', { class: 'card', style: 'margin-top:6px' }, el('div', { class: 'small muted' }, 'Add to memory (recorded under your name, source human:web)'),
+      el('div', { class: 'row' }, kind, subject, dl), el('div', { class: 'row' }, statement), el('div', { class: 'row' }, value,
+        el('button', { onclick: async () => { let v; try { v = JSON.parse(value.value); } catch { toast('value must be JSON like {"days": 2}'); return; } try { const r = await api('/api/beliefs', { method: 'POST', body: { kind: kind.value, subject: subject.value.trim(), statement: statement.value.trim() || subject.value, value: v } }); form.replaceChildren(el('span', { class: 'chip on' }, `remembered [${r.action}]: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`)); onSaved && onSaved(); } catch (e) { toast(e.message); } } }, 'Remember'),
+        el('button', { class: 'ghost', onclick: () => form.remove() }, 'cancel')));
+    return form;
+  }
   async function openMemory() {
     const b = await api('/api/beliefs');
     const active = b.beliefs.filter(x => x.status === 'active');
-    const group = (title, xs, note) => el('div', { class: 'memgroup' }, el('h4', {}, title), note ? el('p', { class: 'small muted' }, note) : null,
-      ...(xs.length ? xs.map(x => el('div', { class: 'memrow' }, el('div', { class: 'st' }, x.statement), el('div', { class: 'meta' }, el('span', { class: 'v' }, JSON.stringify(x.value)), el('span', { class: 'src' }, x.source.startsWith('human:') ? 'you said so' : `from ${x.source}`)))) : [el('p', { class: 'muted small' }, 'nothing yet')]));
+    const group = (title, xs, note, editable) => el('div', { class: 'memgroup' }, el('h4', {}, title), note ? el('p', { class: 'small muted' }, note) : null,
+      ...(xs.length ? xs.map(x => el('div', { class: 'memrow' }, el('div', { class: 'st' }, x.statement), el('div', { class: 'meta' }, el('span', { class: 'v' }, JSON.stringify(x.value)), ...(editable ? beliefEditor(x, openMemory) : []), el('span', { class: 'src' }, x.source.startsWith('human:') ? 'you said so' : `from ${x.source}`)))) : [el('p', { class: 'muted small' }, 'nothing yet')]));
     panel('Memory',
       el('p', { class: 'small muted' }, 'What I keep about how you run the kitchen. Rules and preferences change only when you say so. Facts from your records are rechecked whenever the data changes.'),
       b.conflicts.length ? el('div', { class: 'card gate' }, el('strong', {}, 'Needs you'), ...b.conflicts.map(c => el('p', { class: 'small' }, `${c.old.subject}: you said ${JSON.stringify(c.old.value)}; the record now says ${c.new ? JSON.stringify(c.new.value) : '?'}. Tell me which is right in chat.`))) : null,
-      group('Your rules', active.filter(x => x.kind === 'policy')),
-      group('Your preferences', active.filter(x => x.kind === 'preference'), 'Say "use two days of buffer from now on" in chat to change one.'),
-      group('Facts I am tracking', active.filter(x => x.kind === 'assertion'), '"you said so" is your word; a note or invoice id means I read it there and will recheck it.'),
+      group('Your rules', active.filter(x => x.kind === 'policy'), 'Change one here, or tell me in chat.', true),
+      group('Your preferences', active.filter(x => x.kind === 'preference'), 'Say "use two days of buffer from now on" in chat, or change one here.', true),
+      group('Facts I am tracking', active.filter(x => x.kind === 'assertion'), '"you said so" is your word; a note or invoice id means I read it there and will recheck it.', true),
+      el('div', { class: 'chips' }, el('button', { onclick: (e) => e.target.parentNode.after(memoryForm('', openMemory)) }, 'Add something to memory')),
       el('p', { class: 'small muted' }, `${active.filter(x => x.kind === 'observation' && !(x.value || {}).cleared).length} current observations from the detectors are rechecked every run.`),
       el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); L.setDev(true); location.hash = '#/memory'; } }, 'Full memory (developer view)')));
     if (tour && !tour.done.memory) markTour('memory');
   }
 
   // ---------- order wizard ----------
+  const linesTable = (lines, editable, onChange) => el('table', {}, el('thead', {}, el('tr', {}, ...['ingredient', 'SKU', 'pack', 'cases', 'why'].map(h => el('th', {}, h)))),
+    el('tbody', {}, ...lines.map((l, i) => el('tr', { class: l.quantity === 0 ? 'dropped' : '' }, el('td', {}, l.ingredient || ''), el('td', {}, el('strong', {}, l.sku), el('div', { class: 'small muted' }, l.description || '')), el('td', {}, l.pack || `${l.pack_quantity || ''} ${l.pack_unit || ''}`),
+      el('td', {}, editable ? el('input', { type: 'number', min: 0, max: 100, value: String(l.quantity), style: 'width:64px', onchange: (e) => onChange(i, Number(e.target.value)) }) : el('strong', {}, String(l.quantity))),
+      el('td', { class: 'small' }, (l.notes || []).join('; ') || (l.need ? `need ${Number(l.need).toFixed(1)}, on hand ${l.on_hand}` : ''))))));
   async function openWizard(vendor = 'V1') {
     const steps = el('div', {}); const body = el('div', {});
     const setStep = (n) => { steps.replaceChildren(...['Review the proposal', 'Create the draft and get approval', 'Outcome'].map((t, i) => el('div', { class: `step ${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}` }, el('div', { class: 'n' }, String(i + 1)), el('span', {}, t)))); };
@@ -124,34 +166,54 @@
     let p;
     try { p = await api(`/api/order/proposal?vendor=${encodeURIComponent(vendor)}`); } catch (e) { body.replaceChildren(el('p', {}, e.message)); return; }
     if (!p.lines.length) { body.replaceChildren(el('p', {}, `Nothing to order from ${vendor} for the coverage window.`), el('pre', { class: 'block small' }, p.rationale)); return; }
-    const lines = el('table', {}, el('thead', {}, el('tr', {}, ...['ingredient', 'on hand', 'need', 'order', 'why'].map(h => el('th', {}, h)))),
-      el('tbody', {}, ...p.lines.map(l => el('tr', {}, el('td', {}, l.ingredient), el('td', {}, `${l.on_hand} ${l.pack_unit}`), el('td', {}, `${Number(l.need).toFixed(1)} ${l.pack_unit}`), el('td', {}, el('strong', {}, `${l.cases} × ${l.sku}`), el('div', { class: 'small muted' }, `${l.pack_quantity} ${l.pack_unit} per ${l.order_unit}`)), el('td', { class: 'small' }, (l.notes || []).join('; '))))));
-    const explain = el('div', {});
+    // the lines the draft will contain; the manager can change them before anything is drafted
+    let lines = p.lines.map(l => ({ sku: l.sku, quantity: l.cases, unit: l.order_unit, ingredient: l.ingredient, description: l.sku, pack: `${l.pack_quantity} ${l.pack_unit}`, notes: l.notes, need: l.need, on_hand: l.on_hand }));
+    const original = lines.map(l => ({ sku: l.sku, quantity: l.quantity }));
+    const tableBox = el('div', {}); const changes = el('div', { class: 'small' }); const explain = el('div', {});
+    const render = () => { tableBox.replaceChildren(linesTable(lines, true, (i, q) => { lines[i].quantity = q; render(); })); const d = []; for (const o of original) { const n = lines.find(l => l.sku === o.sku); if (!n || n.quantity === 0) d.push(`drop ${o.sku}`); else if (n.quantity !== o.quantity) d.push(`${o.sku}: ${o.quantity} → ${n.quantity}`); } for (const n of lines) if (!original.find(o => o.sku === n.sku) && n.quantity > 0) d.push(`add ${n.sku} ×${n.quantity}`); changes.replaceChildren(d.length ? el('span', {}, el('strong', {}, 'Your changes: '), d.join('; ')) : el('span', { class: 'muted' }, 'as proposed')); };
+    render();
+    const req = el('input', { placeholder: 'ask for a change in words, e.g. "make the chicken 6 cases and drop the cheese"', style: 'flex:1' });
     const cal = p.calendar;
     body.replaceChildren(...kids(
       el('p', {}, `${cal.delivery_date ? `Delivery ${cal.delivery_date}` : 'Next delivery'}${cal.order_by ? `, order by ${cal.order_by.slice(0, 16).replace('T', ' ')}` : ''}. Covers through ${cal.window_end} plus ${cal.buffer_days} buffer day(s). Nothing is sent until your operator approves it.`),
-      lines,
+      tableBox, changes,
+      el('div', { class: 'row' }, req, el('button', { class: 'ghost', onclick: () => revise() }, 'Ask Marbly to change it')),
+      el('p', { class: 'small muted' }, 'Edit the cases directly, or describe the change and Marbly proposes revised lines; the catalog check runs either way and nothing is drafted until you say so.'),
       p.not_counted.length ? el('p', { class: 'small' }, el('strong', {}, 'Not counted: '), p.not_counted.join(' ')) : null,
       p.warnings.length ? el('div', {}, ...p.warnings.map(w => el('p', { class: 'small' }, el('strong', {}, 'Heads up: '), w))) : null,
-      el('p', { class: 'small' }, `Estimated ${p.est_total_usd ? '$' + Number(p.est_total_usd).toFixed(2) : 'n/a'} at last invoiced prices${p.over_max ? ' (above your unflagged limit)' : ''}. Rules applied: ${p.applied.map(a => a.split(' (')[0]).join(', ')}.`),
+      el('p', { class: 'small' }, `Estimated ${p.est_total_usd ? '$' + Number(p.est_total_usd).toFixed(2) : 'n/a'} at last invoiced prices for the proposal as sized${p.over_max ? ' (above your unflagged limit)' : ''}. Rules applied: ${p.applied.map(a => a.split(' (')[0]).join(', ')}.`),
       el('div', { class: 'chips' }, el('button', { onclick: () => createDraft() }, 'Create the draft'), el('button', { onclick: () => explainIt() }, 'Explain this to me'), el('details', {}, el('summary', { class: 'small' }, 'full rationale'), el('pre', { class: 'block small' }, p.rationale))),
       explain));
+    async function revise() {
+      const text = req.value.trim(); if (!text) { toast('say what to change'); return; }
+      explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is revising the lines…')); think(true);
+      try {
+        const r = await api('/api/order/revise', { method: 'POST', body: { vendor, request: text, lines: lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity })) } });
+        lines = r.lines.map(l => ({ ...l, notes: ['revised on your request'] })); render();
+        explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), `${r.note} (${r.diff.join('; ')})`)); req.value = '';
+      } catch (e) { explain.replaceChildren(el('p', { class: 'small' }, e.message)); }
+      think(false);
+    }
     async function explainIt() {
       explain.replaceChildren(el('p', { class: 'muted' }, 'Marbly is reading the proposal…')); think(true);
       await stream('/api/order/explain', { vendor }, (ev) => { if (ev.type === 'done') explain.replaceChildren(el('div', { class: 'bubble m' }, el('div', { class: 'who' }, avatar(22), ' Marbly'), linkify(ev.text || ev.note || '', ev.citations))); if (ev.type === 'error') explain.replaceChildren(el('p', { class: 'small' }, ev.message)); });
       think(false);
     }
     async function createDraft() {
+      const final = lines.filter(l => l.quantity > 0).map(l => ({ sku: l.sku, quantity: l.quantity }));
+      const edited = JSON.stringify(final) !== JSON.stringify(original);
       setStep(2);
       let r;
-      try { r = await api('/api/order/draft', { method: 'POST', body: { vendor } }); } catch (e) { body.append(el('p', { class: 'small' }, e.message)); return; }
+      try { r = await api('/api/order/draft', { method: 'POST', body: edited ? { vendor, lines: final } : { vendor } }); } catch (e) { setStep(1); body.append(el('p', { class: 'small bad' }, e.message)); return; }
       const status = el('p', {}, 'Waiting for the operator…');
-      body.replaceChildren(
-        el('p', {}, `Draft ${r.draft.draft_id} is with the supplier, awaiting approval. The exact order:`),
-        el('pre', { class: 'block small' }, JSON.stringify(r.draft.order, null, 1)),
-        el('p', {}, 'Approval happens outside this screen on purpose. In the operator terminal run:'),
-        el('pre', { class: 'block' }, r.approve_command),
-        status);
+      const cmd = el('pre', { class: 'block' }, r.approve_command);
+      body.replaceChildren(...kids(
+        el('p', {}, `Draft ${r.draft.draft_id} is with the supplier, awaiting approval${r.edited ? ' (your edits: ' + r.edited.join('; ') + ')' : ''}. The exact order:`),
+        linesTable(r.draft.order.lines.map(l => ({ ...l, ingredient: (lines.find(x => x.sku === l.sku) || {}).ingredient, pack: (lines.find(x => x.sku === l.sku) || {}).pack })), false),
+        el('details', {}, el('summary', { class: 'small' }, 'exact payload the supplier holds'), el('pre', { class: 'block small' }, JSON.stringify(r.draft.order, null, 1))),
+        el('h4', {}, 'How to approve'), el('p', { class: 'small' }, r.how_to),
+        el('div', { class: 'row' }, cmd, el('button', { class: 'ghost', onclick: () => { navigator.clipboard?.writeText(r.approve_command); toast('copied'); } }, 'Copy')),
+        status));
       const poll = setInterval(async () => {
         try {
           const s = await api(`/api/order/${r.draft.draft_id}`);
@@ -160,15 +222,41 @@
             const o = await api(`/api/order/${r.draft.draft_id}/submit`, { method: 'POST' });
             setStep(3);
             body.replaceChildren(el('div', { class: `alertcard ${o.state === 'accepted' ? 'LOW' : 'HIGH'}` }, el('div', { class: 'row' }, el('span', { class: 'badge ' + (o.state === 'accepted' ? 'ok' : 'err') }, o.state.replace('_', ' ')), el('strong', {}, r.draft.draft_id)), el('p', {}, o.message)),
-              el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); sendText('Did the Alder order go through?'); } }, 'Ask Marbly to confirm'), el('button', { onclick: closePanels }, 'Done')));
+              el('div', { class: 'chips' }, el('button', { onclick: () => { closePanels(); sendText('Did the Alder order go through?'); } }, 'Ask Marbly to confirm'), el('button', { onclick: () => { closePanels(); openPlanner(); } }, "What's next to order"), el('button', { onclick: closePanels }, 'Done')));
             refreshBell();
             const before = tour && tour.current;
             await refreshTour();
-            if (before === 'order' && tour && tour.complete) nextStepMessage();
+            if (before === 'order' && tour && tour.complete) { nextStepMessage(); afterFirstOrder(); }
           }
         } catch (e) { status.textContent = e.message; }
       }, 2000);
     }
+  }
+
+  // ---------- planner: what to order next, and when ----------
+  const urgencyLabel = { overdue: 'cutoff passed', today: 'order today', 'this week': 'this week', ordered: 'ordered', 'nothing needed': 'nothing needed' };
+  async function openPlanner() {
+    const d = await api('/api/order/planner');
+    panel('What to order next', el('p', { class: 'small muted' }, `Sized from your counts, recipes and rules at revision ${d.revision}; the time is ${d.now.slice(0, 16).replace('T', ' ')}.`),
+      ...d.vendors.map(v => el('div', { class: `alertcard ${v.urgency === 'overdue' || v.urgency === 'today' ? 'HIGH' : v.urgency === 'this week' ? 'MED' : 'LOW'}` },
+        el('div', { class: 'row' }, el('span', { class: 'badge ' + (v.urgency === 'overdue' || v.urgency === 'today' ? 'HIGH' : v.urgency === 'this week' ? 'MED' : 'ok') }, urgencyLabel[v.urgency] || v.urgency), el('strong', {}, v.vendor_name)),
+        el('p', { class: 'small' }, v.delivery_date ? `Next feasible delivery ${v.delivery_date}${v.order_by ? ', order by ' + v.order_by.slice(0, 16).replace('T', ' ') : ''}${v.hours_to_cutoff !== null ? ' (' + (v.hours_to_cutoff < 0 ? 'cutoff passed' : Math.round(v.hours_to_cutoff) + ' h left') + ')' : ''}.` : 'No delivery day known.'),
+        v.runs_out_before_delivery.length ? el('p', { class: 'small' }, el('strong', {}, 'Runs out before it arrives: '), v.runs_out_before_delivery.map(r => `${r.ingredient} (${r.days} days)`).join(', ')) : null,
+        v.lines.length ? el('p', { class: 'small' }, el('strong', {}, v.accepted.length ? 'Still to order: ' : 'Proposed: '), v.lines.map(l => `${l.cases} × ${l.sku} (${l.ingredient})${l.already_ordered ? ', ' + l.already_ordered + ' already ordered' : ''}`).join(', '), v.est_total_usd && !v.accepted.length ? ` · est. $${Number(v.est_total_usd).toFixed(2)}` : '') : el('p', { class: 'small muted' }, v.accepted.length ? 'Covered by the accepted order.' : 'Stock covers the window; nothing to order.'),
+        v.accepted.length ? el('p', { class: 'small' }, el('strong', {}, 'Already ordered: '), v.accepted.map(a => `${a.draft_id} as ${a.order_id} (${a.lines.map(l => l.quantity + '×' + l.sku).join(', ')})`).join('; ')) : null,
+        v.open_draft ? el('p', { class: 'small' }, el('strong', {}, 'Open draft: '), `${v.open_draft.draft_id} is ${v.open_draft.status.replace('_', ' ')}`) : null,
+        v.warnings.length ? el('p', { class: 'small muted' }, v.warnings[0]) : null,
+        el('div', { class: 'chips' }, v.lines.length ? el('button', { onclick: () => openWizard(v.vendor_id) }, `Plan the ${v.vendor_name.split(' ')[0]} order`) : null, el('button', { class: 'ghost', onclick: () => { closePanels(); sendText(`What should I order from ${v.vendor_name} and when?`); } }, 'Ask Marbly')))));
+  }
+  async function afterFirstOrder() {
+    try {
+      const d = await api('/api/order/planner');
+      const next = d.vendors.filter(v => v.lines.length && v.urgency !== 'ordered');
+      say('', 'Marbly', el('div', {}, el('p', {}, "That's your first order through. Here is what matters next:"),
+        el('ul', {}, ...d.vendors.map(v => el('li', {}, el('strong', {}, v.vendor_name), `: ${urgencyLabel[v.urgency] || v.urgency}` + (v.delivery_date ? `, delivery ${v.delivery_date}, order by ${v.order_by ? v.order_by.slice(0, 16).replace('T', ' ') : '—'}` : '') + (v.runs_out_before_delivery.length ? `; runs out first: ${v.runs_out_before_delivery.map(r => r.ingredient).join(', ')}` : '')))),
+        el('div', { class: 'chips' }, el('button', { onclick: openPlanner }, 'Open the planner'), ...next.slice(0, 2).map(v => el('button', { onclick: () => openWizard(v.vendor_id) }, `Plan ${v.vendor_name.split(' ')[0]}`)))));
+      dimSpot(document.querySelector('.iconbtn[aria-label=planner]'), 'The planner shows every vendor, in order of cutoff.');
+    } catch (e) { console.error(e); }
   }
 
   // ---------- settings ----------
@@ -186,14 +274,27 @@
   async function runOnboarding() {
     say('', 'Marbly', el('div', {}, el('p', {}, intro.greeting), el('p', {}, "Here is how we'll get set up, in four steps you can follow at the top:"),
       el('ol', { class: 'overview' }, el('li', {}, el('strong', {}, 'The big questions.'), ' A few places where your records disagree; your answers become rules I keep.'), el('li', {}, el('strong', {}, "Today's big alerts."), ' What needs a decision, with the evidence behind it.'), el('li', {}, el('strong', {}, 'What I remember, and what I can do.'), ' Your memory, the brief, questions, and the chips to try.'), el('li', {}, el('strong', {}, 'Your first order.'), ' Sized from your numbers and rules, approved by you, verified with the supplier.'))));
-    think(true);
-    const plan = await api('/api/onboarding/plan?wording=1');
-    think(false);
-    if (!plan.questions.length) { say('Everything I found already has an answer from you. Let me look at the picture.'); return finishOnboarding(); }
-    say(`Step 1. ${plan.questions.length} things to settle. Pick the answer that is true for you; "unknown, keep checking" is always fine and I will keep watching.`);
-    let i = 0;
-    const next = () => { if (i >= plan.questions.length) return finishOnboarding(); askQuestion(plan.questions[i++], next, i, plan.questions.length); };
-    next();
+    const go = el('div', { class: 'chips' }, el('button', { onclick: () => { go.replaceChildren(el('span', { class: 'chip on' }, "Let's go")); start(); } }, "Let's go"), el('button', { class: 'ghost', onclick: () => { go.replaceChildren(el('span', { class: 'chip' }, 'later')); say('No problem. The setup card at the top will wait; click "Answer the questions" when you are ready.'); } }, 'Later'));
+    say('', 'Marbly', el('div', {}, el('p', {}, 'Ready to start with the questions?'), go));
+    let firstAnswer = true;
+    async function start() {
+      const t = thinkingBubble('reading your records and wording the questions…'); think(true);
+      const plan = await api('/api/onboarding/plan?wording=1');
+      think(false); t.remove();
+      if (!plan.questions.length) { say('Everything I found already has an answer from you. Let me look at the picture.'); return finishOnboarding(); }
+      say(`Step 1. ${plan.questions.length} things to settle. Pick the answer that is true for you; "unknown, keep checking" is always fine and I will keep watching.`);
+      let i = 0;
+      const next = () => {
+        if (firstAnswer && i === 1) {
+          firstAnswer = false;
+          say("Thanks. I'll save that in Memory. You can see my memories in the book (top right), split between your rules, your preferences and the facts I track, and change them whenever they change. From now on I ask permission before storing anything: you get a card to approve, edit or reject.");
+          dimSpot(book, 'Your memory lives here. Click to look, or anywhere to continue.');
+        }
+        if (i >= plan.questions.length) return finishOnboarding();
+        askQuestion(plan.questions[i++], next, i, plan.questions.length);
+      };
+      next();
+    }
   }
   function askQuestion(q, done, n, total) {
     const card = el('div', { class: 'qcard' }, el('div', { class: 'small muted' }, `${n} of ${total}`), el('h4', {}, q.title), el('p', {}, q.lead || q.why),
@@ -220,17 +321,23 @@
     say('', 'Marbly', card);
   }
   async function finishOnboarding() {
-    await api('/api/onboarding/complete', { method: 'POST' });
+    const t = thinkingBubble('re-running every check with your answers applied: rules, thresholds, the on-hand policy…'); think(true);
+    const shown = sleep(1500);  // keep the thinking state visible even when the recheck is instant
+    const done = await api('/api/onboarding/complete', { method: 'POST' });
     L.refreshStatus();
-    think(true);
     await api('/api/brief/dry?kind=onboarding');  // the recheck: findings against what you told me
     const a = await api('/api/alerts');
-    think(false);
+    await shown;
+    think(false); t.remove();
     await refreshTour();
+    const fx = done.effect || {};
+    const changes = [...(fx.removed || []).map(r => `cleared "${r.title}"`), ...(fx.added || []).map(r => `raised "${r.title}"`), ...(fx.severity_changed || []).map(r => `"${r.title}" moved from ${r.from} to ${r.to}`)];
+    say(`Thank you. I re-ran the ${fx.before ?? ''} checks with your answers applied (${(fx.applied || []).length} rules and preferences in play). ${changes.length ? 'Because of what you told me: ' + changes.join('; ') + '.' : 'Your answers confirmed the defaults, so the picture is the same as before but now it rests on your rules.'}`);
     const crit = a.alerts.filter(x => x.severity === 'HIGH');
-    say(`Thank you. I have rechecked everything against your answers. Step 2: ${crit.length} alert${crit.length === 1 ? '' : 's'} need${crit.length === 1 ? 's' : ''} a decision today, ${a.counts.MED} to watch and ${a.counts.LOW} for the record. The critical ones:`);
+    say(`Step 2: ${crit.length} alert${crit.length === 1 ? '' : 's'} need${crit.length === 1 ? 's' : ''} a decision today, ${a.counts.MED} to watch and ${a.counts.LOW} for the record. The critical ones:`);
     for (const x of crit.slice(0, 3)) say('', 'Marbly', alertCard(x, true));
     say('Open the bell (pulsing, top right) to see all of them with their evidence; that is where new alerts land from now on.');
+    dimSpot(bell, 'Alerts live here. Click to open.');
   }
   function introduceCapabilities() {
     say('', 'Marbly', el('div', {}, el('p', {}, 'Three things I can do for you:'), el('div', { class: 'grid three' }, ...intro.capabilities.map(c => el('div', { class: 'capcard' }, el('h4', {}, c.title), el('p', { class: 'small' }, c.blurb), el('div', { class: 'chips' }, ...c.samples.map(s => el('button', { onclick: () => sendText(s) }, s))))))));
@@ -241,7 +348,7 @@
   // ---------- chat ----------
   async function sendText(text) {
     if (pending) return;
-    say(text, 'You');
+    say(text, 'You', null, true);
     const low = text.toLowerCase();
     if (/\bbrief\b/.test(low) && /morning|give me|today|run/.test(low)) return runBrief();
     if (/order/.test(low) && /help|next|make|place|plan/.test(low) && !/did|went|go through|status/.test(low)) { say('Opening your next order. I will show every line and why before anything is drafted.'); return openWizard('V1'); }
@@ -250,7 +357,7 @@
     const gates = el('div', {}); out.append(gates);
     await stream('/api/chat', { text, mode: 'ask' }, (ev) => {
       if (ev.type === 'gate') { gateIntro(out); L.gateCard(ev, gates); }
-      else if (ev.type === 'done') { out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookup${ev.tool_calls.length === 1 ? '' : 's'} · ${usd(ev.usage.usd)}` : ''))); }
+      else if (ev.type === 'done') { out.replaceChildren(...kids(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, linkify(ev.text || '(no answer)', ev.citations)), ev.recorded && ev.recorded.length ? el('div', { class: 'chips' }, ...ev.recorded.map(r => el('span', { class: 'chip on' }, `remembered: ${r.recorded.subject} = ${JSON.stringify(r.recorded.value)}`))) : null, el('div', { class: 'small muted' }, ev.usage ? `${ev.tool_calls.length} lookup${ev.tool_calls.length === 1 ? '' : 's'} · ${usd(ev.usage.usd)}` : ''), el('div', { class: 'memo-row' }, el('button', { class: 'ghost small', onclick: (e) => { e.target.disabled = true; out.append(memoryForm((ev.text || '').slice(0, 140))); } }, '+ add to memory')))); }
       else if (ev.type === 'error') out.replaceChildren(el('div', { class: 'who' }, avatar(22), ' Marbly'), el('div', {}, `I can't reach my model right now (${ev.message}). You can still use the alerts, memory and the order steps.`));
       feed.scrollTop = feed.scrollHeight;
     });
@@ -276,12 +383,13 @@
     headAvatar = avatar(56);
     bell = el('button', { class: 'iconbtn', 'aria-label': 'alerts', title: 'alerts', onclick: openInbox }, '🔔');
     book = el('button', { class: 'iconbtn', 'aria-label': 'memory', title: 'memory', onclick: openMemory }, '📒');
+    const plannerBtn = el('button', { class: 'iconbtn', 'aria-label': 'planner', title: 'what to order next', onclick: openPlanner }, '🗓');
     const input = el('textarea', { placeholder: 'Ask Marbly, or tell it a rule to remember' });
     const send = el('button', { onclick: () => { const t = input.value.trim(); if (!t) return; input.value = ''; sendText(t); } }, 'Send');
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send.click(); } });
     main.replaceChildren(el('div', { class: 'client' },
       el('div', { class: 'client-head' }, headAvatar, el('div', {}, el('h1', {}, 'Marbly'), el('div', { class: 'sub' }, `Lantern Yard Kitchen · ${intro.now.slice(0, 10)}`)), el('div', { class: 'spacer' }),
-        bell, book, el('button', { class: 'iconbtn', 'aria-label': 'settings', title: 'settings', onclick: openSettings }, '⚙')),
+        bell, book, plannerBtn, el('button', { class: 'iconbtn', 'aria-label': 'settings', title: 'settings', onclick: openSettings }, '⚙')),
       tourBox, feed, chips, el('div', { class: 'composer' }, input, send)));
     tour = intro.tour; renderTour();
     refreshBell();

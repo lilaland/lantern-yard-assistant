@@ -6,18 +6,18 @@ further down. Both drive the same code; the operator's approval is typed in term
 ## Client experience (browser)
 
 Terminal A: `python3 simulator.py serve --mode agent --state .state/live.sqlite`
-Terminal B: `export MARBLE_STATE_DIR=.marble/live && python -m assistant web` then open http://127.0.0.1:8780
+Terminal B: `export MARBLE_STATE_DIR=.marble/live MARBLE_SIM_STATE=.state/live.sqlite && python -m assistant web` then open http://127.0.0.1:8780 (`MARBLE_SIM_STATE` only makes the printed approve command complete; the assistant never reads that file)
 
 | Min | Do | Say |
 |---|---|---|
-| 0–1 | Fresh state: gear → "Start over (wipe memory)" if needed. Reload. | Marbly greets with the four-step overview; the setup card pins to the top with step 1 active. The marble squishes while the model words the questions. |
+| 0–1 | Fresh state: gear → "Start over (wipe memory)" if needed. Reload. Click "Let's go". | Marbly greets with the four-step overview and waits for your go; the setup card pins to the top with step 1 active. The marble squishes while the model words the questions. After the first answer Marbly introduces Memory and dims the screen around the book. |
 | 1–5 | Answer the six cards. Pick "Nobody has seen the cases" on the first; "unknown, keep checking" on the route to show the difference; a custom number on the price threshold; "Set each one" on ordering with buffer 2. | Each answer echoes exactly what was recorded and what changes. "Unknown" records the default rule under your name but leaves the fact at evidence level. |
-| 5–6 | Watch the recheck. | Step 1 ticks off. "Step 2: 2 alerts need a decision today." The critical cards appear with a next step and an action button; the bell pulses. |
+| 5–6 | Watch the recheck. | A thinking bubble while every check re-runs with your answers; then "Because of what you told me: …" naming what cleared, moved or appeared. Step 1 ticks off. "Step 2: 2 alerts need a decision today." The critical cards appear; the screen dims around the bell. |
 | 6–7 | Open the bell (step 2 ticks), then the book (step 3 ticks). | Alerts grouped critical / watch / info with "Ask Marbly", "Plan the next Alder order", "Evidence". Marbly introduces Memory and the three capabilities; the book pulses, then the order chip pulses for step 4. |
 | 7–9 | Chip "Give me this morning's brief". | Narrated brief with citations that open the evidence drawer; the footer with retained vs rechecked. |
 | 9–10 | Type "use two days of buffer from now on". | The approval card: approve, edit the value, or reject. Then the book shows the new preference with "you said so". |
 | 10–11 | A: `scenario --name delivery-correction`. Chip "Give me this morning's brief" again. | Opens with what changed: INV-099 now scheduled, note N16, records corrected, your rules retained. |
-| 11–15 | "Start the order" on the setup card (or the pulsing chip) → "Create the draft". A: `scenario --name supplier-timeout`, then `approve --draft-id D-…` (copy from the screen). | Step 2 shows the exact order and the operator command; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". Step 4 ticks, the setup card disappears, Marbly says the setup is done. "Ask Marbly to confirm" answers from the ledger with the same words. |
+| 11–15 | "Start the order" on the setup card (or the pulsing chip). Change a quantity in the table, or type "drop the cheese" and let Marbly revise. "Create the draft". A: `scenario --name supplier-timeout`, then the approve command exactly as shown (it carries `--port` and, with `MARBLE_SIM_STATE` set in terminal B, `--state`). | Step 2 shows the order as a table with the exact payload behind a toggle, where to run the command, and a Copy button; there is no approve button by design. On approval it submits, loses the response, verifies by lookup, and step 3 reads "accepted … verified by lookup … recorded, not shipped". Step 4 ticks, the card disappears, and Marbly lists what matters next per vendor, with the planner dimmed in. |
 
 Fallbacks: without a key every step except narration still works (cards, inbox, memory, wizard);
 the brief falls back to the deterministic text. Gear → "Show developer pages" for the tool matrix,

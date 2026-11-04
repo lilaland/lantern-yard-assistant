@@ -25,7 +25,7 @@ from ..modes import onboard as onboard_mode
 from ..api_client import ApiClient, ApiError, ServerUnavailable
 from ..config import Config, ROOT
 from ..ledger import Ledger
-from ..orderflow import APPROVE_COMMAND, OrderFlow
+from ..orderflow import OrderFlow, approve_command
 from ..records import Records, load_all
 
 STATIC = Path(__file__).parent / "static"
@@ -364,7 +364,18 @@ class App:
             led.set_meta("onboarded_at", already or stamp)
             led.set_meta("onboarded_with", "client")
             led.set_meta("onboarded_at_revision", str(records.revision))
-            return {"onboarded_at": led.meta("onboarded_at"), "counts": led.counts()}
+            before = {f.id: f for f in detectors.run_all(records)}                              # detector defaults
+            after = {f.id: f for f in detectors.run_all(records, policies.detector_params(led))}  # with the answers
+            sev = detectors.SEVERITY_LABEL
+            effect = {"before": len(before), "after": len(after),
+                      "removed": [{"id": i, "title": f.title} for i, f in before.items() if i not in after],
+                      "added": [{"id": i, "title": f.title} for i, f in after.items() if i not in before],
+                      "severity_changed": [{"id": i, "title": after[i].title, "from": sev[before[i].severity], "to": sev[after[i].severity]}
+                                           for i in before if i in after and before[i].severity != after[i].severity],
+                      "applied": sorted({a for f in after.values() for a in f.applied_policies}),
+                      "critical_after": sum(1 for f in after.values() if f.severity == 1),
+                      "headline": after and next(iter(after.values())).title}
+            return {"onboarded_at": led.meta("onboarded_at"), "counts": led.counts(), "effect": effect}
 
     def onboarding_restart(self) -> dict:
         """Forget which questions were answered so they are asked again; beliefs stay (a new answer supersedes)."""
@@ -442,6 +453,11 @@ class App:
 
     # ----- order path -------------------------------------------------------------
 
+    APPROVE_HOW_TO = ("Run this in the operator's terminal: the one that started `python3 simulator.py serve`, from the same "
+                      "folder. If the simulator was started with --state, the command includes it when MARBLE_SIM_STATE is "
+                      "set; otherwise add the same --state yourself. The operator credential lives only there; this screen "
+                      "cannot approve.")
+
     def create_draft(self, body: dict) -> dict:
         vendor = body.get("vendor") or "V1"
         records = self.records(fresh=True)
@@ -451,14 +467,71 @@ class App:
             if vendor in blocked:
                 raise HttpError(409, f"draft {blocked[vendor].draft_id} for {vendor} is {blocked[vendor].status}; settle it first")
             p = ordering.plan_order(records, led, vendor)  # from the ledger's beliefs only, never from what-if overrides
+            if body.get("lines"):
+                try:
+                    lines = ordering.validate_lines(records, vendor, body["lines"])
+                except ValueError as e:
+                    raise HttpError(400, str(e))
+                diff = ordering.lines_diff(p.api_lines, [{"sku": l["sku"], "quantity": l["quantity"]} for l in lines])
+                try:
+                    d = flow.create_draft_from_lines(vendor, lines, note=f"manager edited the proposal: {'; '.join(diff)}")
+                except (RuntimeError, ApiError) as e:
+                    raise HttpError(409, str(e))
+                return {"draft": d.__dict__, "approve_command": approve_command(d.draft_id, self.cfg.api_base),
+                        "how_to": self.APPROVE_HOW_TO, "rationale": ordering.rationale(p), "edited": diff,
+                        "lines": lines}
             if not p.lines:
                 raise HttpError(400, "nothing to order for this vendor")
             try:
                 d = flow.create_draft(p)
             except (RuntimeError, ApiError) as e:
                 raise HttpError(409, str(e))
-            return {"draft": d.__dict__, "approve_command": APPROVE_COMMAND.format(draft_id=d.draft_id),
-                    "rationale": ordering.rationale(p)}
+            return {"draft": d.__dict__, "approve_command": approve_command(d.draft_id, self.cfg.api_base),
+                    "how_to": self.APPROVE_HOW_TO, "rationale": ordering.rationale(p)}
+
+    REVISE_SCHEMA = {"type": "object", "properties": {
+        "lines": {"type": "array", "items": {"type": "object", "properties": {"sku": {"type": "string"}, "quantity": {"type": "integer"}},
+                                              "required": ["sku", "quantity"], "additionalProperties": False}},
+        "note": {"type": "string"}}, "required": ["lines", "note"], "additionalProperties": False}
+
+    def revise(self, body: dict) -> dict:
+        """The manager asks for a change in words; the model proposes revised lines; code validates them."""
+        vendor = body.get("vendor") or "V1"
+        request = (body.get("request") or "").strip()
+        if not request:
+            raise HttpError(400, "request is required")
+        if self.cfg.dry or not self.key_present():
+            raise HttpError(400, "no model available; edit the quantities in the table instead")
+        records = self.records()
+        with self.ledger() as led:
+            p = ordering.plan_order(records, led, vendor)
+            current = body.get("lines") or p.api_lines
+            catalog = [{"sku": c.sku, "description": c.description, "pack": f"{c.pack_quantity:g} {c.pack_unit}", "unit": c.order_unit,
+                        "ingredient": records.ingredient_for_sku(c.sku)} for c in records.catalog if c.vendor_id == vendor]
+            content = (f"<proposal>\n{ordering.rationale(p)}\n</proposal>\n\nCurrent lines (what will be drafted): {json.dumps(current)}\n"
+                       f"Catalog for this vendor: {json.dumps(catalog)}\n\nThe manager asks: \"{request}\"\n\n"
+                       f"Return the full revised line list (every line that should be ordered, quantities as whole cases 1-100, only "
+                       f"SKUs from this catalog), keeping every line the manager did not mention, and a one-sentence note saying what "
+                       f"changed and anything the manager should know (for example if a request cannot be met from this catalog).")
+            ctx = self.context("order", led, records)
+            try:
+                res = llm.run(self.cfg, "order", content, ctx, output_format={"type": "json_schema", "schema": self.REVISE_SCHEMA}, effort="low")
+                data = json.loads(res.text)
+            except llm.ModelUnavailable as e:
+                raise HttpError(400, str(e))
+            except ValueError:
+                raise HttpError(502, "the model did not return a valid revision")
+            try:
+                lines = ordering.validate_lines(records, vendor, data.get("lines") or [])
+            except ValueError as e:
+                raise HttpError(400, f"the revision was not valid: {e}; attempted lines {data.get('lines')}")
+            return {"lines": lines, "note": data.get("note", ""), "diff": ordering.lines_diff(current, [{"sku": l["sku"], "quantity": l["quantity"]} for l in lines]),
+                    "usage": {**res.usage.__dict__, "usd": res.usage.usd(self.cfg.model)}}
+
+    def planner(self) -> dict:
+        records = self.records()
+        with self.ledger() as led:
+            return {"revision": records.revision, "now": records.now.isoformat(), "vendors": tools.plain(ordering.planner(records, led))}
 
     def drafts(self) -> dict:
         with self.ledger() as led:
@@ -477,7 +550,7 @@ class App:
                 except ApiError as e:
                     raise HttpError(e.status, e.code)
             return {"draft": led.draft(draft_id).__dict__, "server_status": status,
-                    "approve_command": APPROVE_COMMAND.format(draft_id=draft_id)}
+                    "approve_command": approve_command(draft_id, self.cfg.api_base), "how_to": self.APPROVE_HOW_TO}
 
     def submit(self, draft_id: str) -> dict:
         with self.ledger() as led:
@@ -819,6 +892,8 @@ def make_handler(app: App):
                 return a.proposal(q)
             if path == "/api/order/drafts":
                 return a.drafts()
+            if path == "/api/order/planner":
+                return a.planner()
             if path.startswith("/api/order/"):
                 return a.draft_status(path[len("/api/order/"):])
             if path == "/api/usage":
@@ -850,6 +925,8 @@ def make_handler(app: App):
                 return self._json(201, a.create_draft(body))
             if path == "/api/order/resume":
                 return self._json(200, a.resume())
+            if path == "/api/order/revise":
+                return self._json(200, a.revise(body))
             if path.startswith("/api/order/") and path.endswith("/submit"):
                 return self._json(200, a.submit(path[len("/api/order/"):-len("/submit")]))
             if path.startswith("/api/gate/"):

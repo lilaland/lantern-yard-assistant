@@ -18,7 +18,7 @@ Environment: macOS 24.6, Python 3.10.16, `anthropic` 2.4.0, `pytest` 8. Suite ti
 
 ## Result
 
-159 passed, 0 failed, 0 skipped.
+162 passed, 0 failed, 0 skipped.
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -68,6 +68,8 @@ No live scenario, judge calibration or persona turn has run with a real model.
 
 | 22:57 | `evals/agentic.py --only client_samples` (every Marbly sample prompt plus the wizard path with a lost response), live, Sonnet | 7 turns; two deterministic failures and one judge failure | $0.41 | Found: a citation of "Sept 28" came from an earlier turn's tool result the model legitimately had in context, so turn records now carry the conversation history and the grounding corpus includes it; the order explanation ran 1,430 output tokens against a 1,200 bound, so the order prompt has a 120-word budget; the chicken answer ran nine sentences, so ask's rule is now 120 words. |
 | 23:01 | same, after those fixes | 7 turns; every deterministic check passes; one judge failure (`why_wednesday`: the answer cited N09 but did not say the vendor sheet still lists Monday/Thursday, because the model only called `explain`) | $0.17 | Answers now 61–75 words at $0.008–0.018 each; brief 280 words at $0.036; order explanation 139 words at $0.023; the whole flow $0.14. The ask prompt now tells the model to pair `explain` with `get_findings` on "why" questions. Not re-run. |
+
+| 09:23 (Nov 4) | Marbly flow improvements in the browser, dry mode, fresh fixture | Overview with "Let's go"; after the first answer the memory introduction with the screen dimmed around the book; recheck with a thinking bubble and "Your answers confirmed the defaults…"; bell dimmed in; Memory in-place edit of the buffer to 2 (recorded as "you said so"); the wizard with a line dropped from the table, the draft shown as a table with the payload behind a toggle, the operator command with `--port 8792 --state .state/tour.sqlite` and where to run it; approval under `supplier-timeout` → accepted and verified; the setup completes and Marbly lists what matters next per vendor; the planner shows cutoffs, what runs out first, and the accepted order. No console errors. | $0.00 | Untested live: the worded revision ("drop the cheese" → revised lines), which needs a model. |
 
 Measured cost per model call on iteration two (Opus 5.5 assistant, Sonnet 5.5 judge): brief $0.039 (11.5k in / 1.2k out, one round), ask $0.016 (3.7k in / 0.5k out, 2.2 rounds), order explanation $0.040, onboarding wording $0.023, judge $0.020 per scenario, persona $0.002 per turn. One full iteration of eight scenarios: about $0.60. The machine-wide cost log (`.marble/costs.jsonl`) held 106 calls and $2.4231 at 23:03, every model call from the three runs including judge and persona.
 

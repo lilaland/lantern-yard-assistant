@@ -39,7 +39,9 @@ table at the bottom is the cross-check (message timestamps, gaps over 20 minutes
 
 | 2026-11-04 | Flow improvements (additional): confirm before questions, memory intro + dimmed spotlights + in-place edits + add-to-memory, visible recheck with its effect, editable proposal with worded revisions, operator command how-to with port/state, planner of what to order next, 6 tests | 09:15 | 09:23 | ~0.6 | browser run in dry mode; worded revision needs a key and is untested live |
 
-Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.25 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
+| 2026-11-04 | Live test of the worded revision (endpoint and wizard) | 09:25 | 09:26 | ~0.05 | $0.04 model spend |
+
+Running total: ~1.85 h of build time (blocks 0–12, wall clock) + ~2.3 h frontend/evals/agentic suite/live tuning/client experience + ~0.2 h wrap-up plus session 1 design time (fill in). Blocks 1–6 were built by the assistant in short bursts between the candidate's review pauses; the gaps between blocks are not counted.
 
 ## Transcript-derived active time (cross-check)
 

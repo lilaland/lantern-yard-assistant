@@ -14,8 +14,8 @@ COMMANDS = {
     "order": "Prepare one order, show the exact draft, wait for operator approval, submit, verify.",
     "why": "Show the evidence and beliefs behind a subject, e.g. `why alder.delivery_days`.",
     "memory": "List the ledger: what is retained, what is rechecked, model cost so far.",
-    "reset": "Delete local assistant state (.marble/). Does not touch the simulator.",
-    "web": "Local observability UI over the same code (http://127.0.0.1:8780). Needs the simulator running.",
+    "reset": "Forget everything: delete the assistant's state directory (memory, chat, usage log). The simulator's own state is untouched.",
+    "web": "The Marbly UI and developer pages (http://127.0.0.1:8780). Asks what to do with existing memory; --fresh / --keep skip the question.",
 }
 
 # Which BUILD_PLAN.md block delivers each command. Removed as commands land.
@@ -49,6 +49,8 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--port", type=int, default=8780)
             sp.add_argument("--host", default="127.0.0.1")
             sp.add_argument("--open", action="store_true", help="Open the browser.")
+            sp.add_argument("--fresh", action="store_true", help="Start with a new, empty memory directory next to the configured one.")
+            sp.add_argument("--keep", action="store_true", help="Continue with the memory that is there, without asking.")
         if name == "reset":
             sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt.")
         if name == "memory":
@@ -123,8 +125,9 @@ def main(argv: list[str] | None = None) -> int:
         from .modes import ask
         return ask.run(cfg, once=args.once, resume=not args.fresh, auto_approve=args.yes)
     if args.command == "web":
+        from .launch import prelaunch
         from .web.server import serve
-        return serve(cfg, args.host, args.port, args.open)
+        return serve(prelaunch(cfg, args.fresh, args.keep), args.host, args.port, args.open)
     if args.command == "order":
         from .modes import order
         return order.run(cfg, args.vendor, args.propose_only, args.yes, args.resume, args.poll_seconds, args.timeout)

@@ -72,6 +72,15 @@ Operator steps during the demo, in terminal A with the same `--state`:
 python -m assistant web            # http://127.0.0.1:8780 ; needs the simulator; --dry disables model turns
 ```
 
+Run it from the activated venv (`source .venv/bin/activate`), which is where the `anthropic` package
+lives. Two kinds of state exist and both survive restarts: the simulator's `--state` file (drafts,
+orders, scenario flags; the operator's) and the assistant's memory directory `MARBLE_STATE_DIR`
+(default `.marble`: beliefs, chat, usage, setup progress). If the memory directory already holds a
+session, `web` says so and asks whether to continue, start fresh in a new directory, or wipe;
+`--keep` and `--fresh` answer without asking. The startup lines name the simulator, the memory
+directory and whether the model is on. Onboarding runs when the memory is empty; "Ask me the
+questions again" in Settings re-asks with memory intact.
+
 The default page is **Marbly**, the client experience (driven live end to end on 2026-11-03 for $0.1720 with Sonnet 5.5). It opens with an
 overview and a four-step setup pinned to the top until it is complete: (1) straighten out the facts
 (each question is a card whose options and ledger effects are fixed in code; the model may only word

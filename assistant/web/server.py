@@ -992,8 +992,19 @@ def serve(cfg: Config, host: str = "127.0.0.1", port: int = 8780, open_browser: 
     httpd = ThreadingHTTPServer((host, port), make_handler(app))
     httpd.daemon_threads = True
     url = f"http://{host}:{port}/"
-    print(f"Lantern Yard assistant UI at {url}  (state {cfg.state_dir}; model {'off (--dry)' if cfg.dry else cfg.model}"
-          f"{'' if app.key_present() or cfg.dry else ', no ANTHROPIC_API_KEY: model turns disabled'}). Ctrl-C to stop.")
+    records = app.records()
+    model = "off (--dry)" if cfg.dry else (cfg.model if app.key_present() else "off: no ANTHROPIC_API_KEY")
+    if not cfg.dry and app.key_present():
+        try:
+            import anthropic  # noqa: F401
+        except ImportError:
+            model = f"{cfg.model} but the 'anthropic' package is not importable from this Python: activate the venv (source .venv/bin/activate) and relaunch"
+    from ..ledger import Ledger
+    with Ledger(cfg.db_path) as led:
+        onboarded = led.meta("onboarded_at")
+    print(f"Marbly at {url}\n  simulator  {cfg.api_base}  (dataset revision {records.revision}, now {records.now:%Y-%m-%d %H:%M})\n"
+          f"  memory     {cfg.state_dir}  ({'onboarded ' + onboarded[:16] if onboarded else 'empty: the setup runs first'})\n"
+          f"  model      {model}\nCtrl-C to stop.")
     if open_browser:
         import webbrowser
         webbrowser.open(url)
